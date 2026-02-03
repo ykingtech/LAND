@@ -4,11 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Driver App - Site Cam</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1f2937">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         body { -webkit-tap-highlight-color: transparent; }
     </style>
+    <link rel="icon" type="image/png" href="icon-192.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
 </head>
 <body class="bg-gray-900 text-white h-screen flex flex-col">
 
@@ -74,7 +83,6 @@
     </div>
 
     <script type="module">
-        // CORRECTED VERSION: Used 10.8.0 (Stable) instead of non-existent 12.8.0
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, onSnapshot, serverTimestamp, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
@@ -111,12 +119,11 @@
                     projectSelect.appendChild(option);
                 });
 
-                // AUTO-SELECT SAVED PROJECT (If exists)
                 const storedProjId = localStorage.getItem('sithuliya_driver_project');
                 if(storedProjId && projectDataMap[storedProjId]) {
                     projectSelect.value = storedProjId;
-                    loadVehiclesForProject(storedProjId); // Load vehicles immediately
-                    loadRealtimeHistory(storedProjId);    // Load history immediately
+                    loadVehiclesForProject(storedProjId);
+                    loadRealtimeHistory(storedProjId);
                 }
 
             } catch (e) {
@@ -126,7 +133,6 @@
         }
         initData();
 
-        // Project Change Listener
         projectSelect.addEventListener('change', (e) => {
             const pid = e.target.value;
             if(pid) {
@@ -193,10 +199,8 @@
                         const scaleSize = maxWidth / img.width;
                         canvas.width = maxWidth; canvas.height = img.height * scaleSize;
                         
-                        // Draw resized image
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                         
-                        // Add Watermark
                         const now = new Date();
                         const watermarkText = `Captured: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
                         ctx.fillStyle = "rgba(0, 0, 0, 0.6)"; 
@@ -236,7 +240,6 @@
 
                 alert("Reading Uploaded Successfully!");
                 
-                // Reset Form (Keep Project, clear Image & Vehicle)
                 finalImageBase64 = null;
                 document.getElementById('previewImg').classList.add('hidden');
                 document.getElementById('timestampOverlay').classList.add('hidden');
@@ -326,10 +329,8 @@
                     list.appendChild(item);
                 });
             }, (error) => {
-                // HANDLE INDEX ERROR
                 console.error("History Loading Error:", error);
                 if(error.message.includes("requires an index")) {
-                    console.log("CLICK THIS LINK IN CONSOLE TO CREATE INDEX:", error.message);
                     list.innerHTML = `<p class="text-center text-red-400 text-sm">System Error: Index Missing.<br>Ask Admin to check console.</p>`;
                 }
             });
