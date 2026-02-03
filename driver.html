@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Driver App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Mobile Specific Tweaks */
+        body { -webkit-tap-highlight-color: transparent; }
+        .touch-action-manipulation { touch-action: manipulation; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white h-screen flex flex-col">
+
+    <div class="bg-gray-800 p-4 shadow-md z-10 sticky top-0">
+        <h1 class="text-xl font-bold text-center text-blue-400">Driver Portal</h1>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-4 pb-24">
+        
+        <div id="uploadSection">
+            <div class="bg-gray-800 p-5 rounded-2xl shadow-lg border border-gray-700">
+                
+                <label class="text-xs text-gray-400 uppercase font-bold tracking-wider">Project</label>
+                <div class="relative mb-4 mt-1">
+                    <select id="projectSelect" class="w-full bg-gray-700 p-3 rounded-lg text-white appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg">
+                        <option value="">Select Project...</option>
+                    </select>
+                    <i class="fas fa-chevron-down absolute right-4 top-4 text-gray-400 pointer-events-none"></i>
+                </div>
+
+                <label class="text-xs text-gray-400 uppercase font-bold tracking-wider">Vehicle</label>
+                <div class="relative mb-6 mt-1">
+                    <select id="vehicleSelect" disabled class="w-full bg-gray-700 p-3 rounded-lg text-white appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg disabled:opacity-50">
+                        <option value="">Select Project First</option>
+                    </select>
+                    <i class="fas fa-truck absolute right-4 top-4 text-gray-400 pointer-events-none"></i>
+                </div>
+
+                <label class="block mb-4 w-full h-48 border-2 border-dashed border-gray-600 rounded-xl flex flex-col items-center justify-center cursor-pointer active:bg-gray-700 hover:border-blue-500 transition-colors bg-gray-750 relative overflow-hidden">
+                    <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden"> 
+                    
+                    <div id="cameraPlaceholder" class="flex flex-col items-center">
+                        <i class="fas fa-camera text-4xl mb-2 text-gray-400"></i>
+                        <span class="text-sm text-gray-300 font-medium">Tap to Photo</span>
+                    </div>
+                    <img id="previewImg" class="hidden absolute inset-0 w-full h-full object-cover">
+                </label>
+
+                <button id="uploadBtn" class="w-full bg-blue-600 py-4 rounded-xl font-bold text-lg hover:bg-blue-500 active:scale-95 transition transform shadow-lg flex justify-center items-center touch-action-manipulation">
+                    SUBMIT READING
+                </button>
+            </div>
+        </div>
+
+        <div id="historySection" class="hidden">
+            <h2 class="text-lg font-bold mb-4 text-gray-300">My Recent Uploads</h2>
+            <div id="historyList" class="space-y-3">
+                <p class="text-center text-gray-500 mt-10">Select a vehicle to see history.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="bg-gray-800 border-t border-gray-700 fixed bottom-0 w-full h-16 flex justify-around items-center z-20 shadow-2xl">
+        <button onclick="switchTab('upload')" id="tabUpload" class="flex flex-col items-center text-blue-400 w-1/2 h-full justify-center active:bg-gray-700">
+            <i class="fas fa-upload text-xl mb-1"></i>
+            <span class="text-xs font-bold">Upload</span>
+        </button>
+        <button onclick="switchTab('history')" id="tabHistory" class="flex flex-col items-center text-gray-500 w-1/2 h-full justify-center active:bg-gray-700">
+            <i class="fas fa-history text-xl mb-1"></i>
+            <span class="text-xs font-bold">History</span>
+        </button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, getDoc, query, where, orderBy, onSnapshot, serverTimestamp, limit } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAlhMTQ-_sorFg_0ULpjf9kvjuIAWQkDVY",
+            authDomain: "land-4d291.firebaseapp.com",
+            projectId: "land-4d291",
+            storageBucket: "land-4d291.firebasestorage.app",
+            messagingSenderId: "1002505362762",
+            appId: "1:1002505362762:web:f30e7ba82d8a344670f5b3",
+            measurementId: "G-2EEQPP29VR"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // --- GLOBAL UI FUNCTIONS ---
+        window.switchTab = (tab) => {
+            const uploadSec = document.getElementById('uploadSection');
+            const historySec = document.getElementById('historySection');
+            const tabUp = document.getElementById('tabUpload');
+            const tabHist = document.getElementById('tabHistory');
+
+            if(tab === 'upload') {
+                uploadSec.classList.remove('hidden');
+                historySec.classList.add('hidden');
+                tabUp.className = "flex flex-col items-center text-blue-400 w-1/2 h-full justify-center active:bg-gray-700";
+                tabHist.className = "flex flex-col items-center text-gray-500 w-1/2 h-full justify-center active:bg-gray-700";
+            } else {
+                uploadSec.classList.add('hidden');
+                historySec.classList.remove('hidden');
+                tabUp.className = "flex flex-col items-center text-gray-500 w-1/2 h-full justify-center active:bg-gray-700";
+                tabHist.className = "flex flex-col items-center text-blue-400 w-1/2 h-full justify-center active:bg-gray-700";
+                loadHistory(); // Load history when tab clicked
+            }
+        }
+
+        // --- 1. LOAD PROJECTS ---
+        const projectSelect = document.getElementById('projectSelect');
+        const vehicleSelect = document.getElementById('vehicleSelect');
+        let projectDataMap = {}; // Cache project data
+
+        async function init() {
+            const q = query(collection(db, "projects"));
+            const snapshot = await getDocs(q);
+            
+            projectSelect.innerHTML = '<option value="">Select Project...</option>';
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                projectDataMap[doc.id] = data; // Store full data to get vehicles later
+                const option = document.createElement('option');
+                option.value = doc.id; // Use ID as value
+                option.text = data.name;
+                projectSelect.appendChild(option);
+            });
+        }
+        init();
+
+        // --- 2. LOAD VEHICLES ON PROJECT CHANGE ---
+        projectSelect.addEventListener('change', (e) => {
+            const pid = e.target.value;
+            vehicleSelect.innerHTML = '<option value="">Select Vehicle...</option>';
+            
+            if (pid && projectDataMap[pid]) {
+                const vehicles = projectDataMap[pid].assignedVehicles || [];
+                
+                if(vehicles.length === 0) {
+                    vehicleSelect.innerHTML = '<option value="">No Vehicles Registered</option>';
+                    vehicleSelect.disabled = true;
+                } else {
+                    vehicles.forEach(v => {
+                        const opt = document.createElement('option');
+                        opt.value = v;
+                        opt.text = v;
+                        vehicleSelect.appendChild(opt);
+                    });
+                    vehicleSelect.disabled = false;
+                }
+            } else {
+                vehicleSelect.disabled = true;
+            }
+        });
+
+        // --- 3. CAMERA & COMPRESSION ---
+        let compressedImageBase64 = null;
+        
+        document.getElementById('cameraInput').addEventListener('change', async (e) => {
+            if(e.target.files[0]) {
+                // Show simple preview immediately
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('previewImg').src = e.target.result;
+                    document.getElementById('previewImg').classList.remove('hidden');
+                    document.getElementById('cameraPlaceholder').classList.add('hidden');
+                }
+                reader.readAsDataURL(e.target.files[0]);
+
+                // Compress
+                compressedImageBase64 = await compressImage(e.target.files[0]);
+            }
+        });
+
+        function compressImage(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const maxWidth = 800;
+                        const scaleSize = maxWidth / img.width;
+                        canvas.width = maxWidth;
+                        canvas.height = img.height * scaleSize;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.6));
+                    };
+                };
+            });
+        }
+
+        // --- 4. UPLOAD LOGIC ---
+        document.getElementById('uploadBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('uploadBtn');
+            const projectId = projectSelect.value;
+            const projectName = projectSelect.options[projectSelect.selectedIndex].text;
+            const vehicleNo = vehicleSelect.value;
+
+            if(!projectId || !vehicleNo || !compressedImageBase64) {
+                alert("Please select project, vehicle and take a photo.");
+                return;
+            }
+
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+            btn.disabled = true;
+
+            try {
+                await addDoc(collection(db, "meter_readings"), {
+                    projectId: projectId,
+                    projectName: projectName,
+                    vehicleNo: vehicleNo,
+                    imageBase64: compressedImageBase64,
+                    timestamp: serverTimestamp(),
+                    status: "pending" // Initial status
+                });
+
+                alert("Success!");
+                // Reset
+                document.getElementById('previewImg').classList.add('hidden');
+                document.getElementById('cameraPlaceholder').classList.remove('hidden');
+                compressedImageBase64 = null;
+                document.getElementById('cameraInput').value = "";
+                btn.innerHTML = 'SUBMIT READING';
+                btn.disabled = false;
+                
+                // Switch to history to show it's pending
+                window.switchTab('history');
+
+            } catch (error) {
+                console.error(error);
+                alert("Error: " + error.message);
+                btn.innerHTML = 'Try Again';
+                btn.disabled = false;
+            }
+        });
+
+        // --- 5. HISTORY LOGIC (Real-time Status) ---
+        let unsubscribeHistory = null;
+
+        function loadHistory() {
+            const vehicleNo = vehicleSelect.value;
+            const historyList = document.getElementById('historyList');
+
+            if(!vehicleNo) {
+                historyList.innerHTML = '<p class="text-center text-gray-500 mt-10">Please select a vehicle in the Upload tab first to see its history.</p>';
+                return;
+            }
+
+            if(unsubscribeHistory) unsubscribeHistory(); // Clear old listener
+
+            const q = query(
+                collection(db, "meter_readings"), 
+                where("vehicleNo", "==", vehicleNo),
+                orderBy("timestamp", "desc"),
+                limit(10)
+            );
+
+            historyList.innerHTML = '<div class="text-center mt-4"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+
+            unsubscribeHistory = onSnapshot(q, (snapshot) => {
+                historyList.innerHTML = "";
+                if(snapshot.empty) {
+                    historyList.innerHTML = '<p class="text-center text-gray-500">No records found.</p>';
+                    return;
+                }
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    let statusColor = "bg-yellow-500";
+                    let statusIcon = "fa-clock";
+                    
+                    if(data.status === 'approved') {
+                        statusColor = "bg-green-500";
+                        statusIcon = "fa-check";
+                    } else if (data.status === 'rejected') {
+                        statusColor = "bg-red-500";
+                        statusIcon = "fa-times";
+                    }
+
+                    const item = document.createElement('div');
+                    item.className = "bg-gray-800 p-3 rounded-xl border border-gray-700 flex gap-3 items-center";
+                    item.innerHTML = `
+                        <img src="${data.imageBase64}" class="w-16 h-16 object-cover rounded-lg bg-gray-700">
+                        <div class="flex-1">
+                            <div class="flex justify-between items-start">
+                                <h3 class="font-bold text-sm text-gray-300">${new Date(data.timestamp?.seconds * 1000).toLocaleDateString()}</h3>
+                                <span class="${statusColor} text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 uppercase font-bold">
+                                    <i class="fas ${statusIcon}"></i> ${data.status}
+                                </span>
+                            </div>
+                            <p class="text-xs text-gray-400 mt-1">${new Date(data.timestamp?.seconds * 1000).toLocaleTimeString()}</p>
+                        </div>
+                    `;
+                    historyList.appendChild(item);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
