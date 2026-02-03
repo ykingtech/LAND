@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sithuliya Real Estate - Admin System</title>
+    <title>Sithuliya Admin Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -13,21 +13,20 @@
             #printArea { position: absolute; left: 0; top: 0; width: 100%; }
             .no-print { display: none !important; }
         }
-        /* Notification Animation */
+        .animate-bell { animation: bell-shake 2s infinite; }
         @keyframes bell-shake {
-            0% { transform: rotate(0); }
-            15% { transform: rotate(5deg); }
-            30% { transform: rotate(-5deg); }
-            45% { transform: rotate(4deg); }
-            60% { transform: rotate(-4deg); }
-            100% { transform: rotate(0); }
-        }
-        .animate-bell {
-            animation: bell-shake 2s infinite;
+            0%, 100% { transform: rotate(0); }
+            10%, 30%, 50%, 70%, 90% { transform: rotate(-10deg); }
+            20%, 40%, 60%, 80% { transform: rotate(10deg); }
         }
     </style>
 </head>
 <body class="bg-gray-100 h-screen overflow-hidden font-sans">
+
+    <div id="imgModal" class="hidden fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4 cursor-pointer" onclick="closeImgModal()">
+        <img id="imgModalSrc" class="max-h-full max-w-full rounded shadow-2xl border border-gray-600">
+        <p class="absolute bottom-10 text-white bg-black/50 px-4 py-1 rounded">Click anywhere to close</p>
+    </div>
 
     <div id="loginScreen" class="fixed inset-0 bg-slate-900 z-50 flex flex-col items-center justify-center">
         <h1 class="text-white text-3xl font-bold mb-8">Sithuliya Real Estate</h1>
@@ -39,7 +38,7 @@
 
     <div id="mainApp" class="hidden flex h-full">
         <div class="w-64 bg-white shadow-md flex flex-col z-10">
-            <div class="p-6 border-b"><h2 class="text-xl font-bold text-blue-800">Sithuliya Admin</h2></div>
+            <div class="p-6 border-b"><h2 class="text-xl font-bold text-blue-800">Admin Panel</h2></div>
             <nav class="flex-1 p-4 space-y-2">
                 <button id="navProjects" class="w-full text-left p-3 rounded bg-blue-50 text-blue-700 font-bold"><i class="fas fa-project-diagram mr-3"></i> Projects</button>
                 <button id="navVehicles" class="w-full text-left p-3 rounded hover:bg-blue-50 text-gray-700 font-medium"><i class="fas fa-truck mr-3"></i> Meter Approvals</button>
@@ -47,14 +46,17 @@
         </div>
 
         <div class="flex-1 flex flex-col overflow-hidden">
-            <header class="bg-white shadow p-4 flex justify-between items-center z-20">
-                <h2 id="pageTitle" class="text-xl font-bold text-gray-700">Dashboard</h2>
+            <header class="bg-white shadow p-4 flex justify-between items-center z-20 gap-4">
+                <div class="relative flex-1 max-w-lg">
+                    <input type="text" id="projSearch" placeholder="Search by Project Name or Area..." class="w-full pl-10 pr-4 py-2 border rounded-lg bg-gray-50 focus:bg-white outline-none transition">
+                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                </div>
                 <div class="flex items-center gap-4">
                     <div class="relative cursor-pointer" onclick="toggleNotifPanel()">
                         <i id="bellIcon" class="fas fa-bell text-gray-500 text-2xl hover:text-blue-600 transition"></i>
                         <span id="notifBadge" class="hidden absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white">0</span>
                     </div>
-                    <button id="openNewProjModal" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 shadow-sm"><i class="fas fa-plus mr-2"></i> New Project</button>
+                    <button id="openNewProjModal" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 shadow-sm whitespace-nowrap"><i class="fas fa-plus mr-2"></i> New Project</button>
                 </div>
             </header>
 
@@ -63,41 +65,61 @@
                     <span>Overdue Payments</span>
                     <button onclick="toggleNotifPanel()" class="text-gray-400 hover:text-red-500"><i class="fas fa-times"></i></button>
                 </div>
-                <div id="notifList" class="max-h-96 overflow-y-auto p-0">
-                    <p class="text-center text-gray-500 py-4 text-sm">No overdue payments.</p>
-                </div>
+                <div id="notifList" class="max-h-96 overflow-y-auto p-0"></div>
             </div>
 
             <main class="flex-1 overflow-auto p-6 relative">
+                
                 <div id="projectsPage">
                     <div id="projectGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
                 </div>
 
-                <div id="projectDetailPage" class="hidden">
-                    <button id="backBtn" class="mb-4 text-gray-500 hover:text-blue-600"><i class="fas fa-arrow-left"></i> Back to List</button>
-                    
-                    <div class="bg-white p-6 rounded-lg shadow-sm mb-6 border-t-4 border-blue-500 flex justify-between">
-                        <div>
-                            <h1 id="detailName" class="text-3xl font-bold text-gray-900">Project Name</h1>
-                            <p id="detailSize" class="text-gray-500 mt-1">Size: 0 A</p>
+                <div id="projectDetailPage" class="hidden pb-20">
+                    <div class="flex justify-between items-center mb-4">
+                        <button id="backBtn" class="text-gray-500 hover:text-blue-600 font-bold"><i class="fas fa-arrow-left mr-2"></i> Back</button>
+                        <div class="flex items-center gap-2">
+                            <span id="detailStatus" class="px-3 py-1 rounded-full text-xs font-bold uppercase bg-yellow-100 text-yellow-800">Development</span>
+                            <button id="endDevBtn" class="text-xs text-red-600 underline hover:text-red-800 ml-2">End Development</button>
                         </div>
-                        <div class="text-right">
-                            <span id="detailStatus" class="px-3 py-1 rounded-full text-sm font-bold uppercase block mb-2">Development</span>
-                            <button id="endDevBtn" class="text-xs text-red-600 underline hover:text-red-800">End Development</button>
+                    </div>
+                    
+                    <h1 id="detailName" class="text-3xl font-bold text-gray-900 mb-1">Project Name</h1>
+                    <p class="text-gray-500 mb-6 flex items-center"><i class="fas fa-map-marker-alt mr-2 text-blue-500"></i> <span id="detailArea">Area</span></p>
+
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
+                        <div class="flex justify-between items-center border-b pb-4 mb-4">
+                            <h3 class="font-bold text-xl text-gray-800">Financial Overview</h3>
+                            <button onclick="openExpenseModal()" class="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1 rounded text-sm font-bold border border-red-200">Add Expense</button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                            <div class="bg-green-50 p-4 rounded border border-green-100">
+                                <p class="text-xs text-green-600 uppercase font-bold">Total Sales</p>
+                                <h4 id="finIncome" class="text-2xl font-bold text-green-700">Rs. 0.00</h4>
+                            </div>
+                            <div class="bg-red-50 p-4 rounded border border-red-100">
+                                <p class="text-xs text-red-600 uppercase font-bold">Total Expenses</p>
+                                <h4 id="finExpense" class="text-2xl font-bold text-red-700">Rs. 0.00</h4>
+                            </div>
+                            <div class="bg-blue-50 p-4 rounded border border-blue-100">
+                                <p class="text-xs text-blue-600 uppercase font-bold">Net Profit</p>
+                                <h4 id="finProfit" class="text-2xl font-bold text-blue-700">Rs. 0.00</h4>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto max-h-40 overflow-y-auto">
+                            <table class="w-full text-sm text-left"><tbody id="expenseList"></tbody></table>
                         </div>
                     </div>
 
-                    <div id="devPhaseUI" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <div id="devPhaseUI" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                         <div class="bg-blue-50 p-6 rounded-lg border border-blue-100">
                             <h3 class="font-bold text-lg text-blue-800 mb-4">Add Land Blocks</h3>
                             <div class="flex gap-2 mb-2">
-                                <input type="text" id="blockName" placeholder="Block No (e.g. 01)" class="p-2 border rounded w-1/3">
-                                <input type="number" id="blockSize" placeholder="Perches" class="p-2 border rounded w-1/3">
-                                <input type="number" id="blockPrice" placeholder="Total Price" class="p-2 border rounded w-1/3">
+                                <input type="text" id="blockName" placeholder="No (e.g. A1)" class="p-2 border rounded w-1/4">
+                                <input type="number" id="blockSize" placeholder="Perches" class="p-2 border rounded w-1/4">
+                                <input type="number" id="blockPrice" placeholder="Price" class="p-2 border rounded w-1/3">
+                                <button id="addBlockBtn" class="bg-blue-600 text-white px-4 py-2 rounded">Add</button>
                             </div>
-                            <button id="addBlockBtn" class="bg-blue-600 text-white px-4 py-2 rounded w-full">Add Block</button>
                         </div>
-
                         <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
                             <h3 class="font-bold text-lg text-gray-800 mb-4">Register Vehicles</h3>
                             <div class="flex gap-2 mb-2">
@@ -113,6 +135,7 @@
                 </div>
 
                 <div id="vehicleReadingsPage" class="hidden">
+                    <h2 class="text-2xl font-bold mb-6 text-gray-800">Vehicle Meter Approvals</h2>
                     <div id="readingsList" class="space-y-4"></div>
                 </div>
             </main>
@@ -123,10 +146,25 @@
         <div class="bg-white p-6 rounded-lg w-96">
             <h2 class="text-xl font-bold mb-4">Create Project</h2>
             <input type="text" id="newProjName" placeholder="Project Name" class="w-full p-2 border rounded mb-3">
-            <input type="text" id="newProjSize" placeholder="Size" class="w-full p-2 border rounded mb-4">
+            <input type="text" id="newProjArea" placeholder="Area / City" class="w-full p-2 border rounded mb-4">
             <div class="flex justify-end gap-2">
                 <button onclick="document.getElementById('newProjectModal').classList.add('hidden')" class="px-4 py-2 text-gray-600">Cancel</button>
                 <button id="createProjBtn" class="px-4 py-2 bg-blue-600 text-white rounded">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="expenseModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg w-96 shadow-xl">
+            <h2 class="text-xl font-bold mb-4 text-red-700">Add Project Expense</h2>
+            <div class="space-y-3">
+                <input type="date" id="expDate" class="w-full p-2 border rounded">
+                <input type="text" id="expDesc" placeholder="Description" class="w-full p-2 border rounded">
+                <input type="number" id="expAmount" placeholder="Amount (Rs)" class="w-full p-2 border rounded font-bold">
+            </div>
+            <div class="flex justify-end gap-2 mt-4">
+                <button onclick="document.getElementById('expenseModal').classList.add('hidden')" class="px-4 py-2 text-gray-600">Cancel</button>
+                <button id="saveExpenseBtn" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Save</button>
             </div>
         </div>
     </div>
@@ -135,131 +173,112 @@
         <div class="bg-white p-8 rounded-xl w-full max-w-4xl my-10 shadow-2xl relative">
             <button onclick="closeSellModal()" class="absolute top-4 right-4 text-gray-500 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
             
-            <div class="border-b pb-4 mb-4 flex justify-between items-center">
-                <div>
-                    <h2 class="text-2xl font-bold text-blue-800">Sale Agreement</h2>
-                    <p class="text-gray-600">Block: <span id="sellBlockName" class="font-bold text-red-600 text-xl"></span> | Price: Rs. <span id="sellBlockListPrice"></span></p>
-                </div>
-                <div class="bg-red-50 p-2 rounded border border-red-200 text-xs w-64">
-                    <h4 class="font-bold text-red-700">Late Fee Calculator</h4>
-                    <div class="flex gap-1 mt-1">
-                        <input type="number" id="dcInstAmount" placeholder="Installment" class="w-1/3 p-1 border">
-                        <input type="number" id="dcLateDays" placeholder="Late Days" class="w-1/3 p-1 border">
-                        <button onclick="calcDefaultCharge()" class="bg-red-600 text-white px-2 rounded">Calc</button>
-                    </div>
-                    <p id="dcResult" class="font-bold mt-1 text-red-800">Charge: Rs. 0.00</p>
-                </div>
+            <div class="border-b pb-4 mb-4">
+                <h2 class="text-2xl font-bold text-blue-800">Sale Agreement</h2>
+                <p class="text-gray-600">Block: <span id="sellBlockName" class="font-bold text-red-600 text-xl"></span></p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-3">
-                    <h3 class="font-bold text-gray-700 border-b pb-1">Customer Details</h3>
-                    <input type="text" id="cusName" placeholder="Customer Name" class="w-full p-2 border rounded">
+                    <h3 class="font-bold text-gray-700 border-b pb-1">Customer</h3>
+                    <input type="text" id="cusName" placeholder="Name" class="w-full p-2 border rounded">
                     <textarea id="cusAddress" placeholder="Address" class="w-full p-2 border rounded h-16"></textarea>
                     <div class="flex gap-2">
-                        <input type="text" id="cusNIC" placeholder="NIC Number" class="w-full p-2 border rounded">
-                        <input type="text" id="cusPhone" placeholder="Phone Number" class="w-full p-2 border rounded">
+                        <input type="text" id="cusNIC" placeholder="NIC" class="w-full p-2 border rounded">
+                        <input type="text" id="cusPhone" placeholder="Phone" class="w-full p-2 border rounded">
                     </div>
                 </div>
-
                 <div class="space-y-3">
-                    <h3 class="font-bold text-gray-700 border-b pb-1">Payment & EP Plan</h3>
-                    
+                    <h3 class="font-bold text-gray-700 border-b pb-1">Payment Plan</h3>
                     <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="text-xs text-gray-500">Agreed Price</label>
-                            <input type="number" id="finalPrice" class="w-full p-2 border rounded font-bold text-blue-900" oninput="calculateEP()">
-                        </div>
-                        <div>
-                            <label class="text-xs text-gray-500">Advance Payment</label>
-                            <input type="number" id="advancePay" class="w-full p-2 border rounded font-bold text-green-700" oninput="calculateEP()">
-                        </div>
+                        <div><label class="text-xs">Price</label><input type="number" id="finalPrice" class="w-full p-2 border rounded font-bold text-blue-900" oninput="calculateEP()"></div>
+                        <div><label class="text-xs">Advance</label><input type="number" id="advancePay" class="w-full p-2 border rounded font-bold text-green-700" oninput="calculateEP()"></div>
                     </div>
-
-                    <div class="mb-2">
-                        <label class="text-xs text-gray-500">Payment Type</label>
-                        <select id="payPlanType" class="w-full p-2 border rounded" onchange="toggleEPFields()">
-                            <option value="Cash">Outright Cash</option>
-                            <option value="EP">Easy Payment (EP)</option>
-                        </select>
-                    </div>
+                    
+                    <select id="payPlanType" class="w-full p-2 border rounded mb-2" onchange="toggleEPFields()">
+                        <option value="Cash">Outright Cash</option>
+                        <option value="EP">Easy Payment (EP)</option>
+                    </select>
 
                     <div id="epFields" class="hidden bg-blue-50 p-3 rounded border border-blue-200 space-y-2">
                         <div class="flex gap-2">
-                            <div class="w-1/2">
-                                <label class="text-xs text-gray-500">Interest Rate (%)</label>
-                                <input type="number" id="epRate" value="15" class="w-full p-2 border rounded text-center" oninput="calculateEP()">
-                            </div>
-                            <div class="w-1/2">
-                                <label class="text-xs text-gray-500">Duration (Years)</label>
-                                <input type="number" id="epYears" value="5" class="w-full p-2 border rounded text-center" oninput="calculateEP()">
-                            </div>
+                            <div class="w-1/2"><label class="text-xs">Rate %</label><input type="number" id="epRate" value="15" class="w-full p-2 border rounded text-center" oninput="calculateEP()"></div>
+                            <div class="w-1/2"><label class="text-xs">Months</label><input type="number" id="epMonths" value="60" class="w-full p-2 border rounded text-center" oninput="calculateEP()"></div>
                         </div>
-                        <div class="border-t border-blue-200 pt-2 mt-2">
-                            <div class="flex justify-between text-sm"><span>Balance:</span><span id="epBalance" class="font-bold">0.00</span></div>
-                            <div class="flex justify-between text-sm"><span>Interest:</span><span id="epTotalInterest" class="font-bold text-orange-600">0.00</span></div>
-                            <div class="flex justify-between text-lg mt-1 bg-white p-2 rounded"><span class="font-bold text-blue-800">Monthly Installment:</span><span id="epMonthlyInst" class="font-bold text-blue-800">0.00</span></div>
+                        <div>
+                            <label class="text-xs text-red-500 font-bold">Daily Penalty %</label>
+                            <input type="number" id="latePenaltyRate" value="0.1" step="0.01" class="w-full p-2 border border-red-200 rounded text-center">
+                        </div>
+                        <div class="border-t pt-2 mt-2">
+                            <div class="flex justify-between text-sm"><span>Total Due:</span><span id="epTotalPayable" class="font-bold">0.00</span></div>
+                            <div class="flex justify-between text-lg mt-1 bg-white p-2 rounded"><span class="font-bold text-blue-800">Monthly:</span><span id="epMonthlyInst" class="font-bold text-blue-800">0.00</span></div>
                         </div>
                     </div>
-
-                    <div id="paymentMethodDiv">
-                         <label class="text-xs text-gray-500">Advance Method</label>
-                         <select id="payMethod" class="w-full p-2 border rounded">
-                            <option value="Cash">Cash</option>
-                            <option value="Cheque">Cheque</option>
-                            <option value="Bank Transfer">Bank Transfer</option>
-                         </select>
-                    </div>
+                    
+                    <select id="payMethod" class="w-full p-2 border rounded"><option value="Cash">Cash</option><option value="Cheque">Cheque</option><option value="Bank">Bank</option></select>
                 </div>
             </div>
 
             <div class="mt-6 flex justify-end gap-3 pt-4 border-t">
                 <button onclick="closeSellModal()" class="px-6 py-2 text-gray-600 hover:bg-gray-100 rounded">Cancel</button>
-                <button id="confirmSellBtn" class="px-6 py-2 bg-blue-700 text-white rounded hover:bg-blue-800 font-bold shadow">
-                    <i class="fas fa-file-invoice mr-2"></i> Save & Print Invoice
-                </button>
+                <button onclick="processSale(false)" class="px-6 py-2 bg-gray-800 text-white rounded hover:bg-gray-900 font-bold shadow">Save Only</button>
+                <button onclick="processSale(true)" class="px-6 py-2 bg-blue-700 text-white rounded hover:bg-blue-800 font-bold shadow"><i class="fas fa-file-pdf mr-2"></i>Save & Print PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="paymentModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 overflow-y-auto">
+        <div class="bg-white p-6 rounded-xl w-full max-w-2xl shadow-2xl relative">
+            <button onclick="document.getElementById('paymentModal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-500 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
+            
+            <div class="border-b pb-4 mb-4">
+                <h2 class="text-xl font-bold text-green-700">Manage Payments</h2>
+                <p id="payBlockInfo" class="text-gray-600 font-semibold"></p>
+                <p id="payCustomerInfo" class="text-sm text-gray-500"></p>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 mb-6 text-center">
+                <div class="bg-blue-50 p-2 rounded border border-blue-200"><p class="text-xs text-gray-500">Total Payable</p><p id="pmTotal" class="font-bold text-blue-800">0.00</p></div>
+                <div class="bg-green-50 p-2 rounded border border-green-200"><p class="text-xs text-gray-500">Paid So Far</p><p id="pmPaid" class="font-bold text-green-800">0.00</p></div>
+                <div class="bg-red-50 p-2 rounded border border-red-200"><p class="text-xs text-gray-500">Balance Due</p><p id="pmBalance" class="font-bold text-red-800">0.00</p></div>
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded mb-6 border border-gray-200">
+                <h3 class="font-bold text-sm mb-2">Record New Payment</h3>
+                <div class="flex gap-2 mb-2">
+                    <input type="date" id="newPayDate" class="w-1/3 p-2 border rounded text-sm">
+                    <input type="number" id="newPayAmount" placeholder="Amount" class="w-1/3 p-2 border rounded text-sm font-bold">
+                    <button id="submitPayBtn" class="w-1/3 bg-green-600 text-white rounded hover:bg-green-700 font-bold text-sm">Add Payment</button>
+                </div>
+                <div class="flex gap-2">
+                    <input type="number" id="newPayLateFee" placeholder="Late Fee Collected (Optional)" class="w-full p-2 border rounded text-sm border-orange-200 bg-orange-50">
+                </div>
+                <p class="text-[10px] text-gray-500 mt-1">Recording a payment extends the 'Next Due Date' by 30 days.</p>
+            </div>
+
+            <h3 class="font-bold text-sm mb-2">Payment History</h3>
+            <div class="overflow-y-auto max-h-40 border rounded">
+                <table class="w-full text-xs text-left">
+                    <thead class="bg-gray-100 uppercase text-gray-500"><tr><th class="px-4 py-2">Date</th><th class="px-4 py-2">Amount</th><th class="px-4 py-2">Late Fee</th></tr></thead>
+                    <tbody id="paymentHistoryList"></tbody>
+                </table>
             </div>
         </div>
     </div>
 
     <div id="printArea" class="hidden bg-white p-8 text-black">
         <div class="border-2 border-black p-4">
-            <div class="text-center mb-6">
-                <h1 class="text-3xl font-bold uppercase tracking-wide">Sithuliya Real Estate (Pvt) Ltd.</h1>
-                <p class="text-sm">No. 85, Ihala Kadigamuwa | Tel: 077-2338929</p>
-            </div>
-            <div class="flex justify-between border-b-2 border-black pb-2 mb-4">
-                <h2 class="text-xl font-bold underline">OFFICIAL RECEIPT</h2>
-                <div class="text-right">
-                    <p><strong>Date:</strong> <span id="pDate"></span></p>
-                    <p><strong>Receipt No:</strong> <span id="pRecNo"></span></p>
-                </div>
-            </div>
-            <div class="mb-4">
-                <p><strong>Received From:</strong> <span id="pCusName"></span></p>
-                <p><strong>Sum of Rupees:</strong> <span id="pAmountFig" class="font-bold text-xl ml-2"></span></p>
-                <p class="italic text-sm text-gray-600">(Being advance payment for land block)</p>
-            </div>
-            <div class="grid grid-cols-2 gap-4 border-t border-b border-black py-4 mb-4">
-                <div>
-                    <p><strong>Project:</strong> <span id="pProject"></span></p>
-                    <p><strong>Block No:</strong> <span id="pBlock"></span></p>
-                </div>
-                <div id="pEPDetails" class="hidden">
-                    <p><strong>Monthly Installment:</strong> <span id="pInstallment"></span></p>
-                    <p><strong>Next Payment Date:</strong> <span id="pNextDate"></span></p>
-                </div>
-            </div>
-            <div class="mt-12 flex justify-between items-end">
-                <div class="text-center"><p class="border-t border-black w-48 pt-2">Customer Signature</p></div>
-                <div class="text-center"><p class="border-t border-black w-48 pt-2">Authorized Signature</p></div>
-            </div>
+            <div class="text-center mb-6"><h1 class="text-3xl font-bold uppercase">Sithuliya Real Estate</h1><p>No. 85, Ihala Kadigamuwa | 077-2338929</p></div>
+            <div class="flex justify-between border-b-2 border-black pb-2 mb-4"><h2 class="text-xl font-bold underline">OFFICIAL RECEIPT</h2><div class="text-right"><p>Date: <span id="pDate"></span></p><p>No: <span id="pRecNo"></span></p></div></div>
+            <div class="mb-4"><p>Received From: <span id="pCusName"></span></p><p>Amount: <span id="pAmountFig" class="font-bold text-xl ml-2"></span></p></div>
+            <div class="grid grid-cols-2 gap-4 border-t border-b border-black py-4 mb-4"><div><p>Project: <span id="pProject"></span></p><p>Block: <span id="pBlock"></span></p></div><div id="pEPDetails" class="hidden"><p>Monthly: <span id="pInstallment"></span></p><p>Next Due: <span id="pNextDate"></span></p></div></div>
+            <div class="mt-12 flex justify-between items-end"><div class="text-center w-48 border-t border-black pt-2">Customer</div><div class="text-center w-48 border-t border-black pt-2">Cashier</div></div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-        import { getFirestore, collection, collectionGroup, addDoc, onSnapshot, query, where, orderBy, doc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+        import { getFirestore, collection, collectionGroup, addDoc, deleteDoc, onSnapshot, query, where, orderBy, doc, updateDoc, arrayUnion, getDoc } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAlhMTQ-_sorFg_0ULpjf9kvjuIAWQkDVY",
@@ -275,110 +294,82 @@
         const db = getFirestore(app);
 
         // --- GLOBAL UI HELPERS ---
+        window.viewImage = (src) => { document.getElementById('imgModalSrc').src = src; document.getElementById('imgModal').classList.remove('hidden'); };
+        window.closeImgModal = () => document.getElementById('imgModal').classList.add('hidden');
         window.closeSellModal = () => document.getElementById('sellModal').classList.add('hidden');
-        window.toggleNotifPanel = () => {
-            const panel = document.getElementById('notifPanel');
-            panel.classList.toggle('hidden');
-        };
-
+        window.openExpenseModal = () => { document.getElementById('expDate').valueAsDate = new Date(); document.getElementById('expenseModal').classList.remove('hidden'); };
+        window.toggleNotifPanel = () => document.getElementById('notifPanel').classList.toggle('hidden');
+        
         window.toggleEPFields = () => {
-            const plan = document.getElementById('payPlanType').value;
-            if(plan === 'EP') {
-                document.getElementById('epFields').classList.remove('hidden');
-                window.calculateEP();
-            } else {
-                document.getElementById('epFields').classList.add('hidden');
-            }
+            if(document.getElementById('payPlanType').value === 'EP') {
+                document.getElementById('epFields').classList.remove('hidden'); window.calculateEP();
+            } else { document.getElementById('epFields').classList.add('hidden'); }
         };
 
         window.calculateEP = () => {
             const price = parseFloat(document.getElementById('finalPrice').value) || 0;
             const advance = parseFloat(document.getElementById('advancePay').value) || 0;
             const rate = parseFloat(document.getElementById('epRate').value) || 15;
-            const years = parseFloat(document.getElementById('epYears').value) || 5;
-
+            const months = parseFloat(document.getElementById('epMonths').value) || 60;
+            
             const balance = price - advance;
             if(balance < 0) return;
-
+            const years = months / 12;
             const totalInterest = balance * (rate / 100) * years;
-            const totalMonths = years * 12;
-            const monthlyInst = (balance + totalInterest) / totalMonths;
+            const totalPayable = balance + totalInterest;
+            const monthlyInst = totalPayable / months;
 
-            document.getElementById('epBalance').innerText = balance.toFixed(2);
-            document.getElementById('epTotalInterest').innerText = totalInterest.toFixed(2);
+            document.getElementById('epTotalPayable').innerText = totalPayable.toFixed(2);
             document.getElementById('epMonthlyInst').innerText = monthlyInst.toFixed(2);
         };
 
-        window.calcDefaultCharge = () => {
-            const inst = parseFloat(document.getElementById('dcInstAmount').value) || 0;
-            const days = parseFloat(document.getElementById('dcLateDays').value) || 0;
-            const charge = (inst * 0.04 / 30) * days;
-            document.getElementById('dcResult').innerText = "Charge: Rs. " + charge.toFixed(2);
-        };
-
-        // --- LOGIN ---
-        const pinPad = document.getElementById('pinPad');
-        const pinInput = document.getElementById('pinInput');
+        // --- AUTH ---
+        const pinPad = document.getElementById('pinPad'); const pinInput = document.getElementById('pinInput');
         [1,2,3,4,5,6,7,8,9,0].forEach(num => {
-            const btn = document.createElement('button');
-            btn.className = "h-16 w-16 bg-gray-200 rounded-full text-xl font-bold hover:bg-gray-300";
-            btn.innerText = num;
-            btn.onclick = () => { if(pinInput.value.length < 4) pinInput.value += num; };
-            pinPad.appendChild(btn);
+            const btn = document.createElement('button'); btn.className = "h-16 w-16 bg-gray-200 rounded-full text-xl font-bold hover:bg-gray-300"; btn.innerText = num;
+            btn.onclick = () => { if(pinInput.value.length < 4) pinInput.value += num; }; pinPad.appendChild(btn);
         });
         const goBtn = document.createElement('button'); goBtn.innerHTML = "GO"; goBtn.className="h-16 w-16 bg-green-500 text-white rounded-full font-bold";
         goBtn.onclick = () => { 
-            if(pinInput.value=="1234"){ document.getElementById('loginScreen').classList.add('hidden'); document.getElementById('mainApp').classList.remove('hidden'); startRealTimeListeners(); } 
-            else { pinInput.value=""; alert("Invalid PIN"); }
-        };
-        pinPad.appendChild(goBtn);
+            if(pinInput.value=="1234"){ document.getElementById('loginScreen').classList.add('hidden'); document.getElementById('mainApp').classList.remove('hidden'); loadProjects(); loadReadings(); listenForOverduePayments(); } 
+        }; pinPad.appendChild(goBtn);
 
-        // --- START ALL LISTENERS ---
-        function startRealTimeListeners() {
-            loadProjects();
-            loadReadings();
-            listenForOverduePayments(); // New Real-time Notification listener
-        }
+        // --- SEARCH ---
+        document.getElementById('projSearch').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            document.querySelectorAll('.project-item').forEach(item => {
+                const name = item.getAttribute('data-name'); const area = item.getAttribute('data-area');
+                item.style.display = (name.includes(term) || area.includes(term)) ? "block" : "none";
+            });
+        });
 
         // --- NAVIGATION ---
-        const navProj = document.getElementById('navProjects');
-        const navVeh = document.getElementById('navVehicles');
-        navProj.addEventListener('click', () => {
-            document.getElementById('projectsPage').classList.remove('hidden');
-            document.getElementById('vehicleReadingsPage').classList.add('hidden');
-            document.getElementById('projectDetailPage').classList.add('hidden');
-        });
-        navVeh.addEventListener('click', () => {
-            document.getElementById('projectsPage').classList.add('hidden');
-            document.getElementById('vehicleReadingsPage').classList.remove('hidden');
-            document.getElementById('projectDetailPage').classList.add('hidden');
-        });
+        const navProj = document.getElementById('navProjects'); const navVeh = document.getElementById('navVehicles');
+        navProj.addEventListener('click', () => { document.getElementById('projectsPage').classList.remove('hidden'); document.getElementById('vehicleReadingsPage').classList.add('hidden'); document.getElementById('projectDetailPage').classList.add('hidden'); });
+        navVeh.addEventListener('click', () => { document.getElementById('projectsPage').classList.add('hidden'); document.getElementById('vehicleReadingsPage').classList.remove('hidden'); document.getElementById('projectDetailPage').classList.add('hidden'); });
         document.getElementById('openNewProjModal').addEventListener('click', ()=>document.getElementById('newProjectModal').classList.remove('hidden'));
         document.getElementById('backBtn').addEventListener('click', ()=> navProj.click());
 
-        // --- PROJECTS LOGIC ---
-        let currentProjId = null;
-        let currentProjName = "";
-        let selectedBlockId = null;
-        let selectedBlockData = null;
+        // --- PROJECTS ---
+        let currentProjId = null; let currentProjName = ""; let selectedBlockId = null; let selectedBlockData = null;
 
         document.getElementById('createProjBtn').addEventListener('click', async () => {
             const name = document.getElementById('newProjName').value;
-            const size = document.getElementById('newProjSize').value;
-            if(!name) return;
-            await addDoc(collection(db, "projects"), { name, size, status: 'development', createdAt: new Date(), assignedVehicles: [] });
+            const area = document.getElementById('newProjArea').value;
+            if(!name || !area) return;
+            await addDoc(collection(db, "projects"), { name, area, status: 'development', createdAt: new Date(), assignedVehicles: [] });
             document.getElementById('newProjectModal').classList.add('hidden');
         });
 
         function loadProjects() {
             onSnapshot(query(collection(db, "projects"), orderBy("createdAt", "desc")), (snap) => {
-                const grid = document.getElementById('projectGrid');
-                grid.innerHTML = "";
+                const grid = document.getElementById('projectGrid'); grid.innerHTML = "";
                 snap.forEach(docSnap => {
                     const d = docSnap.data();
                     const el = document.createElement('div');
-                    el.className = "bg-white p-6 rounded-lg shadow hover:shadow-lg cursor-pointer border border-gray-100 relative";
-                    el.innerHTML = `<h3 class="font-bold text-lg">${d.name}</h3><p class="text-sm text-gray-500">${d.size}</p><span class="text-xs uppercase bg-gray-100 px-2 py-1 rounded absolute top-6 right-6">${d.status}</span>`;
+                    el.className = "project-item bg-white p-6 rounded-lg shadow hover:shadow-lg cursor-pointer border border-gray-100 relative";
+                    el.setAttribute('data-name', d.name.toLowerCase()); el.setAttribute('data-area', (d.area || "").toLowerCase());
+                    el.innerHTML = `<h3 class="font-bold text-lg">${d.name}</h3><p class="text-sm text-gray-500"><i class="fas fa-map-marker-alt mr-1"></i> ${d.area}</p><span class="text-xs uppercase bg-gray-100 px-2 py-1 rounded absolute top-6 right-6">${d.status}</span>`;
                     el.onclick = () => openProject(docSnap.id, d);
                     grid.appendChild(el);
                 });
@@ -386,256 +377,203 @@
         }
 
         function openProject(id, data) {
-            currentProjId = id;
-            currentProjName = data.name;
-            document.getElementById('projectsPage').classList.add('hidden');
-            document.getElementById('projectDetailPage').classList.remove('hidden');
-            document.getElementById('detailName').innerText = data.name;
-            document.getElementById('detailSize').innerText = data.size;
-
+            currentProjId = id; currentProjName = data.name;
+            document.getElementById('projectsPage').classList.add('hidden'); document.getElementById('projectDetailPage').classList.remove('hidden');
+            document.getElementById('detailName').innerText = data.name; document.getElementById('detailArea').innerText = data.area;
             const isDev = data.status === 'development';
-            if(isDev) {
-                document.getElementById('devPhaseUI').classList.remove('hidden');
-                document.getElementById('endDevBtn').classList.remove('hidden');
-            } else {
-                document.getElementById('devPhaseUI').classList.add('hidden');
-                document.getElementById('endDevBtn').classList.add('hidden');
-            }
-
-            const vList = document.getElementById('vehicleList');
-            vList.innerHTML = "";
-            (data.assignedVehicles || []).forEach(v => vList.innerHTML += `<li>${v}</li>`);
-
-            loadBlocks(id, isDev);
+            document.getElementById('devPhaseUI').style.display = isDev ? 'grid' : 'none'; document.getElementById('endDevBtn').style.display = isDev ? 'inline' : 'none';
+            const vList = document.getElementById('vehicleList'); vList.innerHTML = ""; (data.assignedVehicles || []).forEach(v => vList.innerHTML += `<li>${v}</li>`);
+            loadBlocks(id, isDev); loadExpenses(id);
         }
 
         document.getElementById('addBlockBtn').addEventListener('click', async () => {
-            const name = document.getElementById('blockName').value;
-            const size = document.getElementById('blockSize').value;
-            const price = document.getElementById('blockPrice').value;
+            const name = document.getElementById('blockName').value; const size = document.getElementById('blockSize').value; const price = document.getElementById('blockPrice').value;
             if(!name) return;
             await addDoc(collection(db, `projects/${currentProjId}/blocks`), { name, size, price, status: "available" });
             document.getElementById('blockName').value = "";
         });
 
         document.getElementById('regVehicleBtn').addEventListener('click', async () => {
-            const vNo = document.getElementById('regVehicleNo').value.toUpperCase();
-            if(!vNo) return;
-            await updateDoc(doc(db, "projects", currentProjId), { assignedVehicles: arrayUnion(vNo) });
-            document.getElementById('regVehicleNo').value = "";
+            const vNo = document.getElementById('regVehicleNo').value.toUpperCase(); if(!vNo) return;
+            await updateDoc(doc(db, "projects", currentProjId), { assignedVehicles: arrayUnion(vNo) }); document.getElementById('regVehicleNo').value = "";
         });
 
         document.getElementById('endDevBtn').addEventListener('click', async () => {
-            if(confirm("End Development? Sales will start.")) {
-                await updateDoc(doc(db, "projects", currentProjId), { status: "sales" });
-                // We reload visually by calling openProject again with updated status
-                openProject(currentProjId, {name: currentProjName, size: document.getElementById('detailSize').innerText, status: 'sales', assignedVehicles: []}); 
-            }
+            if(confirm("End Development? Sales will start.")) { await updateDoc(doc(db, "projects", currentProjId), { status: "sales" }); openProject(currentProjId, {name: currentProjName, area: document.getElementById('detailArea').innerText, status: 'sales', assignedVehicles: []}); }
         });
 
+        // --- EXPENSES ---
+        document.getElementById('saveExpenseBtn').addEventListener('click', async () => {
+            const desc = document.getElementById('expDesc').value; const amount = parseFloat(document.getElementById('expAmount').value); const date = document.getElementById('expDate').value;
+            if(!desc || !amount) return;
+            await addDoc(collection(db, `projects/${currentProjId}/expenses`), { description: desc, amount, date, createdAt: new Date() });
+            document.getElementById('expenseModal').classList.add('hidden');
+        });
+
+        function loadExpenses(pid) {
+            onSnapshot(query(collection(db, `projects/${pid}/expenses`), orderBy("date", "desc")), (snap) => {
+                const list = document.getElementById('expenseList'); list.innerHTML = ""; let totalExp = 0;
+                snap.forEach(d => { const e = d.data(); totalExp += parseFloat(e.amount); list.innerHTML += `<tr class="bg-white border-b"><td class="px-4 py-2">${e.date}</td><td class="px-4 py-2 font-medium">${e.description}</td><td class="px-4 py-2 text-right">Rs. ${e.amount.toLocaleString()}</td></tr>`; });
+                document.getElementById('finExpense').innerText = "Rs. " + totalExp.toLocaleString();
+            });
+            onSnapshot(collection(db, `projects/${pid}/blocks`), (snap) => {
+                let totalIncome = 0; snap.forEach(d => { const b = d.data(); if(b.status === 'sold' && b.soldPrice) totalIncome += parseFloat(b.soldPrice); });
+                document.getElementById('finIncome').innerText = "Rs. " + totalIncome.toLocaleString();
+            });
+        }
+
+        // --- BLOCKS & SALES LOGIC ---
         function loadBlocks(pid, isDevMode) {
             const container = document.getElementById('blocksContainer');
-            // Real-time listener for blocks
             onSnapshot(collection(db, `projects/${pid}/blocks`), (snap) => {
                 container.innerHTML = "";
                 snap.forEach(d => {
-                    const b = d.data();
-                    const isSold = b.status === 'sold';
+                    const b = d.data(); const isSold = b.status === 'sold';
                     const el = document.createElement('div');
-                    let statusColor = "bg-white border-blue-200 hover:bg-blue-50";
-                    if(isSold) statusColor = "bg-red-100 border-red-200";
-                    
+                    let statusColor = isSold ? "bg-red-100 border-red-200" : "bg-white border-blue-200 hover:bg-blue-50";
                     el.className = `p-4 border rounded shadow-sm text-center cursor-pointer transition relative overflow-hidden ${statusColor}`;
-                    el.innerHTML = `
-                        <h4 class="font-bold text-lg">${b.name}</h4>
-                        <p class="text-xs text-gray-500">${b.size} P</p>
-                        <p class="font-bold ${isSold ? 'text-red-600' : 'text-blue-600'}">${isSold ? 'SOLD' : 'Rs.'+b.price}</p>
-                        ${isSold ? '<div class="absolute inset-0 bg-gray-500 bg-opacity-10 flex items-center justify-center"><i class="fas fa-lock text-3xl text-red-500 opacity-50"></i></div>' : ''}
-                    `;
-                    
-                    if(!isSold && !isDevMode) {
-                        el.onclick = () => {
-                            selectedBlockId = d.id;
-                            selectedBlockData = b;
-                            openSellModal();
-                        }
+                    el.innerHTML = `<h4 class="font-bold text-lg">${b.name}</h4><p class="text-xs text-gray-500">${b.size} P</p><p class="font-bold ${isSold?'text-red-600':'text-blue-600'}">${isSold?'SOLD':'Rs.'+b.price}</p>`;
+                    if(!isDevMode) {
+                        el.onclick = () => { selectedBlockId = d.id; selectedBlockData = b; if(isSold) openPaymentModal(b); else openSellModal(); };
                     }
                     container.appendChild(el);
                 });
             });
         }
 
-        // --- SALES & REAL-TIME NOTIFICATION LOGIC ---
         function openSellModal() {
             document.getElementById('sellModal').classList.remove('hidden');
             document.getElementById('sellBlockName').innerText = selectedBlockData.name;
-            document.getElementById('sellBlockListPrice').innerText = selectedBlockData.price;
             document.getElementById('finalPrice').value = selectedBlockData.price;
-            document.getElementById('cusName').value = "";
-            document.getElementById('advancePay').value = "";
-            document.getElementById('payPlanType').value = "Cash";
-            toggleEPFields();
+            document.getElementById('cusName').value = ""; document.getElementById('advancePay').value = "";
+            document.getElementById('payPlanType').value = "Cash"; toggleEPFields();
         }
 
-        document.getElementById('confirmSellBtn').addEventListener('click', async () => {
+        window.processSale = async (shouldPrint) => {
             const cusName = document.getElementById('cusName').value;
-            const advance = parseFloat(document.getElementById('advancePay').value) || 0;
-            const finalPrice = parseFloat(document.getElementById('finalPrice').value) || 0;
+            const advance = parseFloat(document.getElementById('advancePay').value);
+            const finalPrice = parseFloat(document.getElementById('finalPrice').value);
             const planType = document.getElementById('payPlanType').value;
             
-            let epData = {};
-            let nextPayDate = null;
-
+            let epData = {}, nextDate = null;
             if(planType === 'EP') {
                 epData = {
                     rate: document.getElementById('epRate').value,
-                    years: document.getElementById('epYears').value,
-                    monthlyInst: document.getElementById('epMonthlyInst').innerText
+                    months: document.getElementById('epMonths').value,
+                    monthlyInst: document.getElementById('epMonthlyInst').innerText,
+                    latePenaltyRate: document.getElementById('latePenaltyRate').value,
+                    totalPayable: parseFloat(document.getElementById('epTotalPayable').innerText),
+                    paidAmount: advance
                 };
-                // Calculate next payment date (Today + 30 Days)
-                const d = new Date();
-                d.setDate(d.getDate() + 30);
-                nextPayDate = d;
+                const d = new Date(); d.setDate(d.getDate()+30); nextDate = d;
             }
 
-            if(!cusName || !advance) return alert("Fill customer name & advance.");
+            if(!cusName || !advance) return alert("Missing details");
 
-            const saleData = {
+            await updateDoc(doc(db, `projects/${currentProjId}/blocks/${selectedBlockId}`), {
                 status: 'sold',
+                soldPrice: finalPrice,
                 customer: { name: cusName, address: document.getElementById('cusAddress').value, nic: document.getElementById('cusNIC').value, phone: document.getElementById('cusPhone').value },
-                payment: {
-                    totalPrice: finalPrice,
-                    advancePaid: advance,
-                    planType: planType,
-                    epDetails: epData,
-                    method: document.getElementById('payMethod').value,
-                    nextPaymentDate: nextPayDate // Saving the due date for notifications
-                },
+                payment: { totalPrice: finalPrice, advancePaid: advance, planType, epDetails: epData, nextPaymentDate: nextDate, history: [{date: new Date(), amount: advance, type: 'Advance', lateFee: 0}] },
                 soldDate: new Date()
-            };
+            });
 
-            try {
-                await updateDoc(doc(db, `projects/${currentProjId}/blocks/${selectedBlockId}`), saleData);
-                
-                // Invoice Printing Logic
+            if(shouldPrint) {
                 document.getElementById('pDate').innerText = new Date().toLocaleDateString();
-                document.getElementById('pRecNo').innerText = Math.floor(Math.random() * 10000);
+                document.getElementById('pRecNo').innerText = Math.floor(Math.random()*10000);
                 document.getElementById('pCusName').innerText = cusName;
                 document.getElementById('pAmountFig').innerText = "Rs. " + advance.toLocaleString();
                 document.getElementById('pProject').innerText = currentProjName;
                 document.getElementById('pBlock').innerText = selectedBlockData.name;
-
                 if(planType === 'EP') {
                     document.getElementById('pEPDetails').classList.remove('hidden');
                     document.getElementById('pInstallment').innerText = "Rs. " + epData.monthlyInst;
-                    document.getElementById('pNextDate').innerText = nextPayDate.toLocaleDateString();
-                } else {
-                    document.getElementById('pEPDetails').classList.add('hidden');
-                }
-
+                    document.getElementById('pNextDate').innerText = nextDate.toLocaleDateString();
+                } else document.getElementById('pEPDetails').classList.add('hidden');
                 window.print();
-                closeSellModal();
-
-            } catch (e) {
-                console.error(e);
-                alert("Error saving sale.");
             }
+            closeSellModal();
+        };
+
+        // --- PAYMENT MANAGEMENT ---
+        window.openPaymentModal = (data) => {
+            document.getElementById('paymentModal').classList.remove('hidden');
+            document.getElementById('payBlockInfo').innerText = `Block: ${data.name}`;
+            document.getElementById('payCustomerInfo').innerText = `Customer: ${data.customer.name}`;
+            document.getElementById('newPayDate').valueAsDate = new Date();
+            document.getElementById('newPayAmount').value = ""; document.getElementById('newPayLateFee').value = "";
+
+            if(data.payment.planType === 'EP') {
+                const total = data.payment.epDetails.totalPayable;
+                const paid = data.payment.epDetails.paidAmount || 0;
+                document.getElementById('pmTotal').innerText = total.toLocaleString();
+                document.getElementById('pmPaid').innerText = paid.toLocaleString();
+                document.getElementById('pmBalance').innerText = (total - paid).toLocaleString();
+            } else {
+                document.getElementById('pmTotal').innerText = data.soldPrice;
+                document.getElementById('pmPaid').innerText = data.soldPrice;
+                document.getElementById('pmBalance').innerText = "0.00";
+            }
+
+            const histList = document.getElementById('paymentHistoryList'); histList.innerHTML = "";
+            (data.payment.history || []).forEach(h => {
+                const date = h.date.seconds ? new Date(h.date.seconds*1000) : new Date(h.date);
+                histList.innerHTML += `<tr class="border-b"><td class="px-4 py-2">${date.toLocaleDateString()}</td><td class="px-4 py-2 font-bold">${h.amount.toLocaleString()}</td><td class="px-4 py-2 text-red-500">${h.lateFee || '-'}</td></tr>`;
+            });
+        };
+
+        document.getElementById('submitPayBtn').addEventListener('click', async () => {
+            const amount = parseFloat(document.getElementById('newPayAmount').value);
+            const lateFee = parseFloat(document.getElementById('newPayLateFee').value) || 0;
+            const payDate = document.getElementById('newPayDate').value;
+            if(!amount) return alert("Enter amount");
+
+            const blockRef = doc(db, `projects/${currentProjId}/blocks/${selectedBlockId}`);
+            const blockSnap = await getDoc(blockRef);
+            const b = blockSnap.data();
+
+            if(b.payment.planType !== 'EP') return alert("Only EP plans accept installments here.");
+
+            const newPaid = (b.payment.epDetails.paidAmount || 0) + amount;
+            const nextD = new Date(); nextD.setDate(nextD.getDate() + 30);
+
+            await updateDoc(blockRef, {
+                "payment.epDetails.paidAmount": newPaid,
+                "payment.nextPaymentDate": nextD,
+                "payment.history": arrayUnion({ date: new Date(payDate), amount, type: 'Installment', lateFee })
+            });
+
+            alert("Payment Recorded!");
+            document.getElementById('paymentModal').classList.add('hidden');
         });
 
-        // --- NEW: LISTEN FOR OVERDUE PAYMENTS (Real-time) ---
-        function listenForOverduePayments() {
-            // Using Collection Group Query to search ALL blocks in ALL projects
-            // NOTE: This might require creating an index in Firebase Console. (Check Console logs if it fails)
-            const today = new Date();
-            
-            // Getting all sold EP blocks
-            const q = query(collectionGroup(db, 'blocks'), 
-                where('status', '==', 'sold'),
-                where('payment.planType', '==', 'EP')
-            );
-
-            onSnapshot(q, (snapshot) => {
-                const notifList = document.getElementById('notifList');
-                const badge = document.getElementById('notifBadge');
-                const bell = document.getElementById('bellIcon');
-                
-                let overdueCount = 0;
-                notifList.innerHTML = "";
-
-                snapshot.forEach(docSnap => {
-                    const data = docSnap.data();
-                    if(data.payment && data.payment.nextPaymentDate) {
-                        // Convert Firestore Timestamp to Date
-                        const dueDate = data.payment.nextPaymentDate.toDate();
-                        
-                        // Check if Overdue
-                        if(today > dueDate) {
-                            overdueCount++;
-                            const div = document.createElement('div');
-                            div.className = "p-3 border-b hover:bg-red-50 cursor-pointer";
-                            div.innerHTML = `
-                                <div class="flex justify-between items-start">
-                                    <h4 class="font-bold text-gray-800">${data.customer.name}</h4>
-                                    <span class="text-xs text-red-600 font-bold">OVERDUE</span>
-                                </div>
-                                <p class="text-xs text-gray-600">Block: ${data.name} | Inst: ${data.payment.epDetails.monthlyInst}</p>
-                                <p class="text-xs text-red-500 mt-1">Due: ${dueDate.toLocaleDateString()}</p>
-                                <button onclick="markPaid('${docSnap.ref.path}')" class="mt-2 bg-blue-600 text-white text-xs px-2 py-1 rounded">Update Payment</button>
-                            `;
-                            notifList.appendChild(div);
-                        }
-                    }
+        // --- READINGS & NOTIFICATIONS ---
+        function loadReadings() {
+            onSnapshot(query(collection(db, "meter_readings"), orderBy("timestamp", "desc")), (snap) => {
+                const list = document.getElementById('readingsList'); list.innerHTML = "";
+                snap.forEach(d => {
+                    const r = d.data(); const isApp = r.status === 'approved';
+                    const el = document.createElement('div'); el.className = "bg-white p-4 rounded shadow flex gap-4 border";
+                    el.innerHTML = `<div class="relative group cursor-zoom-in" onclick="viewImage('${r.imageBase64}')"><img src="${r.imageBase64}" class="w-32 h-32 object-cover border rounded hover:opacity-90 transition"><div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none"><i class="fas fa-search-plus text-white text-2xl drop-shadow-md"></i></div></div><div class="flex-1"><div class="flex justify-between"><h4 class="font-bold text-lg">${r.vehicleNo}</h4><span class="text-sm text-gray-500">${r.projectName}</span></div><p class="text-sm text-gray-500 mb-2">${new Date(r.timestamp?.seconds*1000).toLocaleString()}</p>${isApp ? '<span class="bg-green-100 text-green-700 px-3 py-1 rounded font-bold">Approved ✅</span>' : `<button id="btn-${d.id}" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 font-bold shadow">Approve</button>`}</div>`;
+                    list.appendChild(el);
+                    if(!isApp) document.getElementById(`btn-${d.id}`).addEventListener('click', async ()=> await updateDoc(doc(db, "meter_readings", d.id), { status: 'approved' }));
                 });
-
-                // Update UI Badge
-                if(overdueCount > 0) {
-                    badge.innerText = overdueCount;
-                    badge.classList.remove('hidden');
-                    bell.classList.add('text-red-600', 'animate-bell');
-                } else {
-                    badge.classList.add('hidden');
-                    bell.classList.remove('text-red-600', 'animate-bell');
-                    notifList.innerHTML = '<p class="text-center text-gray-500 py-4 text-sm">No overdue payments.</p>';
-                }
             });
         }
 
-        // --- HELPER to Update Payment Date (Remove Notification) ---
-        window.markPaid = async (docPath) => {
-            if(confirm("Confirm payment received? This will update the Next Due Date to next month.")) {
-                // We need to fetch the doc to get current nextDate, adding 30 days
-                // For simplicity, I'm just creating a reference path manually or logic
-                // Since I can't easily import 'doc' inside this HTML string function without messy scope,
-                // Ideally this function should be properly scoped.
-                // FIX: Let's assume user manually handles it for now or we build a proper Pay Modal later.
-                // Simplest Fix: Update date + 30 days
-                alert("Please go to Project > Block details to record full payment. (Feature coming in next update)");
-            }
-        };
-
-        // --- READINGS ---
-        function loadReadings() {
-            const list = document.getElementById('readingsList');
-            onSnapshot(query(collection(db, "meter_readings"), orderBy("timestamp", "desc")), (snap) => {
-                list.innerHTML = "";
+        function listenForOverduePayments() {
+            const q = query(collectionGroup(db, 'blocks'), where('status','==','sold'), where('payment.planType','==','EP'));
+            onSnapshot(q, (snap) => {
+                const list = document.getElementById('notifList'); const badge = document.getElementById('notifBadge');
+                const today = new Date(); let count = 0; list.innerHTML = "";
                 snap.forEach(d => {
-                    const r = d.data();
-                    const isApp = r.status === 'approved';
-                    const el = document.createElement('div');
-                    el.className = "bg-white p-4 rounded shadow flex gap-4 border";
-                    el.innerHTML = `
-                        <img src="${r.imageBase64}" class="w-24 h-24 object-cover border">
-                        <div>
-                            <h4 class="font-bold">${r.vehicleNo}</h4>
-                            <p class="text-sm">${new Date(r.timestamp?.seconds*1000).toLocaleString()}</p>
-                            ${isApp ? '<span class="text-green-600 font-bold">Approved</span>' : `<button id="btn-${d.id}" class="bg-green-600 text-white px-3 py-1 mt-2 rounded">Approve</button>`}
-                        </div>
-                    `;
-                    list.appendChild(el);
-                    if(!isApp) {
-                        document.getElementById(`btn-${d.id}`).addEventListener('click', async () => await updateDoc(doc(db, "meter_readings", d.id), { status: 'approved' }));
+                    const data = d.data();
+                    if(data.payment?.nextPaymentDate && today > data.payment.nextPaymentDate.toDate()) {
+                        count++; list.innerHTML += `<div class="p-3 border-b hover:bg-red-50"><div class="flex justify-between"><h4 class="font-bold">${data.customer.name}</h4><span class="text-xs text-red-600 font-bold">OVERDUE</span></div><p class="text-xs">Due: ${data.payment.nextPaymentDate.toDate().toLocaleDateString()}</p></div>`;
                     }
                 });
+                if(count > 0) { badge.innerText = count; badge.classList.remove('hidden'); document.getElementById('bellIcon').classList.add('text-red-600','animate-bell'); }
+                else { badge.classList.add('hidden'); document.getElementById('bellIcon').classList.remove('text-red-600','animate-bell'); list.innerHTML = "<p class='text-center text-gray-400 p-4 text-xs'>No alerts</p>"; }
             });
         }
     </script>
