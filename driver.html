@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Driver App</title>
+    <title>Driver App - Live Camera</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* Mobile Specific Tweaks */
         body { -webkit-tap-highlight-color: transparent; }
-        .touch-action-manipulation { touch-action: manipulation; }
+        /* Prevent Gallery access styling tweaks if needed */
     </style>
 </head>
 <body class="bg-gray-900 text-white h-screen flex flex-col">
 
-    <div class="bg-gray-800 p-4 shadow-md z-10 sticky top-0">
-        <h1 class="text-xl font-bold text-center text-blue-400">Driver Portal</h1>
+    <div class="bg-gray-800 p-4 shadow-md sticky top-0 z-20 flex justify-between items-center">
+        <h1 class="text-xl font-bold text-blue-400"><i class="fas fa-camera mr-2"></i>Meter Cam</h1>
+        <div id="connectionStatus" class="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
     </div>
 
     <div class="flex-1 overflow-y-auto p-4 pb-24">
@@ -25,59 +25,56 @@
                 
                 <label class="text-xs text-gray-400 uppercase font-bold tracking-wider">Project</label>
                 <div class="relative mb-4 mt-1">
-                    <select id="projectSelect" class="w-full bg-gray-700 p-3 rounded-lg text-white appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg">
-                        <option value="">Select Project...</option>
+                    <select id="projectSelect" class="w-full bg-gray-700 p-3 rounded-lg text-white appearance-none focus:ring-2 focus:ring-blue-500 text-lg border border-gray-600">
+                        <option value="">Loading Projects...</option>
                     </select>
                     <i class="fas fa-chevron-down absolute right-4 top-4 text-gray-400 pointer-events-none"></i>
                 </div>
 
                 <label class="text-xs text-gray-400 uppercase font-bold tracking-wider">Vehicle</label>
                 <div class="relative mb-6 mt-1">
-                    <select id="vehicleSelect" disabled class="w-full bg-gray-700 p-3 rounded-lg text-white appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg disabled:opacity-50">
+                    <select id="vehicleSelect" disabled class="w-full bg-gray-700 p-3 rounded-lg text-white appearance-none focus:ring-2 focus:ring-blue-500 text-lg disabled:opacity-50 border border-gray-600">
                         <option value="">Select Project First</option>
                     </select>
                     <i class="fas fa-truck absolute right-4 top-4 text-gray-400 pointer-events-none"></i>
                 </div>
 
-                <label class="block mb-4 w-full h-48 border-2 border-dashed border-gray-600 rounded-xl flex flex-col items-center justify-center cursor-pointer active:bg-gray-700 hover:border-blue-500 transition-colors bg-gray-750 relative overflow-hidden">
+                <label class="block mb-4 w-full aspect-[4/3] border-2 border-dashed border-gray-500 rounded-xl flex flex-col items-center justify-center cursor-pointer active:bg-gray-700 bg-gray-750 relative overflow-hidden group">
                     <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden"> 
                     
-                    <div id="cameraPlaceholder" class="flex flex-col items-center">
-                        <i class="fas fa-camera text-4xl mb-2 text-gray-400"></i>
-                        <span class="text-sm text-gray-300 font-medium">Tap to Photo</span>
+                    <div id="cameraPlaceholder" class="flex flex-col items-center group-active:scale-95 transition">
+                        <div class="w-16 h-16 rounded-full bg-blue-600 flex items-center justify-center mb-2 shadow-lg shadow-blue-500/30">
+                            <i class="fas fa-camera text-2xl text-white"></i>
+                        </div>
+                        <span class="text-sm text-gray-300 font-medium">Tap to Open Camera</span>
+                        <span class="text-xs text-gray-500 mt-1">(Live Photo Only)</span>
                     </div>
+                    
                     <img id="previewImg" class="hidden absolute inset-0 w-full h-full object-cover">
+                    
+                    <div id="timestampOverlay" class="hidden absolute bottom-0 left-0 right-0 bg-black/60 p-2 text-center">
+                        <p class="text-xs text-yellow-400 font-mono" id="timeText"></p>
+                    </div>
                 </label>
 
-                <button id="uploadBtn" class="w-full bg-blue-600 py-4 rounded-xl font-bold text-lg hover:bg-blue-500 active:scale-95 transition transform shadow-lg flex justify-center items-center touch-action-manipulation">
-                    SUBMIT READING
+                <button id="uploadBtn" disabled class="w-full bg-gray-600 text-gray-400 py-4 rounded-xl font-bold text-lg transition transform shadow-lg flex justify-center items-center disabled:cursor-not-allowed">
+                    UPLOAD READING
                 </button>
             </div>
         </div>
 
-        <div id="historySection" class="hidden">
-            <h2 class="text-lg font-bold mb-4 text-gray-300">My Recent Uploads</h2>
-            <div id="historyList" class="space-y-3">
-                <p class="text-center text-gray-500 mt-10">Select a vehicle to see history.</p>
+        <div id="historySection" class="mt-8">
+            <h2 class="text-sm font-bold mb-3 text-gray-400 uppercase tracking-wider">Recent Uploads</h2>
+            <div id="historyList" class="space-y-3 pb-4">
+                <p class="text-center text-gray-600 text-sm py-4">Select a vehicle to view history.</p>
             </div>
         </div>
 
     </div>
 
-    <div class="bg-gray-800 border-t border-gray-700 fixed bottom-0 w-full h-16 flex justify-around items-center z-20 shadow-2xl">
-        <button onclick="switchTab('upload')" id="tabUpload" class="flex flex-col items-center text-blue-400 w-1/2 h-full justify-center active:bg-gray-700">
-            <i class="fas fa-upload text-xl mb-1"></i>
-            <span class="text-xs font-bold">Upload</span>
-        </button>
-        <button onclick="switchTab('history')" id="tabHistory" class="flex flex-col items-center text-gray-500 w-1/2 h-full justify-center active:bg-gray-700">
-            <i class="fas fa-history text-xl mb-1"></i>
-            <span class="text-xs font-bold">History</span>
-        </button>
-    </div>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, doc, getDoc, query, where, orderBy, onSnapshot, serverTimestamp, limit } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, onSnapshot, serverTimestamp, limit } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAlhMTQ-_sorFg_0ULpjf9kvjuIAWQkDVY",
@@ -92,58 +89,41 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- GLOBAL UI FUNCTIONS ---
-        window.switchTab = (tab) => {
-            const uploadSec = document.getElementById('uploadSection');
-            const historySec = document.getElementById('historySection');
-            const tabUp = document.getElementById('tabUpload');
-            const tabHist = document.getElementById('tabHistory');
-
-            if(tab === 'upload') {
-                uploadSec.classList.remove('hidden');
-                historySec.classList.add('hidden');
-                tabUp.className = "flex flex-col items-center text-blue-400 w-1/2 h-full justify-center active:bg-gray-700";
-                tabHist.className = "flex flex-col items-center text-gray-500 w-1/2 h-full justify-center active:bg-gray-700";
-            } else {
-                uploadSec.classList.add('hidden');
-                historySec.classList.remove('hidden');
-                tabUp.className = "flex flex-col items-center text-gray-500 w-1/2 h-full justify-center active:bg-gray-700";
-                tabHist.className = "flex flex-col items-center text-blue-400 w-1/2 h-full justify-center active:bg-gray-700";
-                loadHistory(); // Load history when tab clicked
-            }
-        }
-
-        // --- 1. LOAD PROJECTS ---
+        // --- 1. LOAD PROJECTS & VEHICLES ---
         const projectSelect = document.getElementById('projectSelect');
         const vehicleSelect = document.getElementById('vehicleSelect');
-        let projectDataMap = {}; // Cache project data
+        let projectDataMap = {};
 
-        async function init() {
-            const q = query(collection(db, "projects"));
-            const snapshot = await getDocs(q);
-            
-            projectSelect.innerHTML = '<option value="">Select Project...</option>';
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                projectDataMap[doc.id] = data; // Store full data to get vehicles later
-                const option = document.createElement('option');
-                option.value = doc.id; // Use ID as value
-                option.text = data.name;
-                projectSelect.appendChild(option);
-            });
+        async function initData() {
+            try {
+                const q = query(collection(db, "projects"));
+                const snapshot = await getDocs(q);
+                
+                projectSelect.innerHTML = '<option value="">Select Project...</option>';
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    projectDataMap[doc.id] = data;
+                    const option = document.createElement('option');
+                    option.value = doc.id;
+                    option.text = data.name;
+                    projectSelect.appendChild(option);
+                });
+            } catch (e) {
+                console.error("Error loading projects:", e);
+                projectSelect.innerHTML = '<option>Error Loading</option>';
+            }
         }
-        init();
+        initData();
 
-        // --- 2. LOAD VEHICLES ON PROJECT CHANGE ---
         projectSelect.addEventListener('change', (e) => {
             const pid = e.target.value;
             vehicleSelect.innerHTML = '<option value="">Select Vehicle...</option>';
+            document.getElementById('historyList').innerHTML = '<p class="text-center text-gray-600 text-sm py-4">Select a vehicle to view history.</p>';
             
             if (pid && projectDataMap[pid]) {
                 const vehicles = projectDataMap[pid].assignedVehicles || [];
-                
                 if(vehicles.length === 0) {
-                    vehicleSelect.innerHTML = '<option value="">No Vehicles Registered</option>';
+                    vehicleSelect.innerHTML = '<option value="">No Vehicles Found</option>';
                     vehicleSelect.disabled = true;
                 } else {
                     vehicles.forEach(v => {
@@ -159,27 +139,40 @@
             }
         });
 
-        // --- 3. CAMERA & COMPRESSION ---
-        let compressedImageBase64 = null;
-        
-        document.getElementById('cameraInput').addEventListener('change', async (e) => {
-            if(e.target.files[0]) {
-                // Show simple preview immediately
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    document.getElementById('previewImg').src = e.target.result;
-                    document.getElementById('previewImg').classList.remove('hidden');
-                    document.getElementById('cameraPlaceholder').classList.add('hidden');
-                }
-                reader.readAsDataURL(e.target.files[0]);
-
-                // Compress
-                compressedImageBase64 = await compressImage(e.target.files[0]);
+        vehicleSelect.addEventListener('change', () => {
+            if(vehicleSelect.value) {
+                loadRealtimeHistory();
             }
         });
 
-        function compressImage(file) {
-            return new Promise((resolve, reject) => {
+        // --- 2. CAMERA LOGIC WITH WATERMARK (PREVENTS OLD PHOTOS) ---
+        let finalImageBase64 = null;
+        
+        document.getElementById('cameraInput').addEventListener('change', async (e) => {
+            if(e.target.files[0]) {
+                const file = e.target.files[0];
+                
+                // Show loading state on preview
+                document.getElementById('cameraPlaceholder').innerHTML = '<i class="fas fa-spinner fa-spin text-3xl text-blue-500"></i><span class="text-xs mt-2">Processing...</span>';
+                
+                // Process Image (Compress + Watermark)
+                finalImageBase64 = await processImage(file);
+                
+                // Update UI
+                document.getElementById('previewImg').src = finalImageBase64;
+                document.getElementById('previewImg').classList.remove('hidden');
+                document.getElementById('cameraPlaceholder').classList.add('hidden');
+                
+                // Enable Upload
+                const btn = document.getElementById('uploadBtn');
+                btn.disabled = false;
+                btn.classList.remove('bg-gray-600', 'text-gray-400');
+                btn.classList.add('bg-blue-600', 'text-white', 'hover:bg-blue-500');
+            }
+        });
+
+        function processImage(file) {
+            return new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
                 reader.onload = (event) => {
@@ -187,121 +180,147 @@
                     img.src = event.target.result;
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+
+                        // Resize (Max width 800px for speed)
                         const maxWidth = 800;
                         const scaleSize = maxWidth / img.width;
                         canvas.width = maxWidth;
                         canvas.height = img.height * scaleSize;
-                        const ctx = canvas.getContext('2d');
+
+                        // Draw Image
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.6));
+
+                        // --- ADD TIMESTAMP WATERMARK ---
+                        const now = new Date();
+                        const dateStr = now.toLocaleDateString();
+                        const timeStr = now.toLocaleTimeString();
+                        const watermarkText = `Captured: ${dateStr} ${timeStr}`;
+
+                        // Background for text
+                        ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+                        ctx.fillRect(0, canvas.height - 40, canvas.width, 40);
+
+                        // Text
+                        ctx.fillStyle = "#FFD700"; // Gold color
+                        ctx.font = "bold 16px monospace";
+                        ctx.textAlign = "center";
+                        ctx.fillText(watermarkText, canvas.width / 2, canvas.height - 15);
+
+                        // Update UI Overlay Text as well
+                        document.getElementById('timestampOverlay').classList.remove('hidden');
+                        document.getElementById('timeText').innerText = watermarkText;
+
+                        // Export Base64
+                        resolve(canvas.toDataURL('image/jpeg', 0.7));
                     };
                 };
             });
         }
 
-        // --- 4. UPLOAD LOGIC ---
+        // --- 3. UPLOAD LOGIC ---
         document.getElementById('uploadBtn').addEventListener('click', async () => {
             const btn = document.getElementById('uploadBtn');
             const projectId = projectSelect.value;
             const projectName = projectSelect.options[projectSelect.selectedIndex].text;
             const vehicleNo = vehicleSelect.value;
 
-            if(!projectId || !vehicleNo || !compressedImageBase64) {
-                alert("Please select project, vehicle and take a photo.");
-                return;
-            }
+            if(!projectId || !vehicleNo || !finalImageBase64) return alert("Missing details!");
 
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> UPLOADING...';
             btn.disabled = true;
 
             try {
                 await addDoc(collection(db, "meter_readings"), {
-                    projectId: projectId,
-                    projectName: projectName,
-                    vehicleNo: vehicleNo,
-                    imageBase64: compressedImageBase64,
-                    timestamp: serverTimestamp(),
-                    status: "pending" // Initial status
+                    projectId, projectName, vehicleNo,
+                    imageBase64: finalImageBase64,
+                    timestamp: serverTimestamp(), // Server Time (Cannot be faked)
+                    status: "pending"
                 });
 
-                alert("Success!");
-                // Reset
+                // Reset Form
+                alert("Photo Uploaded Successfully!");
+                finalImageBase64 = null;
                 document.getElementById('previewImg').classList.add('hidden');
+                document.getElementById('timestampOverlay').classList.add('hidden');
                 document.getElementById('cameraPlaceholder').classList.remove('hidden');
-                compressedImageBase64 = null;
+                document.getElementById('cameraPlaceholder').innerHTML = '<div class="w-16 h-16 rounded-full bg-blue-600 flex items-center justify-center mb-2 shadow-lg"><i class="fas fa-camera text-2xl text-white"></i></div><span class="text-sm text-gray-300">Tap to Open Camera</span>';
                 document.getElementById('cameraInput').value = "";
-                btn.innerHTML = 'SUBMIT READING';
-                btn.disabled = false;
                 
-                // Switch to history to show it's pending
-                window.switchTab('history');
+                btn.innerHTML = 'UPLOAD READING';
+                btn.classList.add('bg-gray-600', 'text-gray-400');
+                btn.classList.remove('bg-blue-600', 'text-white');
+                btn.disabled = true;
 
             } catch (error) {
                 console.error(error);
-                alert("Error: " + error.message);
-                btn.innerHTML = 'Try Again';
+                alert("Upload Failed. Try Again.");
+                btn.innerHTML = 'TRY AGAIN';
                 btn.disabled = false;
             }
         });
 
-        // --- 5. HISTORY LOGIC (Real-time Status) ---
-        let unsubscribeHistory = null;
+        // --- 4. REAL-TIME HISTORY ---
+        let unsubscribe = null;
 
-        function loadHistory() {
-            const vehicleNo = vehicleSelect.value;
-            const historyList = document.getElementById('historyList');
+        function loadRealtimeHistory() {
+            const vNo = vehicleSelect.value;
+            const list = document.getElementById('historyList');
 
-            if(!vehicleNo) {
-                historyList.innerHTML = '<p class="text-center text-gray-500 mt-10">Please select a vehicle in the Upload tab first to see its history.</p>';
-                return;
-            }
-
-            if(unsubscribeHistory) unsubscribeHistory(); // Clear old listener
+            if(unsubscribe) unsubscribe(); // Stop listening to previous vehicle
 
             const q = query(
-                collection(db, "meter_readings"), 
-                where("vehicleNo", "==", vehicleNo),
+                collection(db, "meter_readings"),
+                where("vehicleNo", "==", vNo),
                 orderBy("timestamp", "desc"),
                 limit(10)
             );
 
-            historyList.innerHTML = '<div class="text-center mt-4"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+            list.innerHTML = '<div class="flex justify-center p-4"><i class="fas fa-spinner fa-spin text-blue-500"></i></div>';
 
-            unsubscribeHistory = onSnapshot(q, (snapshot) => {
-                historyList.innerHTML = "";
+            unsubscribe = onSnapshot(q, (snapshot) => {
+                list.innerHTML = "";
                 if(snapshot.empty) {
-                    historyList.innerHTML = '<p class="text-center text-gray-500">No records found.</p>';
+                    list.innerHTML = '<p class="text-center text-gray-500 text-sm">No uploads yet today.</p>';
                     return;
                 }
 
                 snapshot.forEach(doc => {
-                    const data = doc.data();
-                    let statusColor = "bg-yellow-500";
+                    const d = doc.data();
+                    let statusColor = "bg-yellow-500/20 text-yellow-400 border-yellow-500/50";
                     let statusIcon = "fa-clock";
                     
-                    if(data.status === 'approved') {
-                        statusColor = "bg-green-500";
-                        statusIcon = "fa-check";
-                    } else if (data.status === 'rejected') {
-                        statusColor = "bg-red-500";
-                        statusIcon = "fa-times";
+                    if(d.status === 'approved') {
+                        statusColor = "bg-green-500/20 text-green-400 border-green-500/50";
+                        statusIcon = "fa-check-circle";
                     }
 
+                    // Handle timestamp display (Real-time updates might have null timestamp briefly)
+                    const dateObj = d.timestamp ? d.timestamp.toDate() : new Date();
+                    const timeStr = dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    const dateStr = dateObj.toLocaleDateString();
+
                     const item = document.createElement('div');
-                    item.className = "bg-gray-800 p-3 rounded-xl border border-gray-700 flex gap-3 items-center";
+                    item.className = "bg-gray-800 p-3 rounded-xl border border-gray-700 flex gap-3 animate-fade-in";
                     item.innerHTML = `
-                        <img src="${data.imageBase64}" class="w-16 h-16 object-cover rounded-lg bg-gray-700">
-                        <div class="flex-1">
-                            <div class="flex justify-between items-start">
-                                <h3 class="font-bold text-sm text-gray-300">${new Date(data.timestamp?.seconds * 1000).toLocaleDateString()}</h3>
-                                <span class="${statusColor} text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 uppercase font-bold">
-                                    <i class="fas ${statusIcon}"></i> ${data.status}
+                        <div class="relative w-16 h-16 flex-shrink-0">
+                            <img src="${d.imageBase64}" class="w-full h-full object-cover rounded-lg border border-gray-600">
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-start mb-1">
+                                <h4 class="font-bold text-gray-200 text-sm truncate pr-2">${d.projectName}</h4>
+                                <span class="text-[10px] px-2 py-0.5 rounded border ${statusColor} flex items-center gap-1 font-bold uppercase tracking-wide">
+                                    <i class="fas ${statusIcon}"></i> ${d.status}
                                 </span>
                             </div>
-                            <p class="text-xs text-gray-400 mt-1">${new Date(data.timestamp?.seconds * 1000).toLocaleTimeString()}</p>
+                            <p class="text-xs text-gray-500 flex items-center gap-1">
+                                <i class="fas fa-calendar-alt text-[10px]"></i> ${dateStr} 
+                                <span class="mx-1">•</span> 
+                                <i class="fas fa-clock text-[10px]"></i> ${timeStr}
+                            </p>
                         </div>
                     `;
-                    historyList.appendChild(item);
+                    list.appendChild(item);
                 });
             });
         }
