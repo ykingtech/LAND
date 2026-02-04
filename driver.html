@@ -3,88 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Driver App - Site Cam</title>
+    <title>Site Ops - Sithuliya</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#1f2937">
+    <meta name="theme-color" content="#0f172a">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         body { -webkit-tap-highlight-color: transparent; }
+        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); }
+        input, select { font-size: 16px !important; } /* Prevent iOS Zoom */
     </style>
-    <link rel="icon" type="image/png" href="icon-192.png">
-    <link rel="apple-touch-icon" href="icon-192.png">
 </head>
-<body class="bg-gray-900 text-white h-screen flex flex-col">
+<body class="bg-slate-900 text-white h-screen flex flex-col font-sans">
 
-    <div class="bg-gray-800 p-4 shadow-md sticky top-0 z-20 flex justify-between items-center">
-        <h1 class="text-xl font-bold text-blue-400"><i class="fas fa-camera mr-2"></i>Site Cam</h1>
-        <div id="connectionStatus" class="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
+    <div class="bg-slate-900/90 backdrop-blur p-4 shadow-lg sticky top-0 z-20 flex justify-between items-center border-b border-slate-700">
+        <div>
+            <h1 class="text-lg font-bold text-blue-400 tracking-wider"><i class="fas fa-hard-hat mr-2"></i>SITE OPS</h1>
+            <p id="headerProjName" class="text-xs text-gray-400 hidden truncate max-w-[150px]">Loading...</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <button id="installAppBtn" class="hidden bg-amber-500 text-slate-900 text-[10px] font-bold px-3 py-1.5 rounded animate-pulse shadow-lg border border-amber-400">
+                <i class="fas fa-download mr-1"></i> INSTALL
+            </button>
+            
+            <button id="switchProjBtn" onclick="resetProject()" class="hidden text-[10px] bg-slate-800 border border-slate-600 px-3 py-1.5 rounded text-gray-300 active:bg-slate-700">SWITCH</button>
+            <div id="connectionStatus" class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]"></div>
+        </div>
     </div>
 
-    <div class="flex-1 overflow-y-auto p-4 pb-24">
+    <div id="mainTabs" class="flex border-b border-slate-700 bg-slate-800 hidden">
+        <button onclick="switchTab('meter')" id="tab-meter" class="flex-1 py-3 text-center text-blue-400 border-b-2 border-blue-400 font-bold transition text-xs uppercase tracking-widest active:bg-slate-700"><i class="fas fa-tachometer-alt mr-1"></i> Meter</button>
+        <button onclick="switchTab('tasks')" id="tab-tasks" class="flex-1 py-3 text-center text-gray-500 font-bold transition text-xs uppercase tracking-widest active:bg-slate-700"><i class="fas fa-tasks mr-1"></i> Tasks</button>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-4 pb-24 relative">
         
-        <div id="uploadSection">
-            <div class="bg-gray-800 p-5 rounded-2xl shadow-lg border border-gray-700">
-                
-                <label class="text-xs text-gray-400 uppercase font-bold tracking-wider">Current Project Area</label>
-                <div class="relative mb-4 mt-1">
-                    <select id="projectSelect" class="w-full bg-gray-700 p-3 rounded-lg text-white appearance-none focus:ring-2 focus:ring-blue-500 text-lg border border-gray-600 font-bold">
-                        <option value="">Loading Projects...</option>
-                    </select>
-                    <i class="fas fa-chevron-down absolute right-4 top-4 text-gray-400 pointer-events-none"></i>
+        <div id="projectSelectContainer" class="mt-8 px-2 animate-fade-in">
+            <div class="text-center mb-8">
+                <div class="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-700">
+                    <i class="fas fa-map-marked-alt text-3xl text-blue-500"></i>
                 </div>
+                <h2 class="text-xl font-bold text-slate-200">Select Site</h2>
+                <p class="text-slate-500 text-xs mt-1">This device will be locked to the selected project.</p>
+            </div>
+            <div class="relative">
+                <select id="projectSelect" class="w-full bg-slate-800 p-4 rounded-xl text-white text-lg border border-slate-600 font-bold focus:ring-2 focus:ring-blue-500 outline-none appearance-none shadow-lg">
+                    <option value="">Searching Projects...</option>
+                </select>
+                <i class="fas fa-chevron-down absolute right-4 top-5 text-gray-400 pointer-events-none"></i>
+            </div>
+            <div id="loadingMsg" class="text-center text-gray-500 text-xs mt-4 hidden">Connecting to database...</div>
+        </div>
 
-                <label class="text-xs text-gray-400 uppercase font-bold tracking-wider">Select Vehicle</label>
-                <div class="relative mb-6 mt-1">
-                    <select id="vehicleSelect" disabled class="w-full bg-gray-700 p-3 rounded-lg text-white appearance-none focus:ring-2 focus:ring-blue-500 text-lg disabled:opacity-50 border border-gray-600">
-                        <option value="">Select Project First</option>
-                    </select>
-                    <i class="fas fa-truck absolute right-4 top-4 text-gray-400 pointer-events-none"></i>
-                </div>
+        <div id="appContent" class="hidden mt-2">
+            
+            <div id="meterSection">
+                <div class="glass-panel p-4 rounded-2xl shadow-xl border border-slate-700">
+                    <label class="text-[10px] text-blue-300 uppercase font-bold tracking-wider mb-1 block">Vehicle</label>
+                    <div class="relative mb-4">
+                        <select id="vehicleSelect" class="w-full bg-slate-800 p-3 rounded-lg text-white text-base border border-slate-600 appearance-none focus:border-blue-500 outline-none">
+                            <option value="">Select Vehicle...</option>
+                        </select>
+                        <i class="fas fa-truck absolute right-4 top-4 text-gray-500 pointer-events-none"></i>
+                    </div>
 
-                <label class="block mb-4 w-full aspect-[4/3] border-2 border-dashed border-gray-500 rounded-xl flex flex-col items-center justify-center cursor-pointer active:bg-gray-700 bg-gray-750 relative overflow-hidden group">
-                    <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden"> 
-                    
-                    <div id="cameraPlaceholder" class="flex flex-col items-center group-active:scale-95 transition">
-                        <div class="w-16 h-16 rounded-full bg-blue-600 flex items-center justify-center mb-2 shadow-lg shadow-blue-500/30">
-                            <i class="fas fa-camera text-2xl text-white"></i>
+                    <div class="grid grid-cols-2 gap-3 mb-5">
+                        <div>
+                            <label class="text-[10px] text-blue-300 uppercase font-bold tracking-wider mb-1 block">Hours</label>
+                            <input type="number" id="meterHours" placeholder="0" class="w-full bg-slate-800 p-3 rounded-lg border border-slate-600 font-bold text-center text-lg focus:border-blue-500 outline-none text-white">
                         </div>
-                        <span class="text-sm text-gray-300 font-medium">Tap to Open Camera</span>
-                        <span class="text-xs text-gray-500 mt-1">(Live Photo Only)</span>
+                        <div>
+                            <label class="text-[10px] text-blue-300 uppercase font-bold tracking-wider mb-1 block">Rate (Rs)</label>
+                            <input type="number" id="meterRate" placeholder="0" class="w-full bg-slate-800 p-3 rounded-lg border border-slate-600 font-bold text-center text-lg focus:border-blue-500 outline-none text-white">
+                        </div>
                     </div>
-                    
-                    <img id="previewImg" class="hidden absolute inset-0 w-full h-full object-cover">
-                    
-                    <div id="timestampOverlay" class="hidden absolute bottom-0 left-0 right-0 bg-black/60 p-2 text-center">
-                        <p class="text-xs text-yellow-400 font-mono" id="timeText"></p>
-                    </div>
-                </label>
 
-                <button id="uploadBtn" disabled class="w-full bg-gray-600 text-gray-400 py-4 rounded-xl font-bold text-lg transition transform shadow-lg flex justify-center items-center disabled:cursor-not-allowed">
-                    UPLOAD READING
-                </button>
+                    <label class="block mb-4 w-full aspect-[4/3] border-2 border-dashed border-slate-600 rounded-xl flex flex-col items-center justify-center cursor-pointer active:bg-slate-800 bg-slate-800/50 relative overflow-hidden group">
+                        <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden"> 
+                        <div id="cameraPlaceholder" class="flex flex-col items-center group-active:scale-95 transition">
+                            <div class="w-14 h-14 rounded-full bg-blue-600 flex items-center justify-center mb-2 shadow-lg shadow-blue-500/30">
+                                <i class="fas fa-camera text-xl text-white"></i>
+                            </div>
+                            <span class="text-xs text-slate-300 font-medium">Tap to Photo</span>
+                        </div>
+                        <img id="previewImg" class="hidden absolute inset-0 w-full h-full object-cover">
+                    </label>
+
+                    <button id="uploadBtn" disabled class="w-full bg-slate-700 text-gray-500 py-4 rounded-xl font-bold text-base transition shadow-lg disabled:cursor-not-allowed flex justify-center items-center gap-2 active:scale-95">
+                        UPLOAD READING
+                    </button>
+                </div>
+                
+                <div class="mt-6">
+                    <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 ml-1">Recent History</h3>
+                    <div id="historyList" class="space-y-3 pb-10"></div>
+                </div>
+            </div>
+
+            <div id="tasksSection" class="hidden">
+                <div id="taskList" class="space-y-4 pb-10">
+                    <div class="text-center py-10">
+                        <i class="fas fa-spinner fa-spin text-blue-500 text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="taskModal" class="hidden fixed inset-0 z-50 bg-slate-900/95 backdrop-blur-sm flex flex-col p-4 overflow-y-auto">
+        <div class="flex justify-between items-center mb-6 border-b border-slate-700 pb-4">
+            <h2 class="text-lg font-bold text-white flex items-center"><i class="fas fa-check-circle text-green-500 mr-2"></i>Complete Task</h2>
+            <button onclick="closeTaskModal()" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-gray-400 hover:text-white active:bg-slate-700"><i class="fas fa-times"></i></button>
+        </div>
+        
+        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 mb-6">
+            <h3 id="modalTaskTitle" class="text-base text-blue-400 font-bold mb-1">Task Name</h3>
+            <p id="modalTaskDesc" class="text-sm text-slate-400 leading-relaxed">Description...</p>
+        </div>
+
+        <label class="text-[10px] text-blue-300 uppercase font-bold tracking-wider mb-2 block">Total Cost (Rs)</label>
+        <input type="number" id="taskCost" class="w-full bg-slate-800 p-4 rounded-xl border border-slate-600 text-white font-bold text-2xl mb-6 focus:ring-2 focus:ring-green-500 outline-none" placeholder="0.00">
+
+        <label class="text-[10px] text-blue-300 uppercase font-bold tracking-wider mb-2 block">Evidence Photos (Max 3)</label>
+        <div class="grid grid-cols-3 gap-3 mb-8">
+            <div class="aspect-square bg-slate-800 rounded-xl border border-dashed border-slate-600 flex items-center justify-center cursor-pointer active:bg-slate-700 relative overflow-hidden" onclick="document.getElementById('taskImg1').click()">
+                <input type="file" id="taskImg1" accept="image/*" class="hidden" onchange="previewTaskImg(this, 1)">
+                <img id="prev1" class="hidden w-full h-full object-cover">
+                <i id="icon1" class="fas fa-camera text-slate-500 text-xl"></i>
+            </div>
+            <div class="aspect-square bg-slate-800 rounded-xl border border-dashed border-slate-600 flex items-center justify-center cursor-pointer active:bg-slate-700 relative overflow-hidden" onclick="document.getElementById('taskImg2').click()">
+                <input type="file" id="taskImg2" accept="image/*" class="hidden" onchange="previewTaskImg(this, 2)">
+                <img id="prev2" class="hidden w-full h-full object-cover">
+                <i id="icon2" class="fas fa-plus text-slate-500 text-xl"></i>
+            </div>
+            <div class="aspect-square bg-slate-800 rounded-xl border border-dashed border-slate-600 flex items-center justify-center cursor-pointer active:bg-slate-700 relative overflow-hidden" onclick="document.getElementById('taskImg3').click()">
+                <input type="file" id="taskImg3" accept="image/*" class="hidden" onchange="previewTaskImg(this, 3)">
+                <img id="prev3" class="hidden w-full h-full object-cover">
+                <i id="icon3" class="fas fa-plus text-slate-500 text-xl"></i>
             </div>
         </div>
 
-        <div id="historySection" class="mt-8">
-            <h2 class="text-sm font-bold mb-3 text-gray-400 uppercase tracking-wider flex justify-between items-center">
-                <span>Site History</span>
-                <span id="historyBadge" class="bg-blue-900 text-blue-300 text-[10px] px-2 py-1 rounded-full hidden">0 uploads</span>
-            </h2>
-            <div id="historyList" class="space-y-3 pb-4">
-                <p class="text-center text-gray-600 text-sm py-4">Select a project to view history.</p>
-            </div>
-        </div>
+        <button id="submitTaskBtn" onclick="submitTask()" class="w-full bg-green-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg active:scale-95 transition">
+            SUBMIT COMPLETION
+        </button>
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, onSnapshot, serverTimestamp, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, onSnapshot, serverTimestamp, doc, updateDoc, limit } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAlhMTQ-_sorFg_0ULpjf9kvjuIAWQkDVY",
@@ -99,240 +171,314 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- 1. DATA LOADING ---
+        // --- PWA INSTALL LOGIC ---
+        let deferredPrompt;
+        const installBtn = document.getElementById('installAppBtn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent Chrome 67 and earlier from automatically showing the prompt
+            e.preventDefault();
+            // Stash the event so it can be triggered later.
+            deferredPrompt = e;
+            // Show the install button
+            installBtn.classList.remove('hidden');
+        });
+
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    installBtn.classList.add('hidden');
+                }
+                deferredPrompt = null;
+            }
+        });
+
+        // UI HELPERS
+        window.switchTab = (tab) => {
+            document.querySelectorAll('[id^="tab-"]').forEach(el => {
+                el.classList.replace('text-blue-400', 'text-gray-500');
+                el.classList.remove('border-b-2', 'border-blue-400');
+            });
+            const active = document.getElementById(`tab-${tab}`);
+            active.classList.replace('text-gray-500', 'text-blue-400');
+            active.classList.add('border-b-2', 'border-blue-400');
+            
+            document.getElementById('meterSection').classList.toggle('hidden', tab !== 'meter');
+            document.getElementById('tasksSection').classList.toggle('hidden', tab !== 'tasks');
+        };
+
+        window.resetProject = () => {
+            if(confirm("Change Project Site?")) {
+                localStorage.removeItem('site_proj_id');
+                localStorage.removeItem('site_proj_name');
+                location.reload();
+            }
+        };
+
+        // DATA LOADING & LOCK LOGIC
         const projectSelect = document.getElementById('projectSelect');
         const vehicleSelect = document.getElementById('vehicleSelect');
         let projectDataMap = {};
+        let activeTaskId = null;
 
         async function initData() {
-            try {
-                const q = query(collection(db, "projects"));
-                const snapshot = await getDocs(q);
+            // Check Lock
+            const lockedId = localStorage.getItem('site_proj_id');
+            const lockedName = localStorage.getItem('site_proj_name');
+
+            if(lockedId) {
+                // LOCKED MODE
+                document.getElementById('projectSelectContainer').classList.add('hidden');
+                document.getElementById('appContent').classList.remove('hidden');
+                document.getElementById('mainTabs').classList.remove('hidden');
+                document.getElementById('headerProjName').innerText = lockedName;
+                document.getElementById('headerProjName').classList.remove('hidden');
+                document.getElementById('switchProjBtn').classList.remove('hidden');
                 
-                projectSelect.innerHTML = '<option value="">Select Project Area...</option>';
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    projectDataMap[doc.id] = data;
-                    const option = document.createElement('option');
-                    option.value = doc.id;
-                    option.text = data.name;
-                    projectSelect.appendChild(option);
-                });
-
-                const storedProjId = localStorage.getItem('sithuliya_driver_project');
-                if(storedProjId && projectDataMap[storedProjId]) {
-                    projectSelect.value = storedProjId;
-                    loadVehiclesForProject(storedProjId);
-                    loadRealtimeHistory(storedProjId);
+                loadProjectData(lockedId);
+            } else {
+                // UNLOCKED MODE - Load Dropdown
+                document.getElementById('loadingMsg').classList.remove('hidden');
+                try {
+                    // Try simple query first to avoid index errors
+                    const q = query(collection(db, "projects"), where("status", "==", "development"));
+                    const snapshot = await getDocs(q);
+                    
+                    projectSelect.innerHTML = '<option value="">Select Project Site...</option>';
+                    if(snapshot.empty) {
+                        projectSelect.innerHTML = '<option value="">No Active Projects</option>';
+                    }
+                    
+                    snapshot.forEach(doc => {
+                        projectDataMap[doc.id] = doc.data();
+                        const option = document.createElement('option');
+                        option.value = doc.id; 
+                        option.text = doc.data().name;
+                        projectSelect.appendChild(option);
+                    });
+                } catch(e) { 
+                    console.error("Project Load Error:", e);
+                    // Fallback to all projects if index error
+                    const allQ = query(collection(db, "projects"));
+                    const allSnap = await getDocs(allQ);
+                    projectSelect.innerHTML = '<option value="">Select Project...</option>';
+                    allSnap.forEach(doc => {
+                        projectDataMap[doc.id] = doc.data();
+                        const option = document.createElement('option');
+                        option.value = doc.id; option.text = doc.data().name;
+                        projectSelect.appendChild(option);
+                    });
+                } finally {
+                    document.getElementById('loadingMsg').classList.add('hidden');
                 }
-
-            } catch (e) {
-                console.error("Error loading projects:", e);
-                projectSelect.innerHTML = '<option>Error Loading Data</option>';
             }
         }
-        initData();
+        
+        // Wait for connection before init
+        setTimeout(initData, 500);
 
         projectSelect.addEventListener('change', (e) => {
             const pid = e.target.value;
+            const pname = e.target.options[e.target.selectedIndex].text;
             if(pid) {
-                localStorage.setItem('sithuliya_driver_project', pid);
-                loadVehiclesForProject(pid);
-                loadRealtimeHistory(pid);
-            } else {
-                localStorage.removeItem('sithuliya_driver_project');
-                vehicleSelect.innerHTML = '<option value="">Select Project First</option>';
-                vehicleSelect.disabled = true;
-                document.getElementById('historyList').innerHTML = '<p class="text-center text-gray-600 text-sm py-4">Select a project.</p>';
+                localStorage.setItem('site_proj_id', pid);
+                localStorage.setItem('site_proj_name', pname);
+                location.reload();
             }
         });
 
-        function loadVehiclesForProject(pid) {
-            vehicleSelect.innerHTML = '<option value="">Select Vehicle...</option>';
-            if (pid && projectDataMap[pid]) {
-                const vehicles = projectDataMap[pid].assignedVehicles || [];
-                if(vehicles.length === 0) {
-                    vehicleSelect.innerHTML = '<option value="">No Vehicles Found</option>';
-                    vehicleSelect.disabled = true;
-                } else {
-                    vehicles.forEach(v => {
-                        const opt = document.createElement('option');
-                        opt.value = v; opt.text = v;
-                        vehicleSelect.appendChild(opt);
-                    });
-                    vehicleSelect.disabled = false;
-                }
-            }
+        async function loadProjectData(pid) {
+            try {
+                // Load Vehicles (using getDoc for single doc read is better but query is fine)
+                const docRef = doc(db, "projects", pid);
+                onSnapshot(docRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        const vehicles = docSnap.data().assignedVehicles || [];
+                        vehicleSelect.innerHTML = '<option value="">Select Vehicle...</option>';
+                        vehicles.forEach(v => {
+                            const opt = document.createElement('option'); opt.value = v; opt.text = v;
+                            vehicleSelect.appendChild(opt);
+                        });
+                    }
+                });
+
+                loadMeterHistory(pid);
+                loadTasks(pid);
+            } catch(e) { console.error("Data Load Error", e); }
         }
 
-        // --- 2. CAMERA LOGIC ---
-        let finalImageBase64 = null;
-        
+        // --- METER LOGIC ---
+        let meterImgBase64 = null;
         document.getElementById('cameraInput').addEventListener('change', async (e) => {
             if(e.target.files[0]) {
-                const file = e.target.files[0];
-                document.getElementById('cameraPlaceholder').innerHTML = '<i class="fas fa-spinner fa-spin text-3xl text-blue-500"></i><span class="text-xs mt-2">Processing...</span>';
-                finalImageBase64 = await processImage(file);
-                
-                document.getElementById('previewImg').src = finalImageBase64;
+                document.getElementById('cameraPlaceholder').innerHTML = '<i class="fas fa-spinner fa-spin text-2xl text-blue-500"></i>';
+                meterImgBase64 = await processImage(e.target.files[0]);
+                document.getElementById('previewImg').src = meterImgBase64;
                 document.getElementById('previewImg').classList.remove('hidden');
-                document.getElementById('cameraPlaceholder').classList.add('hidden');
                 
                 const btn = document.getElementById('uploadBtn');
                 btn.disabled = false;
-                btn.classList.remove('bg-gray-600', 'text-gray-400');
-                btn.classList.add('bg-blue-600', 'text-white', 'hover:bg-blue-500');
+                btn.classList.replace('bg-slate-700', 'bg-blue-600');
+                btn.classList.replace('text-gray-500', 'text-white');
+                document.getElementById('cameraPlaceholder').classList.add('hidden');
             }
         });
+
+        document.getElementById('uploadBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('uploadBtn');
+            const pid = localStorage.getItem('site_proj_id');
+            const pname = localStorage.getItem('site_proj_name');
+            const vNo = vehicleSelect.value;
+            const hours = document.getElementById('meterHours').value;
+            const rate = document.getElementById('meterRate').value;
+
+            if(!vNo || !meterImgBase64 || !hours || !rate) return alert("Fill all fields & take photo!");
+
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> UPLOADING...'; btn.disabled = true;
+            try {
+                await addDoc(collection(db, "meter_readings"), {
+                    projectId: pid, projectName: pname, vehicleNo: vNo,
+                    imageBase64: meterImgBase64, timestamp: serverTimestamp(), status: "pending",
+                    hours: parseFloat(hours), rate: parseFloat(rate), totalCost: parseFloat(hours)*parseFloat(rate)
+                });
+                alert("Upload Successful!");
+                location.reload();
+            } catch(e) { console.error(e); alert("Error uploading"); btn.disabled = false; }
+        });
+
+        function loadMeterHistory(pid) {
+            onSnapshot(query(collection(db, "meter_readings"), where("projectId", "==", pid), orderBy("timestamp", "desc"), limit(10)), (snap) => {
+                const list = document.getElementById('historyList'); list.innerHTML = "";
+                snap.forEach(d => {
+                    const data = d.data();
+                    const statusColor = data.status === 'approved' ? 'text-green-400 border-green-500/50 bg-green-500/10' : 'text-yellow-400 border-yellow-500/50 bg-yellow-500/10';
+                    const icon = data.status === 'approved' ? 'fa-check-circle' : 'fa-clock';
+                    
+                    list.innerHTML += `
+                        <div class="glass-panel p-3 rounded-xl border border-slate-700 flex gap-3 items-center">
+                            <img src="${data.imageBase64}" class="w-14 h-14 rounded-lg object-cover border border-slate-600">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex justify-between items-start">
+                                    <h4 class="font-bold text-white text-sm truncate">${data.vehicleNo}</h4>
+                                    <span class="text-[10px] border px-2 py-0.5 rounded-full uppercase font-bold flex items-center gap-1 ${statusColor}">
+                                        <i class="fas ${icon}"></i> ${data.status}
+                                    </span>
+                                </div>
+                                <div class="flex justify-between mt-1 text-xs text-slate-400">
+                                    <span>${data.hours}h @ ${data.rate}</span>
+                                    <span class="font-bold">Rs.${data.totalCost.toLocaleString()}</span>
+                                </div>
+                            </div>
+                        </div>`;
+                });
+            });
+        }
+
+        // --- TASK LOGIC ---
+        function loadTasks(pid) {
+            onSnapshot(query(collection(db, `projects/${pid}/tasks`), orderBy("createdAt", "desc")), (snap) => {
+                const list = document.getElementById('taskList'); list.innerHTML = "";
+                if(snap.empty) { list.innerHTML = "<div class='text-center text-slate-500 py-10'><i class='fas fa-clipboard-check text-4xl mb-3 opacity-20'></i><p>No active tasks.</p></div>"; return; }
+                
+                snap.forEach(d => {
+                    const t = d.data();
+                    const status = t.status || 'new'; 
+                    
+                    let btnHTML = "";
+                    if(status === 'new') {
+                        btnHTML = `<button onclick="openTaskModal('${d.id}', '${t.title}', '${t.description}')" class="w-full mt-3 py-3 rounded-lg font-bold text-sm bg-blue-600 text-white active:bg-blue-700 shadow-lg shadow-blue-900/50 transition">COMPLETE JOB <i class="fas fa-arrow-right ml-1"></i></button>`;
+                    } else if (status === 'pending_approval') {
+                        btnHTML = `<div class="mt-3 bg-yellow-500/10 border border-yellow-500/30 p-2 rounded text-center text-yellow-400 text-xs font-bold uppercase"><i class="fas fa-hourglass-half mr-2"></i>Waiting Approval</div>`;
+                    } else if (status === 'completed') {
+                        btnHTML = `<div class="mt-3 bg-green-500/10 border border-green-500/30 p-2 rounded text-center text-green-400 text-xs font-bold uppercase"><i class="fas fa-check-double mr-2"></i>Accepted</div>`;
+                    }
+
+                    const el = document.createElement('div');
+                    el.className = "glass-panel p-5 rounded-xl border border-slate-700 relative overflow-hidden";
+                    if(status==='completed') el.classList.add('opacity-60');
+
+                    el.innerHTML = `
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold text-lg text-slate-200">${t.title}</h3>
+                            ${status === 'completed' ? '<i class="fas fa-check-circle text-green-500 text-xl"></i>' : ''}
+                        </div>
+                        <p class="text-sm text-slate-400 leading-relaxed">${t.description || 'No description provided.'}</p>
+                        ${btnHTML}
+                    `;
+                    list.appendChild(el);
+                });
+            });
+        }
+
+        window.openTaskModal = (tid, title, desc) => {
+            activeTaskId = tid;
+            document.getElementById('modalTaskTitle').innerText = title;
+            document.getElementById('modalTaskDesc').innerText = desc;
+            document.getElementById('taskModal').classList.remove('hidden');
+            document.getElementById('taskCost').value = "";
+            ['1','2','3'].forEach(i => {
+                document.getElementById(`prev${i}`).classList.add('hidden');
+                document.getElementById(`icon${i}`).classList.remove('hidden');
+                document.getElementById(`taskImg${i}`).value = "";
+                delete document.getElementById(`taskImg${i}`).dataset.b64;
+            });
+        };
+        window.closeTaskModal = () => document.getElementById('taskModal').classList.add('hidden');
+
+        window.previewTaskImg = async (input, idx) => {
+            if(input.files[0]) {
+                const b64 = await processImage(input.files[0]);
+                document.getElementById(`prev${idx}`).src = b64;
+                document.getElementById(`prev${idx}`).classList.remove('hidden');
+                document.getElementById(`icon${idx}`).classList.add('hidden');
+                input.dataset.b64 = b64; 
+            }
+        };
+
+        window.submitTask = async () => {
+            const cost = document.getElementById('taskCost').value;
+            const photos = [];
+            if(document.getElementById('taskImg1').dataset.b64) photos.push(document.getElementById('taskImg1').dataset.b64);
+            if(document.getElementById('taskImg2').dataset.b64) photos.push(document.getElementById('taskImg2').dataset.b64);
+            if(document.getElementById('taskImg3').dataset.b64) photos.push(document.getElementById('taskImg3').dataset.b64);
+
+            if(!cost || photos.length === 0) return alert("Enter cost and at least 1 photo.");
+
+            const btn = document.getElementById('submitTaskBtn');
+            btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> SENDING..."; btn.disabled = true;
+
+            try {
+                const pid = localStorage.getItem('site_proj_id');
+                await updateDoc(doc(db, `projects/${pid}/tasks/${activeTaskId}`), {
+                    status: 'pending_approval',
+                    submittedCost: parseFloat(cost),
+                    photos: photos,
+                    submittedAt: serverTimestamp()
+                });
+                alert("Task Submitted! Waiting for Admin Approval.");
+                closeTaskModal();
+            } catch(e) { console.error(e); alert("Error"); }
+            btn.innerHTML = "SUBMIT COMPLETION"; btn.disabled = false;
+        };
 
         function processImage(file) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
-                reader.onload = (event) => {
+                reader.onload = (e) => {
                     const img = new Image();
-                    img.src = event.target.result;
+                    img.src = e.target.result;
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
                         const ctx = canvas.getContext('2d');
-                        const maxWidth = 800;
-                        const scaleSize = maxWidth / img.width;
-                        canvas.width = maxWidth; canvas.height = img.height * scaleSize;
-                        
+                        const maxW = 800; const scale = maxW / img.width;
+                        canvas.width = maxW; canvas.height = img.height * scale;
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        
-                        const now = new Date();
-                        const watermarkText = `Captured: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
-                        ctx.fillStyle = "rgba(0, 0, 0, 0.6)"; 
-                        ctx.fillRect(0, canvas.height - 40, canvas.width, 40);
-                        ctx.fillStyle = "#FFD700"; 
-                        ctx.font = "bold 16px monospace"; 
-                        ctx.textAlign = "center";
-                        ctx.fillText(watermarkText, canvas.width / 2, canvas.height - 15);
-                        
-                        document.getElementById('timestampOverlay').classList.remove('hidden');
-                        document.getElementById('timeText').innerText = watermarkText;
-                        resolve(canvas.toDataURL('image/jpeg', 0.7));
+                        resolve(canvas.toDataURL('image/jpeg', 0.6));
                     };
                 };
-            });
-        }
-
-        // --- 3. UPLOAD LOGIC ---
-        document.getElementById('uploadBtn').addEventListener('click', async () => {
-            const btn = document.getElementById('uploadBtn');
-            const projectId = projectSelect.value;
-            const projectName = projectSelect.options[projectSelect.selectedIndex].text;
-            const vehicleNo = vehicleSelect.value;
-
-            if(!projectId || !vehicleNo || !finalImageBase64) return alert("Please select a Vehicle and take a photo!");
-
-            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> UPLOADING...';
-            btn.disabled = true;
-
-            try {
-                await addDoc(collection(db, "meter_readings"), {
-                    projectId, projectName, vehicleNo,
-                    imageBase64: finalImageBase64,
-                    timestamp: serverTimestamp(),
-                    status: "pending"
-                });
-
-                alert("Reading Uploaded Successfully!");
-                
-                finalImageBase64 = null;
-                document.getElementById('previewImg').classList.add('hidden');
-                document.getElementById('timestampOverlay').classList.add('hidden');
-                document.getElementById('cameraPlaceholder').classList.remove('hidden');
-                document.getElementById('cameraPlaceholder').innerHTML = '<div class="w-16 h-16 rounded-full bg-blue-600 flex items-center justify-center mb-2 shadow-lg"><i class="fas fa-camera text-2xl text-white"></i></div><span class="text-sm text-gray-300">Tap to Open Camera</span>';
-                document.getElementById('cameraInput').value = "";
-                vehicleSelect.value = ""; 
-                
-                btn.innerHTML = 'UPLOAD READING';
-                btn.classList.add('bg-gray-600', 'text-gray-400');
-                btn.classList.remove('bg-blue-600', 'text-white');
-                btn.disabled = true;
-
-            } catch (error) {
-                console.error("Upload Error:", error);
-                alert("Upload Failed. Check internet connection.");
-                btn.innerHTML = 'TRY AGAIN';
-                btn.disabled = false;
-            }
-        });
-
-        // --- 4. REAL-TIME HISTORY ---
-        let unsubscribe = null;
-
-        function loadRealtimeHistory(pid) {
-            const list = document.getElementById('historyList');
-            const badge = document.getElementById('historyBadge');
-            
-            if(unsubscribe) unsubscribe();
-
-            const q = query(
-                collection(db, "meter_readings"),
-                where("projectId", "==", pid),
-                orderBy("timestamp", "desc"),
-                limit(20)
-            );
-
-            list.innerHTML = '<div class="flex justify-center p-4"><i class="fas fa-spinner fa-spin text-blue-500 text-2xl"></i></div>';
-
-            unsubscribe = onSnapshot(q, (snapshot) => {
-                list.innerHTML = "";
-                if(snapshot.empty) {
-                    list.innerHTML = '<p class="text-center text-gray-500 text-sm">No recent uploads for this project.</p>';
-                    badge.classList.add('hidden');
-                    return;
-                }
-
-                badge.innerText = `${snapshot.docs.length} recent`;
-                badge.classList.remove('hidden');
-
-                snapshot.forEach(doc => {
-                    const d = doc.data();
-                    let statusColor = "bg-yellow-500/20 text-yellow-400 border-yellow-500/50";
-                    let statusIcon = "fa-clock";
-                    let statusText = "Pending";
-                    
-                    if(d.status === 'approved') {
-                        statusColor = "bg-green-500/20 text-green-400 border-green-500/50";
-                        statusIcon = "fa-check-circle";
-                        statusText = "Approved";
-                    }
-
-                    const dateObj = d.timestamp ? d.timestamp.toDate() : new Date();
-                    const timeStr = dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                    const dateStr = dateObj.toLocaleDateString();
-
-                    const item = document.createElement('div');
-                    item.className = "bg-gray-800 p-3 rounded-xl border border-gray-700 flex gap-3";
-                    item.innerHTML = `
-                        <div class="relative w-16 h-16 flex-shrink-0">
-                            <img src="${d.imageBase64}" class="w-full h-full object-cover rounded-lg border border-gray-600">
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="flex justify-between items-start mb-1">
-                                <h4 class="font-bold text-white text-md truncate pr-2"><i class="fas fa-truck text-xs text-gray-500 mr-1"></i> ${d.vehicleNo}</h4>
-                                <span class="text-[10px] px-2 py-0.5 rounded border ${statusColor} flex items-center gap-1 font-bold uppercase tracking-wide">
-                                    <i class="fas ${statusIcon}"></i> ${statusText}
-                                </span>
-                            </div>
-                            <p class="text-xs text-gray-500 flex items-center gap-1 mt-1">
-                                <i class="fas fa-calendar-alt text-[10px]"></i> ${dateStr} 
-                                <span class="mx-1">•</span> 
-                                <i class="fas fa-clock text-[10px]"></i> ${timeStr}
-                            </p>
-                        </div>
-                    `;
-                    list.appendChild(item);
-                });
-            }, (error) => {
-                console.error("History Loading Error:", error);
-                if(error.message.includes("requires an index")) {
-                    list.innerHTML = `<p class="text-center text-red-400 text-sm">System Error: Index Missing.<br>Ask Admin to check console.</p>`;
-                }
             });
         }
     </script>
