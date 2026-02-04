@@ -79,7 +79,7 @@
         <div class="flex-1 flex flex-col overflow-hidden bg-gray-50 relative">
             <header class="bg-white shadow-sm p-4 flex justify-between items-center z-10 px-8 border-b">
                 <div class="relative w-96 group">
-                    <input type="text" id="projSearch" placeholder="Search Projects or Customers..." class="w-full pl-10 pr-4 py-2 border-none bg-gray-100 rounded-full focus:ring-2 focus:ring-amber-500 transition text-sm group-hover:bg-gray-200">
+                    <input type="text" id="projSearch" placeholder="Search Customer ID, Name, Phone..." class="w-full pl-10 pr-4 py-2 border-none bg-gray-100 rounded-full focus:ring-2 focus:ring-amber-500 transition text-sm group-hover:bg-gray-200">
                     <i class="fas fa-search absolute left-4 top-2.5 text-gray-400"></i>
                     <div id="searchResults" class="hidden absolute top-12 left-0 w-full bg-white shadow-2xl rounded-xl border border-gray-100 max-h-96 overflow-y-auto p-2 z-50"></div>
                 </div>
@@ -118,7 +118,7 @@
                         </div>
                         <div class="flex flex-col items-end gap-2">
                             <span id="detailStatus" class="px-4 py-1 rounded-full text-xs font-bold uppercase bg-amber-100 text-amber-800 border border-amber-200">Development</span>
-                            <button id="endDevBtn" class="text-xs text-red-500 hover:underline font-bold">End Development Phase</button>
+                            <button id="endDevBtn" onclick="endDevelopmentPhase()" class="text-xs text-red-500 hover:bg-red-50 px-3 py-1 rounded border border-red-200 font-bold">End Development Phase</button>
                         </div>
                     </div>
 
@@ -144,7 +144,7 @@
                                 <h3 class="font-bold text-sm uppercase text-gray-400 mb-4 flex items-center tracking-wider">Assigned Vehicles</h3>
                                 <div class="flex gap-2 mb-2">
                                     <input type="text" id="regVehicleNo" placeholder="Vehicle Number (e.g. WP-1234)" class="p-2 border rounded w-full uppercase text-sm">
-                                    <button id="regVehicleBtn" class="bg-slate-800 text-white px-4 py-2 rounded text-sm hover:bg-slate-900 shadow">Assign</button>
+                                    <button id="regVehicleBtn" onclick="assignVehicle()" class="bg-slate-800 text-white px-4 py-2 rounded text-sm hover:bg-slate-900 shadow">Assign</button>
                                 </div>
                                 <div id="vehicleList" class="flex flex-wrap gap-2 mt-2"></div>
                             </div>
@@ -198,7 +198,6 @@
 
                 <div id="page-reports" class="hidden">
                     <h2 class="text-2xl font-bold text-slate-800 mb-6">Financial Center</h2>
-                    
                     <div class="flex border-b border-gray-200 mb-6">
                         <button onclick="switchFinTab('entry')" id="ft-entry" class="px-6 py-3 font-bold text-slate-800 border-b-2 border-slate-800 transition">Data Entry</button>
                         <button onclick="switchFinTab('reports')" id="ft-reports" class="px-6 py-3 font-bold text-gray-400 hover:text-slate-600 transition">View Reports</button>
@@ -206,136 +205,42 @@
 
                     <div id="fin-view-entry">
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            
                             <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
                                 <h3 class="font-bold text-lg text-slate-800 mb-4 flex items-center"><i class="fas fa-coins text-amber-500 mr-2"></i> Transaction Entry</h3>
-                                <p class="text-xs text-gray-400 mb-6">Enter daily income, expenses, and petty cash vouchers.</p>
-                                
                                 <div class="space-y-4">
-                                    <div class="flex gap-4">
-                                        <div class="flex-1">
-                                            <label class="block text-xs font-bold text-gray-500 mb-1">Date</label>
-                                            <input type="date" id="txDate" class="w-full p-2 border rounded bg-gray-50">
-                                        </div>
-                                        <div class="flex-1">
-                                            <label class="block text-xs font-bold text-gray-500 mb-1">Voucher No (Optional)</label>
-                                            <input type="text" id="txVno" class="w-full p-2 border rounded bg-gray-50" placeholder="e.g. V-001">
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-xs font-bold text-gray-500 mb-1">Description / Particulars</label>
-                                        <input type="text" id="txDesc" class="w-full p-2 border rounded bg-gray-50" placeholder="Description of transaction">
-                                    </div>
-
-                                    <div class="flex gap-4">
-                                        <div class="flex-1">
-                                            <label class="block text-xs font-bold text-gray-500 mb-1">Type</label>
-                                            <select id="txType" class="w-full p-2 border rounded bg-gray-50 font-bold text-slate-700">
-                                                <option value="Expense">Payment / Expense</option>
-                                                <option value="Income">Receipt / Income</option>
-                                            </select>
-                                        </div>
-                                        <div class="flex-1">
-                                            <label class="block text-xs font-bold text-gray-500 mb-1">Amount</label>
-                                            <input type="number" id="txAmount" class="w-full p-2 border rounded bg-gray-50 font-bold text-slate-800" placeholder="0.00">
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-xs font-bold text-gray-500 mb-1">Category (for P&L)</label>
-                                        <select id="txCategory" class="w-full p-2 border rounded bg-gray-50 text-sm">
-                                            <optgroup label="Income">
-                                                <option value="Sales">Revenue / Sales</option>
-                                                <option value="Other Income">Other Income</option>
-                                            </optgroup>
-                                            <optgroup label="Expenses">
-                                                <option value="Cost of Sales">Cost of Sales</option>
-                                                <option value="Admin Expense">Administrative Expense</option>
-                                                <option value="Selling Expense">Selling & Distribution</option>
-                                                <option value="Finance Cost">Finance Cost</option>
-                                                <option value="Petty Cash">Petty Cash Refill/Exp</option>
-                                                <option value="Tax">Tax Expense</option>
-                                            </optgroup>
-                                        </select>
-                                    </div>
-
-                                    <div class="flex items-center gap-2 pt-2">
-                                        <input type="checkbox" id="txIsPetty" class="w-4 h-4 text-amber-500 rounded">
-                                        <label for="txIsPetty" class="text-sm font-bold text-slate-700">This is a Petty Cash Record</label>
-                                    </div>
-
+                                    <div class="flex gap-4"><div class="flex-1"><label class="block text-xs font-bold text-gray-500 mb-1">Date</label><input type="date" id="txDate" class="w-full p-2 border rounded bg-gray-50"></div><div class="flex-1"><label class="block text-xs font-bold text-gray-500 mb-1">Voucher No</label><input type="text" id="txVno" class="w-full p-2 border rounded bg-gray-50"></div></div>
+                                    <div><label class="block text-xs font-bold text-gray-500 mb-1">Description</label><input type="text" id="txDesc" class="w-full p-2 border rounded bg-gray-50"></div>
+                                    <div class="flex gap-4"><div class="flex-1"><label class="block text-xs font-bold text-gray-500 mb-1">Type</label><select id="txType" class="w-full p-2 border rounded bg-gray-50"><option value="Expense">Expense</option><option value="Income">Income</option></select></div><div class="flex-1"><label class="block text-xs font-bold text-gray-500 mb-1">Amount</label><input type="number" id="txAmount" class="w-full p-2 border rounded bg-gray-50 font-bold"></div></div>
+                                    <div><label class="block text-xs font-bold text-gray-500 mb-1">Category</label><select id="txCategory" class="w-full p-2 border rounded bg-gray-50"><optgroup label="Income"><option value="Sales">Revenue</option><option value="Other Income">Other</option></optgroup><optgroup label="Expenses"><option value="Admin Expense">Admin</option><option value="Petty Cash">Petty Cash</option></optgroup></select></div>
+                                    <div class="flex items-center gap-2 pt-2"><input type="checkbox" id="txIsPetty" class="w-4 h-4 text-amber-500 rounded"><label for="txIsPetty" class="text-sm font-bold text-slate-700">Petty Cash Record</label></div>
                                     <button onclick="saveTransaction()" class="w-full bg-slate-900 text-white font-bold py-3 rounded-xl hover:bg-slate-800 mt-4 shadow-lg">SAVE TRANSACTION</button>
                                 </div>
                             </div>
-
                             <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 h-fit">
                                 <h3 class="font-bold text-lg text-slate-800 mb-4 flex items-center"><i class="fas fa-balance-scale text-blue-500 mr-2"></i> Balance Sheet Entry</h3>
-                                <p class="text-xs text-gray-400 mb-6">Enter Assets, Liabilities, and Equity values.</p>
-                                
                                 <div class="space-y-4">
-                                    <div>
-                                        <label class="block text-xs font-bold text-gray-500 mb-1">As of Date</label>
-                                        <input type="date" id="bsDate" class="w-full p-2 border rounded bg-gray-50">
-                                    </div>
-                                    
-                                    <div>
-                                        <label class="block text-xs font-bold text-gray-500 mb-1">Account Name</label>
-                                        <input type="text" id="bsName" class="w-full p-2 border rounded bg-gray-50" placeholder="e.g. Land at Kadigamuwa, Bank Loan">
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-xs font-bold text-gray-500 mb-1">Type</label>
-                                        <select id="bsType" class="w-full p-2 border rounded bg-gray-50">
-                                            <option value="Non-Current Asset">Non-Current Asset</option>
-                                            <option value="Current Asset">Current Asset</option>
-                                            <option value="Equity">Equity / Capital</option>
-                                            <option value="Non-Current Liability">Non-Current Liability</option>
-                                            <option value="Current Liability">Current Liability</option>
-                                        </select>
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-xs font-bold text-gray-500 mb-1">Value</label>
-                                        <input type="number" id="bsAmount" class="w-full p-2 border rounded bg-gray-50 font-bold text-slate-800" placeholder="0.00">
-                                    </div>
-
-                                    <button onclick="saveBSItem()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 mt-4 shadow-lg">SAVE B/S ITEM</button>
+                                    <div><label class="block text-xs font-bold text-gray-500 mb-1">Date</label><input type="date" id="bsDate" class="w-full p-2 border rounded bg-gray-50"></div>
+                                    <div><label class="block text-xs font-bold text-gray-500 mb-1">Account</label><input type="text" id="bsName" class="w-full p-2 border rounded bg-gray-50"></div>
+                                    <div><label class="block text-xs font-bold text-gray-500 mb-1">Type</label><select id="bsType" class="w-full p-2 border rounded bg-gray-50"><option value="Non-Current Asset">Asset (Fixed)</option><option value="Current Asset">Asset (Current)</option><option value="Equity">Equity</option><option value="Current Liability">Liability</option></select></div>
+                                    <div><label class="block text-xs font-bold text-gray-500 mb-1">Value</label><input type="number" id="bsAmount" class="w-full p-2 border rounded bg-gray-50 font-bold"></div>
+                                    <button onclick="saveBSItem()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 mt-4 shadow-lg">SAVE ITEM</button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <div id="fin-view-reports" class="hidden">
-                        
                         <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-wrap gap-4 items-center mb-6">
-                            <div class="flex items-center gap-2">
-                                <label class="text-xs font-bold text-gray-500">From:</label>
-                                <input type="date" id="repFrom" class="p-2 border rounded bg-gray-50 text-sm">
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <label class="text-xs font-bold text-gray-500">To:</label>
-                                <input type="date" id="repTo" class="p-2 border rounded bg-gray-50 text-sm">
-                            </div>
-                            <div class="h-8 w-px bg-gray-300 mx-2"></div>
-                            <div class="flex gap-2">
-                                <button onclick="genReport('daybook')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-sm font-bold transition">Day Book</button>
-                                <button onclick="genReport('petty')" class="px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg text-sm font-bold transition">Petty Cash</button>
-                                <button onclick="genReport('pnl')" class="px-4 py-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg text-sm font-bold transition">P & L</button>
-                                <button onclick="genReport('bs')" class="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-sm font-bold transition">Balance Sheet</button>
-                            </div>
+                            <input type="date" id="repFrom" class="p-2 border rounded bg-gray-50 text-sm"> <input type="date" id="repTo" class="p-2 border rounded bg-gray-50 text-sm">
+                            <button onclick="genReport('daybook')" class="px-4 py-2 bg-slate-100 text-slate-800 rounded text-sm font-bold">Day Book</button>
+                            <button onclick="genReport('petty')" class="px-4 py-2 bg-amber-50 text-amber-700 rounded text-sm font-bold">Petty Cash</button>
+                            <button onclick="genReport('pnl')" class="px-4 py-2 bg-green-50 text-green-700 rounded text-sm font-bold">P & L</button>
+                            <button onclick="genReport('bs')" class="px-4 py-2 bg-blue-50 text-blue-700 rounded text-sm font-bold">Balance Sheet</button>
                         </div>
-
                         <div id="reportOutputArea" class="bg-white p-8 rounded-2xl shadow border border-gray-100 min-h-[400px]">
-                            <div class="flex justify-between items-center mb-4">
-                                <h3 class="font-bold text-gray-400 uppercase tracking-widest text-sm">Report Preview</h3>
-                                <button onclick="triggerPDFDownload()" class="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-bold shadow hover:bg-slate-800"><i class="fas fa-file-pdf mr-2"></i> Download PDF</button>
-                            </div>
-                            <div id="reportContent" class="overflow-x-auto border rounded-lg p-4 bg-gray-50 text-sm">
-                                <p class="text-center text-gray-400 py-10">Select a date range and click a report button above to view.</p>
-                            </div>
+                            <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-gray-400 uppercase tracking-widest text-sm">Report Preview</h3><button onclick="triggerPDFDownload()" class="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-bold">Download PDF</button></div>
+                            <div id="reportContent" class="overflow-x-auto border rounded-lg p-4 bg-gray-50 text-sm"><p class="text-center text-gray-400 py-10">Select date range & type.</p></div>
                         </div>
-
                     </div>
                 </div>
 
@@ -347,52 +252,33 @@
                         <button onclick="updatePassword()" class="w-full bg-slate-900 text-white font-bold py-3 rounded-lg hover:bg-slate-800">Update Password</button>
                     </div>
                 </div>
-
             </main>
         </div>
     </div>
-
-    <div id="pettyCashModal" class="hidden fixed inset-0 bg-black/50 z-[60] flex items-center justify-center backdrop-blur-sm">
-         </div>
 
     <div id="newProjectModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm">
         <div class="bg-white p-8 rounded-2xl shadow-2xl w-96">
             <h2 class="text-xl font-bold mb-6 text-slate-800">New Project</h2>
             <input type="text" id="newProjName" placeholder="Project Name" class="w-full p-3 border rounded-lg mb-3 bg-gray-50">
             <input type="text" id="newProjArea" placeholder="Location" class="w-full p-3 border rounded-lg mb-6 bg-gray-50">
-            <div class="flex justify-end gap-3">
-                <button onclick="document.getElementById('newProjectModal').classList.add('hidden')" class="px-4 py-2 text-gray-500">Cancel</button>
-                <button id="createProjBtn" class="px-6 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800">Create</button>
-            </div>
+            <div class="flex justify-end gap-3"><button onclick="document.getElementById('newProjectModal').classList.add('hidden')" class="px-4 py-2 text-gray-500">Cancel</button><button id="createProjBtn" class="px-6 py-2 bg-slate-900 text-white rounded-lg">Create</button></div>
         </div>
     </div>
     
     <div id="newTaskModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm">
         <div class="bg-white p-8 rounded-2xl shadow-2xl w-96">
             <h2 class="text-xl font-bold mb-4 text-slate-800">Assign Site Task</h2>
-            <input type="text" id="newTaskTitle" placeholder="Title (e.g. Build Wall)" class="w-full p-3 border rounded-lg mb-3">
+            <input type="text" id="newTaskTitle" placeholder="Title" class="w-full p-3 border rounded-lg mb-3">
             <textarea id="newTaskDesc" placeholder="Instructions" class="w-full p-3 border rounded-lg mb-6 h-24"></textarea>
-            <div class="flex justify-end gap-3">
-                <button onclick="document.getElementById('newTaskModal').classList.add('hidden')" class="px-4 py-2 text-gray-500">Cancel</button>
-                <button id="saveTaskBtn" class="px-6 py-2 bg-blue-600 text-white rounded-lg">Assign</button>
-            </div>
+            <div class="flex justify-end gap-3"><button onclick="document.getElementById('newTaskModal').classList.add('hidden')" class="px-4 py-2 text-gray-500">Cancel</button><button id="saveTaskBtn" class="px-6 py-2 bg-blue-600 text-white rounded-lg">Assign</button></div>
         </div>
     </div>
 
     <div id="taskApproveModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl w-full max-w-4xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
-            <div class="p-6 border-b flex justify-between items-center bg-gray-50">
-                <h2 class="text-xl font-bold text-slate-800" id="taskModalHeader">Review Task</h2>
-                <button onclick="document.getElementById('taskApproveModal').classList.add('hidden')" class="text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
-            </div>
-            <div class="p-6 overflow-y-auto flex-1">
-                <h3 id="approveTaskTitle" class="text-2xl font-bold text-slate-800 mb-2">Title</h3>
-                <p class="text-lg mb-4">Submitted Cost: <span id="approveTaskCost" class="font-bold text-green-600 text-2xl"></span></p>
-                <div id="approveTaskPhotos" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
-            </div>
-            <div class="p-6 border-t bg-gray-50 flex justify-end">
-                <button id="confirmApproveTaskBtn" class="px-8 py-3 bg-green-600 text-white rounded-lg font-bold shadow hover:bg-green-700">APPROVE & PAY</button>
-            </div>
+            <div class="p-6 border-b flex justify-between items-center bg-gray-50"><h2 class="text-xl font-bold text-slate-800" id="taskModalHeader">Review Task</h2><button onclick="document.getElementById('taskApproveModal').classList.add('hidden')" class="text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button></div>
+            <div class="p-6 overflow-y-auto flex-1"><h3 id="approveTaskTitle" class="text-2xl font-bold text-slate-800 mb-2"></h3><p class="text-lg mb-4">Cost: <span id="approveTaskCost" class="font-bold text-green-600 text-2xl"></span></p><div id="approveTaskPhotos" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div></div>
+            <div class="p-6 border-t bg-gray-50 flex justify-end"><button id="confirmApproveTaskBtn" class="px-8 py-3 bg-green-600 text-white rounded-lg font-bold shadow hover:bg-green-700">APPROVE & PAY</button></div>
         </div>
     </div>
 
@@ -403,9 +289,10 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div class="space-y-4">
                     <h3 class="font-bold text-gray-400 text-xs uppercase tracking-widest border-b pb-1">Customer Details</h3>
+                    <div id="newCusIdDisplay" class="hidden bg-blue-50 text-blue-700 p-2 rounded text-sm font-bold border border-blue-200 text-center">New Customer ID will be generated</div>
                     <input type="text" id="cusName" placeholder="Full Name" class="w-full p-3 border rounded-lg bg-gray-50">
                     <textarea id="cusAddress" placeholder="Address" class="w-full p-3 border rounded-lg h-20 bg-gray-50"></textarea>
-                    <div class="flex gap-3"><input type="text" id="cusNIC" placeholder="NIC" class="w-full p-3 border rounded-lg bg-gray-50"><input type="text" id="cusPhone" placeholder="Phone" class="w-full p-3 border rounded-lg bg-gray-50"></div>
+                    <div class="flex gap-3"><input type="text" id="cusNIC" placeholder="NIC (Required for ID)" class="w-full p-3 border rounded-lg bg-gray-50"><input type="text" id="cusPhone" placeholder="Phone" class="w-full p-3 border rounded-lg bg-gray-50"></div>
                 </div>
                 <div class="space-y-4">
                     <h3 class="font-bold text-gray-400 text-xs uppercase tracking-widest border-b pb-1">Payment Plan</h3>
@@ -415,13 +302,8 @@
                     </div>
                     <select id="payPlanType" class="w-full p-3 border rounded-lg bg-slate-800 text-white font-bold" onchange="toggleEPFields()"><option value="Cash">Cash Sale</option><option value="EP">Easy Payment</option></select>
                     <div id="epFields" class="hidden bg-blue-50/50 p-4 rounded-xl border border-blue-100 space-y-3">
-                        <div class="flex gap-3">
-                            <div class="w-1/3"><label class="text-[10px] font-bold text-blue-800">RATE %</label><input type="number" id="epRate" value="15" class="w-full p-2 border rounded text-center" oninput="calculateEP()"></div>
-                            <div class="w-1/3"><label class="text-[10px] font-bold text-blue-800">MONTHS</label><input type="number" id="epMonths" value="60" class="w-full p-2 border rounded text-center" oninput="calculateEP()"></div>
-                            <div class="w-1/3"><label class="text-[10px] font-bold text-blue-800">CYCLE</label><input type="number" id="epCycle" value="30" class="w-full p-2 border rounded text-center font-bold text-blue-600"></div>
-                        </div>
-                        <div class="flex justify-between items-center pt-2 border-t border-blue-200"><span class="text-sm font-bold text-blue-900">Monthly:</span><span id="epMonthlyInst" class="text-xl font-bold text-blue-700">0.00</span></div>
-                        <div class="hidden"><span id="epTotalPayable"></span></div>
+                        <div class="flex gap-3"><div class="w-1/3"><label class="text-[10px] font-bold text-blue-800">RATE %</label><input type="number" id="epRate" value="15" class="w-full p-2 border rounded text-center" oninput="calculateEP()"></div><div class="w-1/3"><label class="text-[10px] font-bold text-blue-800">MONTHS</label><input type="number" id="epMonths" value="60" class="w-full p-2 border rounded text-center" oninput="calculateEP()"></div><div class="w-1/3"><label class="text-[10px] font-bold text-blue-800">CYCLE</label><input type="number" id="epCycle" value="30" class="w-full p-2 border rounded text-center font-bold text-blue-600"></div></div>
+                        <div class="flex justify-between items-center pt-2 border-t border-blue-200"><span class="text-sm font-bold text-blue-900">Monthly:</span><span id="epMonthlyInst" class="text-xl font-bold text-blue-700">0.00</span></div><div class="hidden"><span id="epTotalPayable"></span></div>
                     </div>
                 </div>
             </div>
@@ -434,35 +316,35 @@
     <div id="paymentModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center overflow-y-auto">
         <div class="bg-white p-6 rounded-2xl w-full max-w-2xl shadow-2xl relative">
             <button onclick="document.getElementById('paymentModal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
-            <div class="flex justify-between items-start mb-6 border-b pb-4">
+            <div class="flex justify-between items-start mb-4 border-b pb-4">
                 <div><h2 class="text-2xl font-bold text-slate-800">Payment Record</h2><p id="payBlockInfo" class="text-amber-600 font-bold text-sm"></p></div>
-                <div class="flex flex-col items-end gap-1">
-                    <button id="editPlanBtn" class="text-xs text-blue-600 underline font-bold" onclick="toggleEditPlan()">Edit Interest/Plan</button>
-                    <button id="resellBtn" class="hidden text-xs bg-red-100 text-red-600 px-3 py-1 rounded font-bold hover:bg-red-200" onclick="processResell()">CANCEL & RESELL</button>
+                <div class="flex flex-col items-end gap-1"><button id="editPlanBtn" class="text-xs text-blue-600 underline font-bold" onclick="toggleEditPlan()">Edit Interest/Plan</button><button id="resellBtn" class="hidden text-xs bg-red-100 text-red-600 px-3 py-1 rounded font-bold hover:bg-red-200" onclick="processResell()">CANCEL & RESELL</button></div>
+            </div>
+            <div id="cusDetailsSection" class="bg-gray-50 p-3 rounded-lg border border-gray-200 mb-4 text-sm">
+                <h4 class="font-bold text-gray-400 text-xs uppercase mb-2">Customer Details</h4>
+                <div class="grid grid-cols-2 gap-2">
+                    <p><i class="fas fa-id-badge mr-2 text-amber-500"></i> <span id="viewCusId" class="font-bold text-slate-800"></span></p>
+                    <p><i class="fas fa-id-card mr-2 text-gray-400"></i> <span id="viewCusNIC" class="font-medium"></span></p>
+                    <p><i class="fas fa-phone mr-2 text-gray-400"></i> <span id="viewCusPhone" class="font-medium"></span></p>
+                    <p class="col-span-2"><i class="fas fa-map-marker-alt mr-2 text-gray-400"></i> <span id="viewCusAddr" class="font-medium text-gray-600"></span></p>
                 </div>
             </div>
             <div id="editPlanSection" class="hidden bg-yellow-50 p-4 rounded-xl border border-yellow-200 mb-4">
                 <h4 class="text-xs font-bold text-yellow-700 uppercase mb-2">Adjust Plan</h4>
-                <div class="flex gap-2 mb-2">
-                    <input type="number" id="editNewRate" placeholder="New Rate %" class="p-2 border rounded w-1/3 text-sm">
-                    <input type="number" id="editNewMonths" placeholder="New Months" class="p-2 border rounded w-1/3 text-sm">
-                    <button id="savePlanChangesBtn" class="bg-yellow-600 text-white px-3 rounded text-sm font-bold w-1/3 hover:bg-yellow-700">Update</button>
-                </div>
+                <div class="flex gap-2 mb-2"><input type="number" id="editNewRate" placeholder="Rate %" class="p-2 border rounded w-1/3 text-sm"><input type="number" id="editNewMonths" placeholder="Months" class="p-2 border rounded w-1/3 text-sm"><button id="savePlanChangesBtn" class="bg-yellow-600 text-white px-3 rounded text-sm font-bold w-1/3 hover:bg-yellow-700">Update</button></div>
             </div>
             <div class="grid grid-cols-3 gap-4 mb-6 text-center">
                 <div class="p-3 bg-slate-100 rounded-lg"><p class="text-[10px] uppercase font-bold text-gray-500">Payable</p><p id="pmTotal" class="font-bold text-slate-800 text-lg">0.00</p></div>
                 <div class="p-3 bg-green-50 rounded-lg border border-green-100"><p class="text-[10px] uppercase font-bold text-green-600">Paid</p><p id="pmPaid" class="font-bold text-green-700 text-lg">0.00</p></div>
                 <div class="p-3 bg-red-50 rounded-lg border border-red-100"><p class="text-[10px] uppercase font-bold text-red-600">Balance</p><p id="pmBalance" class="font-bold text-red-700 text-lg">0.00</p></div>
             </div>
-            <div id="addPaymentSection" class="bg-slate-50 p-4 rounded-xl mb-6 border border-gray-200">
-                <div class="flex gap-3 mb-2"><input type="date" id="newPayDate" class="w-1/3 p-2 border rounded text-sm"><input type="number" id="newPayAmount" placeholder="Amount" class="w-1/3 p-2 border rounded text-sm font-bold text-slate-800"><button id="submitPayBtn" class="w-1/3 bg-green-600 text-white rounded font-bold text-sm shadow hover:bg-green-700">ADD PAYMENT</button></div>
-            </div>
+            <div id="addPaymentSection" class="bg-slate-50 p-4 rounded-xl mb-6 border border-gray-200"><div class="flex gap-3 mb-2"><input type="date" id="newPayDate" class="w-1/3 p-2 border rounded text-sm"><input type="number" id="newPayAmount" placeholder="Amount" class="w-1/3 p-2 border rounded text-sm font-bold text-slate-800"><button id="submitPayBtn" class="w-1/3 bg-green-600 text-white rounded font-bold text-sm shadow hover:bg-green-700">ADD PAYMENT</button></div></div>
             <div id="paymentCompleteMsg" class="hidden bg-green-100 text-green-800 p-4 rounded-xl text-center font-bold mb-6 border border-green-200"><i class="fas fa-check-circle mr-2"></i> FULLY PAID & CLOSED</div>
             <h3 class="font-bold text-xs text-gray-400 uppercase mb-2">History</h3>
             <div class="overflow-y-auto max-h-40 border rounded-lg"><table class="w-full text-xs text-left"><tbody id="paymentHistoryList" class="divide-y"></tbody></table></div>
         </div>
     </div>
-
+    
     <div id="expenseModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
         <div class="bg-white p-6 rounded-xl w-96 shadow-xl">
             <h2 class="text-lg font-bold mb-4 text-red-600">Add Expense</h2>
@@ -524,10 +406,7 @@
             const btn = document.getElementById(`nav-${page}`);
             if(btn) { btn.classList.add('bg-amber-600/20','text-amber-500'); btn.classList.remove('text-gray-400'); }
             if(page==='readings') loadMeterReadings();
-            if(page==='reports') {
-                document.getElementById('txDate').valueAsDate = new Date();
-                document.getElementById('bsDate').valueAsDate = new Date();
-            }
+            if(page==='reports') { document.getElementById('txDate').valueAsDate = new Date(); document.getElementById('bsDate').valueAsDate = new Date(); }
         };
 
         window.subTab = (tab) => {
@@ -544,7 +423,7 @@
             document.getElementById('ft-reports').className = tab === 'reports' ? "px-6 py-3 font-bold text-slate-800 border-b-2 border-slate-800 transition" : "px-6 py-3 font-bold text-gray-400 hover:text-slate-600 transition";
         };
 
-        // --- DEEP SEARCH ---
+        // --- DEEP SEARCH (Now supports Customer ID) ---
         document.getElementById('projSearch').addEventListener('input', async (e) => {
             const term = e.target.value.toLowerCase();
             const resDiv = document.getElementById('searchResults');
@@ -562,8 +441,13 @@
             const cusSnap = await getDocs(cusQ);
             cusSnap.forEach(d => {
                 const c = d.data();
-                if(c.name.toLowerCase().includes(term) || c.phone.includes(term) || c.nic.toLowerCase().includes(term)) {
-                    results.push({type:'Customer', name: c.name, detail: `Block: ${c.blockName} (${c.projectName})`, ref: d.ref, blockId: c.blockId, projId: c.projectId});
+                const cid = (c.customerId || "").toLowerCase();
+                const cname = (c.name || "").toLowerCase();
+                const cnic = (c.nic || "").toLowerCase();
+                const cphone = (c.phone || "").toLowerCase();
+
+                if(cid.includes(term) || cname.includes(term) || cnic.includes(term) || cphone.includes(term)) {
+                    results.push({type:'Customer', name: c.name, detail: `ID: ${c.customerId || '-'} | Block: ${c.blockName} (${c.projectName})`, ref: d.ref, blockId: c.blockId, projId: c.projectId});
                 }
             });
 
@@ -603,219 +487,80 @@
 
         // --- CORE DATA ---
         let currentProjId = null; let currentProjName = ""; let selectedBlockId = null; let selectedBlockData = null;
+        let currentProjUnsub = null;
 
         function initApp() { loadProjects(); checkOverduePayments(); }
 
         async function recordDailyTransaction(desc, amt, type, projName) {
             const today = new Date().toLocaleDateString('en-CA'); 
-            await addDoc(collection(db, "daily_transactions"), {
-                date: today, description: desc, amount: amt, type: type, project: projName, timestamp: serverTimestamp()
-            });
-            // Also add to new system transactions for consistency
+            await addDoc(collection(db, "daily_transactions"), { date: today, description: desc, amount: amt, type: type, project: projName, timestamp: serverTimestamp() });
             const cat = type === 'income' ? 'Sales' : 'Admin Expense';
-            await addDoc(collection(db, "transactions"), {
-                date: today, description: desc, vNo: '', type: type, category: cat, amount: amt, isPetty: false, timestamp: serverTimestamp()
-            });
+            await addDoc(collection(db, "transactions"), { date: today, description: desc, vNo: '', type: type, category: cat, amount: amt, isPetty: false, timestamp: serverTimestamp() });
         }
 
-        // --- NEW FINANCIAL DATA ENTRY FUNCTIONS ---
         window.saveTransaction = async () => {
-            const date = document.getElementById('txDate').value;
-            const vNo = document.getElementById('txVno').value;
-            const desc = document.getElementById('txDesc').value;
-            const type = document.getElementById('txType').value;
-            const category = document.getElementById('txCategory').value;
-            const amount = parseFloat(document.getElementById('txAmount').value);
+            const date = document.getElementById('txDate').value; const vNo = document.getElementById('txVno').value;
+            const desc = document.getElementById('txDesc').value; const type = document.getElementById('txType').value;
+            const category = document.getElementById('txCategory').value; const amount = parseFloat(document.getElementById('txAmount').value);
             const isPetty = document.getElementById('txIsPetty').checked;
-
             if(!date || !desc || !amount) return alert("Please fill Date, Description and Amount");
-
-            try {
-                await addDoc(collection(db, "transactions"), {
-                    date, vNo, description: desc, type, category, amount, isPetty, timestamp: serverTimestamp()
-                });
-                
-                // Clear form
-                document.getElementById('txDesc').value = "";
-                document.getElementById('txAmount').value = "";
-                document.getElementById('txVno').value = "";
-                alert("Transaction Saved Successfully!");
-            } catch (e) {
-                console.error(e);
-                alert("Error saving transaction");
-            }
+            await addDoc(collection(db, "transactions"), { date, vNo, description: desc, type, category, amount, isPetty, timestamp: serverTimestamp() });
+            document.getElementById('txDesc').value = ""; document.getElementById('txAmount').value = ""; document.getElementById('txVno').value = ""; alert("Transaction Saved Successfully!");
         };
 
         window.saveBSItem = async () => {
-            const date = document.getElementById('bsDate').value;
-            const name = document.getElementById('bsName').value;
-            const type = document.getElementById('bsType').value;
-            const amount = parseFloat(document.getElementById('bsAmount').value);
-
+            const date = document.getElementById('bsDate').value; const name = document.getElementById('bsName').value;
+            const type = document.getElementById('bsType').value; const amount = parseFloat(document.getElementById('bsAmount').value);
             if(!date || !name || !amount) return alert("Please fill all Balance Sheet fields");
-
-            try {
-                await addDoc(collection(db, "bs_items"), {
-                    date, name, type, amount, timestamp: serverTimestamp()
-                });
-                
-                document.getElementById('bsName').value = "";
-                document.getElementById('bsAmount').value = "";
-                alert("Balance Sheet Item Saved!");
-            } catch (e) {
-                console.error(e);
-                alert("Error saving item");
-            }
+            await addDoc(collection(db, "bs_items"), { date, name, type, amount, timestamp: serverTimestamp() });
+            document.getElementById('bsName').value = ""; document.getElementById('bsAmount').value = ""; alert("Balance Sheet Item Saved!");
         };
 
-        // --- REPORT GENERATION LOGIC ---
         window.genReport = async (type) => {
-            const from = document.getElementById('repFrom').value;
-            const to = document.getElementById('repTo').value;
-            
+            const from = document.getElementById('repFrom').value; const to = document.getElementById('repTo').value;
             if(!from || !to) return alert("Please select a Date Range first.");
+            document.getElementById('overlayPrintTitle').innerText = type.toUpperCase() + " REPORT"; document.getElementById('overlayPrintDate').innerText = `${from} to ${to}`;
+            let html = ""; let q = query(collection(db, "transactions"), where("date", ">=", from), where("date", "<=", to), orderBy("date"));
+            const snap = await getDocs(q);
 
-            document.getElementById('overlayPrintTitle').innerText = type.toUpperCase() + " REPORT";
-            document.getElementById('overlayPrintDate').innerText = `${from} to ${to}`;
-
-            let html = "";
-            let q = query(collection(db, "transactions"), where("date", ">=", from), where("date", "<=", to), orderBy("date"));
-            
             if(type === 'daybook') {
-                const snap = await getDocs(q);
                 let bal = 0; let totInc = 0; let totExp = 0;
                 html = `<table class="w-full border-collapse"><thead><tr class="bg-gray-200 border-b border-black"><th class="p-2 text-left">Date</th><th class="p-2 text-left">Desc</th><th class="p-2 text-left">V.No</th><th class="p-2 text-right">Income</th><th class="p-2 text-right">Expense</th><th class="p-2 text-right">Balance</th></tr></thead><tbody>`;
-                snap.forEach(d => {
-                    const t = d.data();
-                    let inc = t.type === 'Income' ? t.amount : 0;
-                    let exp = t.type === 'Expense' ? t.amount : 0;
-                    bal += (inc - exp);
-                    totInc += inc; totExp += exp;
-                    html += `<tr><td class="p-2 border-b text-xs">${t.date}</td><td class="p-2 border-b text-xs">${t.description}</td><td class="p-2 border-b text-xs">${t.vNo||'-'}</td><td class="p-2 border-b text-right text-xs text-green-600">${inc>0?inc.toLocaleString():'-'}</td><td class="p-2 border-b text-right text-xs text-red-600">${exp>0?exp.toLocaleString():'-'}</td><td class="p-2 border-b text-right text-xs font-bold">${bal.toLocaleString()}</td></tr>`;
-                });
+                snap.forEach(d => { const t = d.data(); let inc = t.type === 'Income' ? t.amount : 0; let exp = t.type === 'Expense' ? t.amount : 0; bal += (inc - exp); totInc += inc; totExp += exp; html += `<tr><td class="p-2 border-b text-xs">${t.date}</td><td class="p-2 border-b text-xs">${t.description}</td><td class="p-2 border-b text-xs">${t.vNo||'-'}</td><td class="p-2 border-b text-right text-xs text-green-600">${inc>0?inc.toLocaleString():'-'}</td><td class="p-2 border-b text-right text-xs text-red-600">${exp>0?exp.toLocaleString():'-'}</td><td class="p-2 border-b text-right text-xs font-bold">${bal.toLocaleString()}</td></tr>`; });
                 html += `</tbody><tfoot><tr class="font-bold border-t-2 border-black"><td colspan="3" class="p-2 text-right">TOTALS:</td><td class="p-2 text-right">${totInc.toLocaleString()}</td><td class="p-2 text-right">${totExp.toLocaleString()}</td><td class="p-2 text-right">${bal.toLocaleString()}</td></tr></tfoot></table>`;
             } 
             else if (type === 'petty') {
-                const snap = await getDocs(q);
-                let tot = 0;
-                html = `<table class="w-full border-collapse"><thead><tr class="bg-amber-100 border-b border-amber-600"><th class="p-2 text-left">Date</th><th class="p-2 text-left">Description</th><th class="p-2 text-left">V.No</th><th class="p-2 text-right">Amount</th></tr></thead><tbody>`;
-                snap.forEach(d => {
-                    const t = d.data();
-                    if(t.isPetty) {
-                        tot += t.amount;
-                        html += `<tr><td class="p-2 border-b text-xs">${t.date}</td><td class="p-2 border-b text-xs">${t.description}</td><td class="p-2 border-b text-xs">${t.vNo||'-'}</td><td class="p-2 border-b text-right text-xs font-bold">${t.amount.toLocaleString()}</td></tr>`;
-                    }
-                });
+                let tot = 0; html = `<table class="w-full border-collapse"><thead><tr class="bg-amber-100 border-b border-amber-600"><th class="p-2 text-left">Date</th><th class="p-2 text-left">Description</th><th class="p-2 text-left">V.No</th><th class="p-2 text-right">Amount</th></tr></thead><tbody>`;
+                snap.forEach(d => { const t = d.data(); if(t.isPetty) { tot += t.amount; html += `<tr><td class="p-2 border-b text-xs">${t.date}</td><td class="p-2 border-b text-xs">${t.description}</td><td class="p-2 border-b text-xs">${t.vNo||'-'}</td><td class="p-2 border-b text-right text-xs font-bold">${t.amount.toLocaleString()}</td></tr>`; } });
                 html += `</tbody><tfoot><tr class="font-bold border-t border-amber-600"><td colspan="3" class="p-2 text-right">TOTAL PETTY CASH:</td><td class="p-2 text-right">${tot.toLocaleString()}</td></tr></tfoot></table>`;
             }
             else if (type === 'pnl') {
-                const snap = await getDocs(q);
-                let cats = {};
-                snap.forEach(d => {
-                    const t = d.data();
-                    if(!cats[t.category]) cats[t.category] = 0;
-                    cats[t.category] += t.amount;
-                });
-
-                const rev = (cats['Sales']||0) + (cats['Other Income']||0);
-                const cogs = cats['Cost of Sales']||0;
-                const gp = rev - cogs;
-                
-                // Expenses
-                const admin = cats['Admin Expense']||0;
-                const selling = cats['Selling Expense']||0;
-                const fin = cats['Finance Cost']||0;
-                const tax = cats['Tax']||0;
-                const petty = cats['Petty Cash']||0; // Usually grouped under admin, but showing separate if needed
-                
-                const totExp = admin + selling + fin + tax + petty;
-                const np = gp - totExp;
-
-                html = `<table class="w-full text-sm">
-                    <tr><td class="p-2 font-bold">Revenue</td><td class="p-2 text-right">${rev.toLocaleString()}</td></tr>
-                    <tr><td class="p-2 text-red-600">Cost of Sales</td><td class="p-2 text-right text-red-600">(${cogs.toLocaleString()})</td></tr>
-                    <tr class="border-t border-black bg-gray-100"><td class="p-2 font-bold">GROSS PROFIT</td><td class="p-2 text-right font-bold">${gp.toLocaleString()}</td></tr>
-                    <tr><td class="p-2 pt-4 font-bold text-gray-500 uppercase">Expenses</td><td></td></tr>
-                    <tr><td class="p-2 pl-6">Admin Expenses</td><td class="p-2 text-right">${admin.toLocaleString()}</td></tr>
-                    <tr><td class="p-2 pl-6">Selling & Distribution</td><td class="p-2 text-right">${selling.toLocaleString()}</td></tr>
-                    <tr><td class="p-2 pl-6">Finance Costs</td><td class="p-2 text-right">${fin.toLocaleString()}</td></tr>
-                    <tr><td class="p-2 pl-6">Tax</td><td class="p-2 text-right">${tax.toLocaleString()}</td></tr>
-                    ${petty>0 ? `<tr><td class="p-2 pl-6">Petty Cash Exp</td><td class="p-2 text-right">${petty.toLocaleString()}</td></tr>` : ''}
-                    <tr class="border-t border-black"><td class="p-2 font-bold">Total Expenses</td><td class="p-2 text-right">(${totExp.toLocaleString()})</td></tr>
-                    <tr class="border-t-2 border-double border-black bg-gray-200"><td class="p-2 font-bold text-lg">NET PROFIT</td><td class="p-2 text-right font-bold text-lg">${np.toLocaleString()}</td></tr>
-                </table>`;
+                let cats = {}; snap.forEach(d => { const t = d.data(); if(!cats[t.category]) cats[t.category] = 0; cats[t.category] += t.amount; });
+                const rev = (cats['Sales']||0) + (cats['Other Income']||0); const cogs = cats['Cost of Sales']||0; const gp = rev - cogs;
+                const admin = cats['Admin Expense']||0; const selling = cats['Selling Expense']||0; const fin = cats['Finance Cost']||0; const tax = cats['Tax']||0; const petty = cats['Petty Cash']||0;
+                const totExp = admin + selling + fin + tax + petty; const np = gp - totExp;
+                html = `<table class="w-full text-sm"><tr><td class="p-2 font-bold">Revenue</td><td class="p-2 text-right">${rev.toLocaleString()}</td></tr><tr><td class="p-2 text-red-600">Cost of Sales</td><td class="p-2 text-right text-red-600">(${cogs.toLocaleString()})</td></tr><tr class="border-t border-black bg-gray-100"><td class="p-2 font-bold">GROSS PROFIT</td><td class="p-2 text-right font-bold">${gp.toLocaleString()}</td></tr><tr><td class="p-2 pt-4 font-bold text-gray-500 uppercase">Expenses</td><td></td></tr><tr><td class="p-2 pl-6">Admin Expenses</td><td class="p-2 text-right">${admin.toLocaleString()}</td></tr><tr><td class="p-2 pl-6">Selling & Distribution</td><td class="p-2 text-right">${selling.toLocaleString()}</td></tr><tr><td class="p-2 pl-6">Finance Costs</td><td class="p-2 text-right">${fin.toLocaleString()}</td></tr><tr><td class="p-2 pl-6">Tax</td><td class="p-2 text-right">${tax.toLocaleString()}</td></tr>${petty>0 ? `<tr><td class="p-2 pl-6">Petty Cash Exp</td><td class="p-2 text-right">${petty.toLocaleString()}</td></tr>` : ''}<tr class="border-t border-black"><td class="p-2 font-bold">Total Expenses</td><td class="p-2 text-right">(${totExp.toLocaleString()})</td></tr><tr class="border-t-2 border-double border-black bg-gray-200"><td class="p-2 font-bold text-lg">NET PROFIT</td><td class="p-2 text-right font-bold text-lg">${np.toLocaleString()}</td></tr></table>`;
             }
             else if (type === 'bs') {
-                const snap = await getDocs(query(collection(db, "bs_items"))); // Get all BS items (ignoring date range usually, or handle 'as of')
-                let grp = { 'Non-Current Asset':0, 'Current Asset':0, 'Equity':0, 'Non-Current Liability':0, 'Current Liability':0 };
-                let items = [];
-                snap.forEach(d => {
-                    const t = d.data();
-                    if(t.date <= to) { // Filter strictly by date if needed
-                        grp[t.type] += t.amount;
-                        items.push(t);
-                    }
-                });
-
-                html = `<div class="grid grid-cols-2 gap-8">
-                    <div>
-                        <h4 class="font-bold border-b mb-2">ASSETS</h4>
-                        <div class="mb-4">
-                            <p class="font-bold text-xs text-gray-500 uppercase">Non-Current Assets</p>
-                            ${items.filter(i=>i.type==='Non-Current Asset').map(i=>`<div class="flex justify-between text-xs p-1"><span>${i.name}</span><span>${i.amount.toLocaleString()}</span></div>`).join('')}
-                            <div class="flex justify-between font-bold border-t mt-1 p-1 bg-gray-50"><span>Total</span><span>${grp['Non-Current Asset'].toLocaleString()}</span></div>
-                        </div>
-                        <div class="mb-4">
-                            <p class="font-bold text-xs text-gray-500 uppercase">Current Assets</p>
-                            ${items.filter(i=>i.type==='Current Asset').map(i=>`<div class="flex justify-between text-xs p-1"><span>${i.name}</span><span>${i.amount.toLocaleString()}</span></div>`).join('')}
-                            <div class="flex justify-between font-bold border-t mt-1 p-1 bg-gray-50"><span>Total</span><span>${grp['Current Asset'].toLocaleString()}</span></div>
-                        </div>
-                        <div class="flex justify-between font-bold text-lg border-t-2 border-black p-2"><span>TOTAL ASSETS</span><span>${(grp['Non-Current Asset']+grp['Current Asset']).toLocaleString()}</span></div>
-                    </div>
-                    <div>
-                        <h4 class="font-bold border-b mb-2">EQUITY & LIABILITIES</h4>
-                         <div class="mb-4">
-                            <p class="font-bold text-xs text-gray-500 uppercase">Equity</p>
-                            ${items.filter(i=>i.type==='Equity').map(i=>`<div class="flex justify-between text-xs p-1"><span>${i.name}</span><span>${i.amount.toLocaleString()}</span></div>`).join('')}
-                            <div class="flex justify-between font-bold border-t mt-1 p-1 bg-gray-50"><span>Total Equity</span><span>${grp['Equity'].toLocaleString()}</span></div>
-                        </div>
-                        <div class="mb-4">
-                            <p class="font-bold text-xs text-gray-500 uppercase">Liabilities</p>
-                            ${items.filter(i=>i.type.includes('Liability')).map(i=>`<div class="flex justify-between text-xs p-1"><span>${i.name}</span><span>${i.amount.toLocaleString()}</span></div>`).join('')}
-                            <div class="flex justify-between font-bold border-t mt-1 p-1 bg-gray-50"><span>Total Liab.</span><span>${(grp['Non-Current Liability']+grp['Current Liability']).toLocaleString()}</span></div>
-                        </div>
-                        <div class="flex justify-between font-bold text-lg border-t-2 border-black p-2"><span>TOTAL EQ & LIAB</span><span>${(grp['Equity']+grp['Non-Current Liability']+grp['Current Liability']).toLocaleString()}</span></div>
-                    </div>
-                </div>`;
+                const snap = await getDocs(query(collection(db, "bs_items")));
+                let grp = { 'Non-Current Asset':0, 'Current Asset':0, 'Equity':0, 'Non-Current Liability':0, 'Current Liability':0 }; let items = [];
+                snap.forEach(d => { const t = d.data(); if(t.date <= to) { grp[t.type] += t.amount; items.push(t); } });
+                html = `<div class="grid grid-cols-2 gap-8"><div><h4 class="font-bold border-b mb-2">ASSETS</h4><div class="mb-4"><p class="font-bold text-xs text-gray-500 uppercase">Non-Current Assets</p>${items.filter(i=>i.type==='Non-Current Asset').map(i=>`<div class="flex justify-between text-xs p-1"><span>${i.name}</span><span>${i.amount.toLocaleString()}</span></div>`).join('')}<div class="flex justify-between font-bold border-t mt-1 p-1 bg-gray-50"><span>Total</span><span>${grp['Non-Current Asset'].toLocaleString()}</span></div></div><div class="mb-4"><p class="font-bold text-xs text-gray-500 uppercase">Current Assets</p>${items.filter(i=>i.type==='Current Asset').map(i=>`<div class="flex justify-between text-xs p-1"><span>${i.name}</span><span>${i.amount.toLocaleString()}</span></div>`).join('')}<div class="flex justify-between font-bold border-t mt-1 p-1 bg-gray-50"><span>Total</span><span>${grp['Current Asset'].toLocaleString()}</span></div></div><div class="flex justify-between font-bold text-lg border-t-2 border-black p-2"><span>TOTAL ASSETS</span><span>${(grp['Non-Current Asset']+grp['Current Asset']).toLocaleString()}</span></div></div><div><h4 class="font-bold border-b mb-2">EQUITY & LIABILITIES</h4><div class="mb-4"><p class="font-bold text-xs text-gray-500 uppercase">Equity</p>${items.filter(i=>i.type==='Equity').map(i=>`<div class="flex justify-between text-xs p-1"><span>${i.name}</span><span>${i.amount.toLocaleString()}</span></div>`).join('')}<div class="flex justify-between font-bold border-t mt-1 p-1 bg-gray-50"><span>Total Equity</span><span>${grp['Equity'].toLocaleString()}</span></div></div><div class="mb-4"><p class="font-bold text-xs text-gray-500 uppercase">Liabilities</p>${items.filter(i=>i.type.includes('Liability')).map(i=>`<div class="flex justify-between text-xs p-1"><span>${i.name}</span><span>${i.amount.toLocaleString()}</span></div>`).join('')}<div class="flex justify-between font-bold border-t mt-1 p-1 bg-gray-50"><span>Total Liab.</span><span>${(grp['Non-Current Liability']+grp['Current Liability']).toLocaleString()}</span></div></div><div class="flex justify-between font-bold text-lg border-t-2 border-black p-2"><span>TOTAL EQ & LIAB</span><span>${(grp['Equity']+grp['Non-Current Liability']+grp['Current Liability']).toLocaleString()}</span></div></div></div>`;
             }
 
-            // Render to hidden print area & Preview
-            document.getElementById('overlayPrintContent').innerHTML = html;
-            document.getElementById('reportContent').innerHTML = html;
+            document.getElementById('overlayPrintContent').innerHTML = html; document.getElementById('reportContent').innerHTML = html;
         };
 
         window.triggerPDFDownload = async () => {
-            const content = document.getElementById('overlayPrintContent').innerHTML;
-            if(!content) return alert("Please Load Data or Generate Report first.");
-            await downloadPDF();
+            const content = document.getElementById('overlayPrintContent').innerHTML; if(!content) return alert("Generate Report first."); await downloadPDF();
         };
-        
-        // --- ADDED: PROJECT SPECIFIC DOWNLOAD ---
         window.downloadFinancialReport = async () => {
-            const inc = document.getElementById('finIncome').innerText;
-            const exp = document.getElementById('finExpense').innerText;
-            const prof = document.getElementById('finProfit').innerText;
-            
-            // Set content to overlay
-            document.getElementById('overlayPrintTitle').innerText = "Financial Report: " + currentProjName;
-            document.getElementById('overlayPrintDate').innerText = new Date().toLocaleDateString();
+            const inc = document.getElementById('finIncome').innerText; const exp = document.getElementById('finExpense').innerText; const prof = document.getElementById('finProfit').innerText;
+            document.getElementById('overlayPrintTitle').innerText = "Financial Report: " + currentProjName; document.getElementById('overlayPrintDate').innerText = new Date().toLocaleDateString();
             document.getElementById('overlayPrintContent').innerHTML = `<h2>Project Summary</h2><table style="width:100%; margin-top:20px; font-size:18px;"><tr><td style="padding:10px;">Total Revenue</td><td style="text-align:right;">${inc}</td></tr><tr><td style="padding:10px;">Total Costs</td><td style="text-align:right; color:red;">${exp}</td></tr><tr style="font-weight:bold; border-top:2px solid black;"><td style="padding:10px;">NET PROFIT</td><td style="text-align:right;">${prof}</td></tr></table>`;
-            
-            // Trigger download with delay
             await downloadPDF();
         };
 
-        // --- PROJECTS ---
         function loadProjects() {
             onSnapshot(query(collection(db, "projects"), orderBy("createdAt", "desc")), (snap) => {
                 const grid = document.getElementById('projectGrid'); grid.innerHTML = "";
@@ -831,8 +576,7 @@
         }
 
         document.getElementById('createProjBtn').addEventListener('click', async () => {
-            const name = document.getElementById('newProjName').value; const area = document.getElementById('newProjArea').value;
-            if(!name) return;
+            const name = document.getElementById('newProjName').value; const area = document.getElementById('newProjArea').value; if(!name) return;
             await addDoc(collection(db, "projects"), { name, area, status: 'development', createdAt: new Date() });
             document.getElementById('newProjectModal').classList.add('hidden');
         });
@@ -840,51 +584,63 @@
         function openProject(id, data) {
             currentProjId = id; currentProjName = data.name;
             nav('detail');
-            document.getElementById('detailName').innerText = data.name; document.getElementById('detailArea').innerText = data.area || 'Unknown';
-            document.getElementById('detailStatus').innerText = data.status || 'Active';
-            const isDev = data.status === 'development';
-            document.getElementById('devPhaseUI').style.display = isDev ? 'grid' : 'none';
-            document.getElementById('endDevBtn').style.display = isDev ? 'block' : 'none';
-            const vList = document.getElementById('vehicleList'); vList.innerHTML = "";
-            (data.assignedVehicles || []).forEach(v => vList.innerHTML += `<span class="bg-gray-200 px-2 py-1 rounded text-xs font-bold mr-1">${v}</span>`);
-            loadBlocks(id, isDev);
-            loadExpensesAndProfit(id);
-            loadProjectTasks(id);
+            
+            // LISTEN TO REAL-TIME UPDATES FOR THIS SPECIFIC PROJECT
+            if(currentProjUnsub) currentProjUnsub(); // Clear previous listener
+            currentProjUnsub = onSnapshot(doc(db, "projects", id), (docSnap) => {
+                if (docSnap.exists()) {
+                    const pData = docSnap.data();
+                    document.getElementById('detailName').innerText = pData.name; 
+                    document.getElementById('detailArea').innerText = pData.area || 'Unknown';
+                    document.getElementById('detailStatus').innerText = pData.status || 'Active';
+                    
+                    const isDev = pData.status === 'development';
+                    document.getElementById('devPhaseUI').style.display = isDev ? 'grid' : 'none';
+                    document.getElementById('endDevBtn').style.display = isDev ? 'block' : 'none';
+
+                    // Update Vehicle List
+                    const vList = document.getElementById('vehicleList'); 
+                    vList.innerHTML = "";
+                    (pData.assignedVehicles || []).forEach(v => vList.innerHTML += `<span class="bg-gray-200 px-2 py-1 rounded text-xs font-bold mr-1">${v}</span>`);
+                }
+            });
+
+            // FIXED: END DEVELOPMENT FUNCTIONALITY
+            window.endDevelopmentPhase = async () => {
+                if(!confirm("Are you sure you want to end Development Phase?\nThis will hide development tools and mark project as Active.")) return;
+                await updateDoc(doc(db, "projects", currentProjId), { status: 'active' });
+                alert("Development Phase Ended. Project is now Active.");
+            };
+            
+            window.assignVehicle = async () => {
+                const vNo = document.getElementById('regVehicleNo').value;
+                if(!vNo) return;
+                await updateDoc(doc(db, "projects", currentProjId), {
+                    assignedVehicles: arrayUnion(vNo)
+                });
+                document.getElementById('regVehicleNo').value = "";
+            };
+
+            loadBlocks(id, data.status === 'development'); loadExpensesAndProfit(id); loadProjectTasks(id);
         }
 
         document.getElementById('addBlockBtn').addEventListener('click', async () => {
             const name = document.getElementById('blockName').value; const size = document.getElementById('blockSize').value;
-            const price = document.getElementById('blockPrice').value; const pPrice = document.getElementById('blockPerchPrice').value;
-            if(!name) return;
+            const price = document.getElementById('blockPrice').value; const pPrice = document.getElementById('blockPerchPrice').value; if(!name) return;
             await addDoc(collection(db, `projects/${currentProjId}/blocks`), { name, size, price: parseFloat(price), perchPrice: parseFloat(pPrice), status: "available" });
             document.getElementById('blockName').value = ""; document.getElementById('blockPrice').value = "";
         });
 
-        // --- TASKS ---
         let projectTasksData = {}; 
-
         function loadProjectTasks(pid) {
             onSnapshot(query(collection(db, `projects/${pid}/tasks`), orderBy("createdAt", "desc")), (snap) => {
-                const list = document.getElementById('adminTaskList'); list.innerHTML = "";
-                projectTasksData = {}; 
+                const list = document.getElementById('adminTaskList'); list.innerHTML = ""; projectTasksData = {}; 
                 snap.forEach(d => {
-                    const t = d.data();
-                    projectTasksData[d.id] = t; 
-                    
-                    let statusBadge = "";
-                    let actionBtn = "";
-
-                    if (t.status === 'completed') {
-                        statusBadge = '<span class="text-green-600 font-bold text-xs bg-green-100 px-2 rounded">Paid</span>';
-                        // ADDED VIEW BUTTON FOR COMPLETED TASKS
-                        actionBtn = `<button onclick="openApproveModal('${d.id}', true)" class="bg-slate-200 text-slate-800 px-4 py-2 rounded text-xs font-bold hover:bg-slate-300">View</button>`;
-                    } else if (t.status === 'pending_approval') {
-                        statusBadge = '<span class="text-yellow-600 font-bold text-xs bg-yellow-100 px-2 rounded animate-pulse">Needs Review</span>';
-                        actionBtn = `<button onclick="openApproveModal('${d.id}', false)" class="bg-slate-900 text-white px-4 py-2 rounded text-xs font-bold">Review</button>`;
-                    } else {
-                        statusBadge = '<span class="text-gray-400 text-xs bg-gray-100 px-2 rounded">Pending</span>';
-                    }
-
+                    const t = d.data(); projectTasksData[d.id] = t; 
+                    let statusBadge = ""; let actionBtn = "";
+                    if (t.status === 'completed') { statusBadge = '<span class="text-green-600 font-bold text-xs bg-green-100 px-2 rounded">Paid</span>'; actionBtn = `<button onclick="openApproveModal('${d.id}', true)" class="bg-slate-200 text-slate-800 px-4 py-2 rounded text-xs font-bold hover:bg-slate-300">View</button>`; } 
+                    else if (t.status === 'pending_approval') { statusBadge = '<span class="text-yellow-600 font-bold text-xs bg-yellow-100 px-2 rounded animate-pulse">Needs Review</span>'; actionBtn = `<button onclick="openApproveModal('${d.id}', false)" class="bg-slate-900 text-white px-4 py-2 rounded text-xs font-bold">Review</button>`; } 
+                    else { statusBadge = '<span class="text-gray-400 text-xs bg-gray-100 px-2 rounded">Pending</span>'; }
                     const el = document.createElement('div'); el.className = "bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex justify-between items-center";
                     el.innerHTML = `<div><h4 class="font-bold text-slate-800">${t.title}</h4><p class="text-xs text-gray-500">${t.description||'-'}</p><div class="mt-1">${statusBadge} ${t.submittedCost ? `<span class="ml-2 font-bold">Rs. ${t.submittedCost}</span>` : ''}</div></div>${actionBtn}`;
                     list.appendChild(el);
@@ -897,27 +653,16 @@
         });
         
         let activeApproveId = null; let activeApproveCost = 0;
-        
-        // MODIFIED: Accepts readOnly parameter
         window.openApproveModal = (id, readOnly) => {
-            const task = projectTasksData[id];
-            if(!task) return alert("Error loading task data");
-            
+            const task = projectTasksData[id]; if(!task) return alert("Error");
             activeApproveId = id; activeApproveCost = task.submittedCost;
-            document.getElementById('approveTaskTitle').innerText = task.title; 
-            document.getElementById('approveTaskCost').innerText = "Rs. " + (task.submittedCost || 0).toLocaleString();
-            
-            // Adjust UI for Read Only vs Approve
-            document.getElementById('taskModalHeader').innerText = readOnly ? "Task Details" : "Review Task";
-            document.getElementById('confirmApproveTaskBtn').style.display = readOnly ? 'none' : 'block';
-
+            document.getElementById('approveTaskTitle').innerText = task.title; document.getElementById('approveTaskCost').innerText = "Rs. " + (task.submittedCost || 0).toLocaleString();
+            document.getElementById('taskModalHeader').innerText = readOnly ? "Task Details" : "Review Task"; document.getElementById('confirmApproveTaskBtn').style.display = readOnly ? 'none' : 'block';
             const div = document.getElementById('approveTaskPhotos'); div.innerHTML = "";
-            if(task.photos && task.photos.length > 0) {
-                task.photos.forEach(src => div.innerHTML += `<img src="${src}" class="w-full h-32 object-cover rounded border cursor-pointer hover:opacity-90 transition" onclick="document.getElementById('imgModalSrc').src='${src}';document.getElementById('imgModal').classList.remove('hidden')">`);
-            } else { div.innerHTML = "<p class='text-xs text-gray-400'>No photos.</p>"; }
+            if(task.photos && task.photos.length > 0) { task.photos.forEach(src => div.innerHTML += `<img src="${src}" class="w-full h-32 object-cover rounded border cursor-pointer hover:opacity-90 transition" onclick="document.getElementById('imgModalSrc').src='${src}';document.getElementById('imgModal').classList.remove('hidden')">`); } 
+            else { div.innerHTML = "<p class='text-xs text-gray-400'>No photos.</p>"; }
             document.getElementById('taskApproveModal').classList.remove('hidden');
         };
-
         document.getElementById('confirmApproveTaskBtn').addEventListener('click', async () => {
             const title = document.getElementById('approveTaskTitle').innerText;
             await updateDoc(doc(db, `projects/${currentProjId}/tasks/${activeApproveId}`), { status: 'completed' });
@@ -926,9 +671,34 @@
             document.getElementById('taskApproveModal').classList.add('hidden');
         });
 
-        // --- SALES & PAYMENTS ---
+        // --- SALES & PAYMENTS & CUSTOMER ID ---
         window.processSale = async (downloadPdf) => {
-            const cus = { name: document.getElementById('cusName').value, address: document.getElementById('cusAddress').value, nic: document.getElementById('cusNIC').value, phone: document.getElementById('cusPhone').value };
+            const nic = document.getElementById('cusNIC').value;
+            const name = document.getElementById('cusName').value;
+            const phone = document.getElementById('cusPhone').value;
+            const address = document.getElementById('cusAddress').value;
+
+            if(!nic || !name) return alert("Customer Name and NIC are required!");
+
+            // 1. GET OR GENERATE CUSTOMER ID
+            let customerId = "";
+            const q = query(collection(db, "customers"), where("nic", "==", nic));
+            const snap = await getDocs(q);
+
+            if(!snap.empty) {
+                // Existing customer
+                customerId = snap.docs[0].data().customerId;
+                // Update their details just in case
+                await updateDoc(snap.docs[0].ref, { name, phone, address });
+            } else {
+                // New customer - Generate ID (CUS- + Random 6 digits)
+                customerId = "CUS-" + Math.floor(100000 + Math.random() * 900000);
+                await addDoc(collection(db, "customers"), {
+                    customerId, name, nic, phone, address, joinedDate: new Date()
+                });
+            }
+
+            const cus = { customerId, name, address, nic, phone };
             const advance = parseFloat(document.getElementById('advancePay').value);
             const price = parseFloat(document.getElementById('finalPrice').value);
             const plan = document.getElementById('payPlanType').value;
@@ -945,19 +715,25 @@
                 payment: { totalPrice: price, advancePaid: advance, planType: plan, epDetails: ep, nextPaymentDate: nextD, history: [{date: new Date(), amount: advance, type: 'Advance'}] }
             });
 
-            await addDoc(collection(db, "customers"), {
-                name: cus.name, nic: cus.nic, phone: cus.phone, address: cus.address,
-                projectId: currentProjId, projectName: currentProjName,
-                blockId: selectedBlockId, blockName: selectedBlockData.name,
-                purchasedDate: new Date()
-            });
+            // Also save to Customers collection as a purchase reference (optional but good)
+            const cusRef = query(collection(db, "customers"), where("customerId", "==", customerId));
+            const cusSnap2 = await getDocs(cusRef);
+            if(!cusSnap2.empty) {
+                await updateDoc(cusSnap2.docs[0].ref, {
+                    lastPurchase: new Date(),
+                    blockName: selectedBlockData.name,
+                    projectName: currentProjName,
+                    blockId: selectedBlockId,
+                    projectId: currentProjId
+                });
+            }
 
             await recordDailyTransaction(`Sale Advance: ${selectedBlockData.name} - ${cus.name}`, advance, 'income', currentProjName);
             
             if(downloadPdf) {
                 document.getElementById('overlayPrintTitle').innerText = "OFFICIAL RECEIPT";
                 document.getElementById('overlayPrintDate').innerText = new Date().toLocaleDateString();
-                document.getElementById('overlayPrintContent').innerHTML = `<div style="margin-top:30px; line-height:1.8;"><p><strong>Received From:</strong> ${cus.name}</p><p><strong>Amount:</strong> Rs. ${advance.toLocaleString()}</p><hr class="my-6 border-gray-400"><p><strong>Project:</strong> ${currentProjName}</p><p><strong>Block:</strong> ${selectedBlockData.name}</p><p><strong>Payment Plan:</strong> ${plan === 'EP' ? 'Easy Payment (Installment)' : 'Cash / Outright'}</p></div>`;
+                document.getElementById('overlayPrintContent').innerHTML = `<div style="margin-top:30px; line-height:1.8;"><p><strong>Customer ID:</strong> ${customerId}</p><p><strong>Received From:</strong> ${cus.name}</p><p><strong>Amount:</strong> Rs. ${advance.toLocaleString()}</p><hr class="my-6 border-gray-400"><p><strong>Project:</strong> ${currentProjName}</p><p><strong>Block:</strong> ${selectedBlockData.name}</p><p><strong>Payment Plan:</strong> ${plan === 'EP' ? 'Easy Payment (Installment)' : 'Cash / Outright'}</p></div>`;
                 await downloadPDF();
             }
             closeSellModal();
@@ -973,6 +749,13 @@
             document.getElementById('resellBtn').classList.toggle('hidden', isFin || !isEP); 
             document.getElementById('paymentCompleteMsg').classList.toggle('hidden', !isFin);
             document.getElementById('payBlockInfo').innerText = `${data.name} - ${data.customer.name}`;
+            
+            // SHOW CUSTOMER DETAILS
+            document.getElementById('viewCusId').innerText = data.customer.customerId || "N/A";
+            document.getElementById('viewCusNIC').innerText = data.customer.nic || "N/A";
+            document.getElementById('viewCusPhone').innerText = data.customer.phone || "N/A";
+            document.getElementById('viewCusAddr').innerText = data.customer.address || "N/A";
+
             let total = data.soldPrice; let paid = data.soldPrice;
             if(isEP) { total = data.payment.epDetails.totalPayable; paid = data.payment.epDetails.paidAmount || 0; }
             
@@ -1009,38 +792,20 @@
         };
 
         window.toggleEditPlan = () => document.getElementById('editPlanSection').classList.toggle('hidden');
-        
         document.getElementById('savePlanChangesBtn').addEventListener('click', async () => {
             const rate = parseFloat(document.getElementById('editNewRate').value);
             const months = parseFloat(document.getElementById('editNewMonths').value);
-            
             if(!rate || !months) return alert("Please enter valid Rate and Months");
-            
-            const b = selectedBlockData;
-            if(!b || !b.payment || b.payment.planType !== 'EP') return alert("Invalid Block Data for Edit");
-
-            const bal = b.soldPrice - b.payment.advancePaid; 
-            const newInt = bal * (rate/100) * (months/12);
-            const newTot = bal + newInt + b.payment.advancePaid;
-
-            await updateDoc(doc(db, `projects/${currentProjId}/blocks/${selectedBlockId}`), { 
-                "payment.epDetails.rate": rate, 
-                "payment.epDetails.months": months, 
-                "payment.epDetails.totalPayable": newTot 
-            });
-
-            alert("Plan Updated Successfully!"); 
-            document.getElementById('paymentModal').classList.add('hidden');
-            openProject(currentProjId, {name: currentProjName, area: '...'});
+            const b = selectedBlockData; if(!b || !b.payment || b.payment.planType !== 'EP') return alert("Invalid");
+            const bal = b.soldPrice - b.payment.advancePaid; const newInt = bal * (rate/100) * (months/12); const newTot = bal + newInt + b.payment.advancePaid;
+            await updateDoc(doc(db, `projects/${currentProjId}/blocks/${selectedBlockId}`), { "payment.epDetails.rate": rate, "payment.epDetails.months": months, "payment.epDetails.totalPayable": newTot });
+            alert("Updated!"); document.getElementById('paymentModal').classList.add('hidden'); openProject(currentProjId, {name: currentProjName, area: '...'});
         });
-
         document.getElementById('submitPayBtn').addEventListener('click', async () => {
-            const amt = parseFloat(document.getElementById('newPayAmount').value);
-            if(!amt) return;
+            const amt = parseFloat(document.getElementById('newPayAmount').value); if(!amt) return;
             const b = selectedBlockData;
             if(b.payment.planType === 'EP') {
-                const newPaid = (b.payment.epDetails.paidAmount||0) + amt;
-                const nextD = new Date(); nextD.setDate(nextD.getDate() + (b.payment.epDetails.cycleDays || 30));
+                const newPaid = (b.payment.epDetails.paidAmount||0) + amt; const nextD = new Date(); nextD.setDate(nextD.getDate() + (b.payment.epDetails.cycleDays || 30));
                 let up = { "payment.epDetails.paidAmount": newPaid, "payment.nextPaymentDate": nextD, "payment.history": arrayUnion({date:new Date(), amount:amt, type:'Installment'}) };
                 if(newPaid >= b.payment.epDetails.totalPayable - 100) up["status"] = "sold_finished"; 
                 await updateDoc(doc(db, `projects/${currentProjId}/blocks/${selectedBlockId}`), up);
@@ -1048,150 +813,38 @@
             await recordDailyTransaction(`Payment: ${b.name} (${b.customer.name})`, amt, 'income', currentProjName);
             document.getElementById('paymentModal').classList.add('hidden');
         });
-
         window.processResell = async () => {
-            if(!confirm("Are you sure you want to CANCEL this sale?\nThis will calculate the refund and reset the block.")) return;
-            const b = selectedBlockData;
-            const paid = b.payment.epDetails ? b.payment.epDetails.paidAmount : b.soldPrice;
+            if(!confirm("Cancel sale?")) return; const b = selectedBlockData; const paid = b.payment.epDetails ? b.payment.epDetails.paidAmount : b.soldPrice;
             await addDoc(collection(db, `projects/${currentProjId}/expenses`), { description: `REFUND: Cancelled Sale ${b.name} (${b.customer.name})`, amount: paid, date: new Date().toLocaleDateString('en-CA'), createdAt: serverTimestamp() });
             await recordDailyTransaction(`REFUND: ${b.name}`, paid, 'expense', currentProjName);
             await updateDoc(doc(db, `projects/${currentProjId}/blocks/${selectedBlockId}`), { status: 'available', customer: null, payment: null, soldPrice: null, soldDate: null });
-            alert(`Sale Cancelled.\nRefund of Rs.${paid.toLocaleString()} recorded.\nBlock is now AVAILABLE.`);
-            document.getElementById('paymentModal').classList.add('hidden');
+            alert("Cancelled!"); document.getElementById('paymentModal').classList.add('hidden');
         };
-
         document.getElementById('saveExpenseBtn').addEventListener('click', async () => {
-            const amt = parseFloat(document.getElementById('expAmount').value);
-            const desc = document.getElementById('expDesc').value;
+            const amt = parseFloat(document.getElementById('expAmount').value); const desc = document.getElementById('expDesc').value;
             await addDoc(collection(db, `projects/${currentProjId}/expenses`), { description: desc, amount: amt, date: new Date().toLocaleDateString('en-CA'), createdAt: serverTimestamp() });
-            await recordDailyTransaction(`Expense: ${desc}`, amt, 'expense', currentProjName);
-            document.getElementById('expenseModal').classList.add('hidden');
+            await recordDailyTransaction(`Expense: ${desc}`, amt, 'expense', currentProjName); document.getElementById('expenseModal').classList.add('hidden');
         });
-
         async function checkOverduePayments() {
-            const blocksQ = query(collectionGroup(db, 'blocks'), where('status', '==', 'sold'));
-            const snap = await getDocs(blocksQ);
-            const list = document.getElementById('notifList'); list.innerHTML = "";
-            let count = 0;
-            snap.forEach(d => {
-                const b = d.data();
-                if(b.payment && b.payment.planType === 'EP' && b.payment.nextPaymentDate) {
+            const blocksQ = query(collectionGroup(db, 'blocks'), where('status', '==', 'sold')); const snap = await getDocs(blocksQ);
+            const list = document.getElementById('notifList'); list.innerHTML = ""; let count = 0;
+            snap.forEach(d => { const b = d.data(); if(b.payment && b.payment.planType === 'EP' && b.payment.nextPaymentDate) {
                     const nextD = b.payment.nextPaymentDate.seconds ? new Date(b.payment.nextPaymentDate.seconds*1000) : new Date(b.payment.nextPaymentDate);
-                    if(nextD < new Date()) {
-                        count++;
-                        const div = document.createElement('div');
-                        div.className = "p-3 border-b hover:bg-red-50 cursor-pointer";
-                        div.innerHTML = `<p class="font-bold text-slate-800 text-xs">${b.name} - ${b.customer.name}</p><p class="text-[10px] text-red-500 font-bold">Due: ${nextD.toLocaleDateString()}</p>`;
-                        div.onclick = async () => { 
-                            const pid = d.ref.parent.parent.id;
-                            const pSnap = await getDoc(doc(db, "projects", pid));
-                            openProject(pid, pSnap.data()); 
-                            setTimeout(()=> { selectedBlockId=d.id; openPaymentModal(b); }, 1000); 
-                        };
-                        list.appendChild(div);
-                    }
-                }
-            });
-            if(count > 0) {
-                document.getElementById('notifBadge').innerText = count;
-                document.getElementById('notifBadge').classList.remove('hidden');
-                document.getElementById('bellIcon').classList.add('text-red-500', 'animate-pulse');
-            }
+                    if(nextD < new Date()) { count++; const div = document.createElement('div'); div.className = "p-3 border-b hover:bg-red-50 cursor-pointer"; div.innerHTML = `<p class="font-bold text-slate-800 text-xs">${b.name} - ${b.customer.name}</p><p class="text-[10px] text-red-500 font-bold">Due: ${nextD.toLocaleDateString()}</p>`;
+                        div.onclick = async () => { const pid = d.ref.parent.parent.id; const pSnap = await getDoc(doc(db, "projects", pid)); openProject(pid, pSnap.data()); setTimeout(()=> { selectedBlockId=d.id; openPaymentModal(b); }, 1000); };
+                        list.appendChild(div); } } });
+            if(count > 0) { document.getElementById('notifBadge').innerText = count; document.getElementById('notifBadge').classList.remove('hidden'); document.getElementById('bellIcon').classList.add('text-red-500', 'animate-pulse'); }
         }
-        
-        // --- HELPERS ---
-        window.calcBlockPrice = () => {
-            const size = parseFloat(document.getElementById('blockSize').value) || 0;
-            const price = parseFloat(document.getElementById('blockPerchPrice').value) || 0;
-            document.getElementById('blockPrice').value = size * price;
-        };
-        window.toggleEPFields = () => {
-            const isEP = document.getElementById('payPlanType').value === 'EP';
-            document.getElementById('epFields').classList.toggle('hidden', !isEP);
-            if(isEP) window.calculateEP();
-        };
-        window.calculateEP = () => {
-            const price = parseFloat(document.getElementById('finalPrice').value) || 0;
-            const advance = parseFloat(document.getElementById('advancePay').value) || 0;
-            const rate = parseFloat(document.getElementById('epRate').value) || 15;
-            const months = parseFloat(document.getElementById('epMonths').value) || 60;
-            const balance = price - advance;
-            if(balance < 0) return;
-            const totalInterest = balance * (rate / 100) * (months/12);
-            const totalPayable = balance + totalInterest;
-            document.getElementById('epTotalPayable').innerText = totalPayable.toFixed(2);
-            document.getElementById('epMonthlyInst').innerText = (totalPayable / months).toFixed(2);
-        };
-        window.downloadPDF = async () => {
-            const overlay = document.getElementById('pdfPreviewOverlay'); 
-            overlay.style.display = 'block'; 
-            
-            // Add slight delay to ensure content renders
-            await new Promise(r => setTimeout(r, 500));
-
-            try { 
-                await html2pdf().set({ 
-                    margin: 10, 
-                    filename: 'Report.pdf', 
-                    image: { type: 'jpeg', quality: 0.98 }, 
-                    html2canvas: { scale: 2 }, 
-                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
-                }).from(overlay.querySelector('.print-container')).save(); 
-            } 
-            catch (err) { 
-                console.error(err); 
-                alert("Error generating PDF. Please check console."); 
-            } 
-            finally { 
-                setTimeout(() => { overlay.style.display = 'none'; }, 1000); 
-            }
-        };
-        function loadExpensesAndProfit(pid) {
-            let inc = 0;
-            onSnapshot(collection(db, `projects/${pid}/blocks`), (snap) => {
-                inc = 0; snap.forEach(d => { const b = d.data(); if(b.status.includes('sold')) inc += b.soldPrice; });
-                document.getElementById('finIncome').innerText = "Rs. " + inc.toLocaleString(); updateNet(inc, null);
-            });
-            onSnapshot(query(collection(db, `projects/${pid}/expenses`), orderBy("date","desc")), (snap) => {
-                let exp = 0; const list = document.getElementById('expenseList'); list.innerHTML = "";
-                snap.forEach(d => { const e = d.data(); exp += e.amount; list.innerHTML += `<tr class="border-b"><td class="p-3 text-gray-500">${e.date}</td><td class="p-3 font-bold">${e.description}</td><td class="p-3 text-right text-red-600">-${e.amount.toLocaleString()}</td></tr>`; });
-                document.getElementById('finExpense').innerText = "Rs. " + exp.toLocaleString(); updateNet(null, exp);
-            });
-        }
+        window.calcBlockPrice = () => { document.getElementById('blockPrice').value = (parseFloat(document.getElementById('blockSize').value)||0) * (parseFloat(document.getElementById('blockPerchPrice').value)||0); };
+        window.toggleEPFields = () => { const isEP = document.getElementById('payPlanType').value === 'EP'; document.getElementById('epFields').classList.toggle('hidden', !isEP); if(isEP) window.calculateEP(); };
+        window.calculateEP = () => { const price = parseFloat(document.getElementById('finalPrice').value)||0; const advance = parseFloat(document.getElementById('advancePay').value)||0; const rate = parseFloat(document.getElementById('epRate').value)||15; const months = parseFloat(document.getElementById('epMonths').value)||60; const balance = price - advance; if(balance < 0) return; const totalInterest = balance * (rate / 100) * (months/12); const totalPayable = balance + totalInterest; document.getElementById('epTotalPayable').innerText = totalPayable.toFixed(2); document.getElementById('epMonthlyInst').innerText = (totalPayable / months).toFixed(2); };
+        window.downloadPDF = async () => { const overlay = document.getElementById('pdfPreviewOverlay'); overlay.style.display = 'block'; await new Promise(r => setTimeout(r, 500)); try { await html2pdf().set({ margin: 10, filename: 'Report.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(overlay.querySelector('.print-container')).save(); } catch (err) { console.error(err); alert("Error"); } finally { setTimeout(() => { overlay.style.display = 'none'; }, 1000); } };
+        function loadExpensesAndProfit(pid) { let inc = 0; onSnapshot(collection(db, `projects/${pid}/blocks`), (snap) => { inc = 0; snap.forEach(d => { const b = d.data(); if(b.status.includes('sold')) inc += b.soldPrice; }); document.getElementById('finIncome').innerText = "Rs. " + inc.toLocaleString(); updateNet(inc, null); }); onSnapshot(query(collection(db, `projects/${pid}/expenses`), orderBy("date","desc")), (snap) => { let exp = 0; const list = document.getElementById('expenseList'); list.innerHTML = ""; snap.forEach(d => { const e = d.data(); exp += e.amount; list.innerHTML += `<tr class="border-b"><td class="p-3 text-gray-500">${e.date}</td><td class="p-3 font-bold">${e.description}</td><td class="p-3 text-right text-red-600">-${e.amount.toLocaleString()}</td></tr>`; }); document.getElementById('finExpense').innerText = "Rs. " + exp.toLocaleString(); updateNet(null, exp); }); }
         let cInc=0, cExp=0; function updateNet(i,e) { if(i!==null) cInc=i; if(e!==null) cExp=e; const net = cInc-cExp; document.getElementById('finProfit').innerText = "Rs. " + net.toLocaleString(); document.getElementById('finProfit').className = `text-3xl font-bold relative z-10 ${net>=0?'text-slate-800':'text-red-600'}`; }
-        function loadMeterReadings() {
-            onSnapshot(query(collection(db, "meter_readings"), orderBy("timestamp", "desc")), (snap) => {
-                const list = document.getElementById('readingsList'); list.innerHTML = "";
-                snap.forEach(d => {
-                    const r = d.data();
-                    const el = document.createElement('div'); el.className = "bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex gap-4";
-                    el.innerHTML = `<img src="${r.imageBase64}" onclick="document.getElementById('imgModalSrc').src='${r.imageBase64}';document.getElementById('imgModal').classList.remove('hidden')" class="w-24 h-24 object-cover rounded-lg cursor-pointer"><div class="flex-1"><h4 class="font-bold text-lg text-slate-800">${r.vehicleNo} <span class="text-sm text-gray-500 font-normal">(${r.projectName})</span></h4><p class="text-sm text-gray-600 font-bold mt-1">Worked: ${r.hours} hrs @ Rs. ${r.rate}/hr</p><p class="text-lg text-blue-600 font-bold">Total: Rs. ${r.totalCost.toLocaleString()}</p>${r.status!=='approved' ? `<button onclick="approveReading('${d.id}')" class="mt-2 bg-green-600 text-white px-4 py-1 rounded shadow text-sm font-bold">Approve</button>` : '<span class="text-green-600 font-bold text-xs border border-green-200 px-2 rounded">Approved</span>'}</div>`;
-                    list.appendChild(el);
-                });
-            });
-        }
+        function loadMeterReadings() { onSnapshot(query(collection(db, "meter_readings"), orderBy("timestamp", "desc")), (snap) => { const list = document.getElementById('readingsList'); list.innerHTML = ""; snap.forEach(d => { const r = d.data(); const el = document.createElement('div'); el.className = "bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex gap-4"; el.innerHTML = `<img src="${r.imageBase64}" onclick="document.getElementById('imgModalSrc').src='${r.imageBase64}';document.getElementById('imgModal').classList.remove('hidden')" class="w-24 h-24 object-cover rounded-lg cursor-pointer"><div class="flex-1"><h4 class="font-bold text-lg text-slate-800">${r.vehicleNo} <span class="text-sm text-gray-500 font-normal">(${r.projectName})</span></h4><p class="text-sm text-gray-600 font-bold mt-1">Worked: ${r.hours} hrs @ Rs. ${r.rate}/hr</p><p class="text-lg text-blue-600 font-bold">Total: Rs. ${r.totalCost.toLocaleString()}</p>${r.status!=='approved' ? `<button onclick="approveReading('${d.id}')" class="mt-2 bg-green-600 text-white px-4 py-1 rounded shadow text-sm font-bold">Approve</button>` : '<span class="text-green-600 font-bold text-xs border border-green-200 px-2 rounded">Approved</span>'}</div>`; list.appendChild(el); }); }); }
         window.approveReading = async (id) => { await updateDoc(doc(db, "meter_readings", id), { status: 'approved' }); };
-        function loadBlocks(pid, isDevMode) {
-            const container = document.getElementById('blocksContainer');
-            onSnapshot(collection(db, `projects/${pid}/blocks`), (snap) => {
-                container.innerHTML = "";
-                snap.forEach(d => {
-                    const b = d.data(); const isSold = b.status === 'sold'; const isFin = b.status === 'sold_finished';
-                    const el = document.createElement('div');
-                    const bg = isFin ? 'bg-slate-800 text-white' : (isSold ? 'bg-red-50 border-red-200' : 'bg-white border-blue-100 hover:border-blue-400');
-                    el.className = `p-4 border-2 rounded-xl text-center cursor-pointer relative overflow-hidden ${bg}`;
-                    el.innerHTML = `<h4 class="font-bold text-xl">${b.name}</h4><p class="text-xs ${isFin?'text-gray-400':'text-gray-500'}">${b.size}P</p><p class="font-bold mt-2 ${isFin?'text-green-400':(isSold?'text-red-600':'text-blue-600')}">${isFin?'CLOSED':(isSold?'SOLD':`Rs.${b.price.toLocaleString()}`)}</p>`;
-                    if(!isDevMode) el.onclick = () => { selectedBlockId = d.id; selectedBlockData = b; if(isSold||isFin) openPaymentModal(b); else openSellModal(); };
-                    container.appendChild(el);
-                });
-            });
-        }
-        function openSellModal() {
-            document.getElementById('sellModal').classList.remove('hidden');
-            document.getElementById('sellBlockName').innerText = selectedBlockData.name;
-            document.getElementById('finalPrice').value = selectedBlockData.price;
-            document.getElementById('payPlanType').value = "Cash"; toggleEPFields();
-        }
+        function loadBlocks(pid, isDevMode) { const container = document.getElementById('blocksContainer'); onSnapshot(collection(db, `projects/${pid}/blocks`), (snap) => { container.innerHTML = ""; snap.forEach(d => { const b = d.data(); const isSold = b.status === 'sold'; const isFin = b.status === 'sold_finished'; const el = document.createElement('div'); const bg = isFin ? 'bg-slate-800 text-white' : (isSold ? 'bg-red-50 border-red-200' : 'bg-white border-blue-100 hover:border-blue-400'); el.className = `p-4 border-2 rounded-xl text-center cursor-pointer relative overflow-hidden ${bg}`; el.innerHTML = `<h4 class="font-bold text-xl">${b.name}</h4><p class="text-xs ${isFin?'text-gray-400':'text-gray-500'}">${b.size}P</p><p class="font-bold mt-2 ${isFin?'text-green-400':(isSold?'text-red-600':'text-blue-600')}">${isFin?'CLOSED':(isSold?'SOLD':`Rs.${b.price.toLocaleString()}`)}</p>`; el.onclick = () => { selectedBlockId = d.id; selectedBlockData = b; if(isSold||isFin) openPaymentModal(b); else openSellModal(); }; container.appendChild(el); }); }); }
+        function openSellModal() { document.getElementById('sellModal').classList.remove('hidden'); document.getElementById('sellBlockName').innerText = selectedBlockData.name; document.getElementById('finalPrice').value = selectedBlockData.price; document.getElementById('payPlanType').value = "Cash"; toggleEPFields(); }
     </script>
 </body>
 </html>
