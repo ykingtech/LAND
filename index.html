@@ -15,28 +15,12 @@
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* PDF Preview Overlay Style */
         #pdfPreviewOverlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: white;
-            z-index: 10000; /* Highest priority */
-            overflow-y: auto;
-            padding: 40px;
-            display: none; /* Hidden by default */
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; z-index: 10000; overflow-y: auto; padding: 40px; display: none;
         }
-        
-        /* Print Content Styling */
         .print-container {
-            max-width: 210mm; /* A4 Width */
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            color: black;
-            font-family: 'Times New Roman', serif;
+            max-width: 210mm; margin: 0 auto; background: white; padding: 20px; color: black; font-family: 'Times New Roman', serif;
         }
     </style>
 </head>
@@ -64,14 +48,16 @@
 
     <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1600596542815-2a429b08e695?q=80&w=2070&auto=format&fit=crop');">
         <div class="absolute inset-0 bg-black/50"></div>
-        <div class="relative z-10 glass-dark p-10 rounded-3xl shadow-2xl w-96 text-center border border-white/10 animate-fade-in-up">
+        <div class="relative z-10 glass-dark p-10 rounded-3xl shadow-2xl w-96 text-center border border-white/10">
             <div class="mb-8">
                 <i class="fas fa-gem text-5xl text-amber-500 mb-4 drop-shadow-lg"></i>
                 <h1 class="text-4xl text-white luxury-font tracking-wide">Sithuliya</h1>
                 <p class="text-amber-500/90 text-xs uppercase tracking-[0.4em] mt-2">Exclusive Real Estate</p>
             </div>
-            <input type="password" id="pinInput" readonly class="w-full bg-transparent border-b border-white/20 text-white text-center text-4xl tracking-[1em] mb-8 py-2 focus:outline-none placeholder-white/10" placeholder="••••">
-            <div class="grid grid-cols-3 gap-4 mb-6 max-w-[240px] mx-auto" id="pinPad"></div>
+            <div class="space-y-4">
+                <input type="password" id="loginPass" class="w-full bg-white/10 border border-white/20 rounded-lg p-3 text-white placeholder-gray-400 focus:outline-none focus:border-amber-500 text-center tracking-widest" placeholder="Password">
+                <button onclick="attemptLogin()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-lg shadow-lg transition">LOGIN</button>
+            </div>
         </div>
     </div>
 
@@ -83,7 +69,10 @@
             <nav class="flex-1 p-4 space-y-2">
                 <button onclick="nav('projects')" id="nav-projects" class="nav-btn w-full text-left p-3 rounded-xl bg-amber-600/20 text-amber-500 font-bold border border-amber-600/30"><i class="fas fa-map-marked-alt mr-3"></i> Projects</button>
                 <button onclick="nav('readings')" id="nav-readings" class="nav-btn w-full text-left p-3 rounded-xl hover:bg-slate-800 text-gray-400 font-medium transition"><i class="fas fa-tachometer-alt mr-3"></i> Meter Approvals</button>
-                <button onclick="nav('reports')" id="nav-reports" class="nav-btn w-full text-left p-3 rounded-xl hover:bg-slate-800 text-gray-400 font-medium transition"><i class="fas fa-chart-line mr-3"></i> Reports Center</button>
+                <button onclick="nav('reports')" id="nav-reports" class="nav-btn w-full text-left p-3 rounded-xl hover:bg-slate-800 text-gray-400 font-medium transition"><i class="fas fa-file-invoice-dollar mr-3"></i> Financial Center</button>
+                <div class="pt-8 border-t border-slate-800 mt-8">
+                    <button onclick="nav('settings')" id="nav-settings" class="nav-btn w-full text-left p-3 rounded-xl hover:bg-slate-800 text-gray-400 font-medium transition"><i class="fas fa-cog mr-3"></i> Settings</button>
+                </div>
             </nav>
         </div>
 
@@ -105,7 +94,7 @@
                 </div>
             </header>
 
-            <div id="notifPanel" class="hidden absolute top-20 right-8 w-80 bg-white shadow-2xl rounded-xl border border-gray-100 z-50 overflow-hidden animate-fade-in-down">
+            <div id="notifPanel" class="hidden absolute top-20 right-8 w-96 bg-white shadow-2xl rounded-xl border border-gray-100 z-50 overflow-hidden animate-fade-in-down">
                 <div class="bg-slate-900 p-3 text-white text-sm font-bold flex justify-between items-center">
                     <span><i class="fas fa-exclamation-circle mr-2"></i>Overdue Payments</span>
                     <button onclick="toggleNotifPanel()"><i class="fas fa-times"></i></button>
@@ -176,7 +165,10 @@
                         <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 mb-8">
                             <div class="flex justify-between items-center mb-6">
                                 <h3 class="font-bold text-2xl text-slate-800 luxury-font">Profit Analysis</h3>
-                                <button onclick="openExpenseModal()" class="bg-red-50 text-red-600 hover:bg-red-100 px-4 py-2 rounded-lg text-sm font-bold border border-red-200 transition"><i class="fas fa-receipt mr-2"></i> Add Misc Expense</button>
+                                <div class="flex gap-2">
+                                    <button onclick="downloadFinancialReport()" class="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-bold border hover:bg-slate-800 transition"><i class="fas fa-file-download mr-2"></i> Report</button>
+                                    <button onclick="openExpenseModal()" class="bg-red-50 text-red-600 hover:bg-red-100 px-4 py-2 rounded-lg text-sm font-bold border border-red-200 transition"><i class="fas fa-receipt mr-2"></i> Add Misc Expense</button>
+                                </div>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
                                 <div class="p-6 rounded-xl bg-green-50 border border-green-100">
@@ -205,70 +197,163 @@
                 </div>
 
                 <div id="page-reports" class="hidden">
-                    <h2 class="text-2xl font-bold text-slate-800 mb-6">Financial Reports Center</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <div onclick="openReportGen('cost')" class="bg-white p-6 rounded-2xl shadow-sm hover:shadow-lg cursor-pointer border border-gray-100 transition group">
-                            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition"><i class="fas fa-project-diagram text-xl"></i></div>
-                            <h3 class="font-bold text-lg text-slate-800">Project Cost Breakdown</h3>
-                            <p class="text-xs text-gray-500 mt-2">Generate cost analysis per project.</p>
-                        </div>
-                        <div onclick="openReportGen('petty')" class="bg-white p-6 rounded-2xl shadow-sm hover:shadow-lg cursor-pointer border border-gray-100 transition group">
-                            <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mb-4 text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition"><i class="fas fa-coins text-xl"></i></div>
-                            <h3 class="font-bold text-lg text-slate-800">Petty Cash</h3>
-                            <p class="text-xs text-gray-500 mt-2">Daily cash flow statements.</p>
-                        </div>
-                        <div onclick="openReportGen('pl')" class="bg-white p-6 rounded-2xl shadow-sm hover:shadow-lg cursor-pointer border border-gray-100 transition group">
-                            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600 group-hover:bg-green-600 group-hover:text-white transition"><i class="fas fa-chart-pie text-xl"></i></div>
-                            <h3 class="font-bold text-lg text-slate-800">Profit & Loss</h3>
-                            <p class="text-xs text-gray-500 mt-2">Income vs Expense statements.</p>
-                        </div>
-                        <div onclick="openReportGen('bs')" class="bg-white p-6 rounded-2xl shadow-sm hover:shadow-lg cursor-pointer border border-gray-100 transition group">
-                            <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-4 text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition"><i class="fas fa-balance-scale text-xl"></i></div>
-                            <h3 class="font-bold text-lg text-slate-800">Balance Sheet</h3>
-                            <p class="text-xs text-gray-500 mt-2">Assets, Liabilities & Equity.</p>
-                        </div>
+                    <h2 class="text-2xl font-bold text-slate-800 mb-6">Financial Center</h2>
+                    
+                    <div class="flex border-b border-gray-200 mb-6">
+                        <button onclick="switchFinTab('entry')" id="ft-entry" class="px-6 py-3 font-bold text-slate-800 border-b-2 border-slate-800 transition">Data Entry</button>
+                        <button onclick="switchFinTab('reports')" id="ft-reports" class="px-6 py-3 font-bold text-gray-400 hover:text-slate-600 transition">View Reports</button>
                     </div>
 
-                    <div id="reportGenArea" class="mt-8 bg-white p-8 rounded-2xl shadow-lg border border-gray-100 hidden">
-                        <div class="flex justify-between items-center mb-6 border-b pb-4">
-                            <h3 id="reportTitle" class="text-xl font-bold text-slate-800">Generate Report</h3>
-                            <button onclick="document.getElementById('reportGenArea').classList.add('hidden')" class="text-gray-400 hover:text-red-500"><i class="fas fa-times"></i></button>
-                        </div>
-                        
-                        <div id="reportProjectSelect" class="mb-6 hidden">
-                            <label class="text-xs font-bold uppercase text-gray-500">Select Project</label>
-                            <select id="repProjDropdown" class="w-full md:w-1/3 p-2 border rounded mt-1 bg-gray-50"></select>
-                            <button onclick="generateProjectCostReport()" class="bg-blue-600 text-white px-4 py-2 rounded ml-2 text-sm font-bold">Load Data</button>
-                        </div>
+                    <div id="fin-view-entry">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            
+                            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+                                <h3 class="font-bold text-lg text-slate-800 mb-4 flex items-center"><i class="fas fa-coins text-amber-500 mr-2"></i> Transaction Entry</h3>
+                                <p class="text-xs text-gray-400 mb-6">Enter daily income, expenses, and petty cash vouchers.</p>
+                                
+                                <div class="space-y-4">
+                                    <div class="flex gap-4">
+                                        <div class="flex-1">
+                                            <label class="block text-xs font-bold text-gray-500 mb-1">Date</label>
+                                            <input type="date" id="txDate" class="w-full p-2 border rounded bg-gray-50">
+                                        </div>
+                                        <div class="flex-1">
+                                            <label class="block text-xs font-bold text-gray-500 mb-1">Voucher No (Optional)</label>
+                                            <input type="text" id="txVno" class="w-full p-2 border rounded bg-gray-50" placeholder="e.g. V-001">
+                                        </div>
+                                    </div>
 
-                        <div id="reportInputTable" class="hidden mb-6">
-                            <table class="w-full text-sm text-left border rounded">
-                                <thead class="bg-gray-100"><tr><th class="p-2">Description</th><th class="p-2 text-right">Amount</th><th class="p-2 w-10"></th></tr></thead>
-                                <tbody id="reportRows"></tbody>
-                            </table>
-                            <button onclick="addReportRow()" class="mt-2 text-blue-600 text-xs font-bold">+ Add Line Item</button>
-                        </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-500 mb-1">Description / Particulars</label>
+                                        <input type="text" id="txDesc" class="w-full p-2 border rounded bg-gray-50" placeholder="Description of transaction">
+                                    </div>
 
-                        <div class="flex justify-end gap-4 mt-6">
-                            <button onclick="saveCurrentReport()" class="bg-amber-500 text-white px-6 py-2 rounded-lg font-bold shadow hover:bg-amber-600 flex items-center gap-2">
-                                <i class="fas fa-save"></i> Save to History
-                            </button>
-                            <button onclick="downloadPDF()" class="bg-slate-900 text-white px-6 py-2 rounded-lg font-bold shadow hover:bg-slate-800 flex items-center gap-2">
-                                <i class="fas fa-file-pdf"></i> Download PDF
-                            </button>
-                        </div>
-                    </div>
+                                    <div class="flex gap-4">
+                                        <div class="flex-1">
+                                            <label class="block text-xs font-bold text-gray-500 mb-1">Type</label>
+                                            <select id="txType" class="w-full p-2 border rounded bg-gray-50 font-bold text-slate-700">
+                                                <option value="Expense">Payment / Expense</option>
+                                                <option value="Income">Receipt / Income</option>
+                                            </select>
+                                        </div>
+                                        <div class="flex-1">
+                                            <label class="block text-xs font-bold text-gray-500 mb-1">Amount</label>
+                                            <input type="number" id="txAmount" class="w-full p-2 border rounded bg-gray-50 font-bold text-slate-800" placeholder="0.00">
+                                        </div>
+                                    </div>
 
-                    <div class="mt-8">
-                        <h3 class="text-xl font-bold text-slate-700 mb-4">Saved Reports History</h3>
-                        <div id="savedReportsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-500 mb-1">Category (for P&L)</label>
+                                        <select id="txCategory" class="w-full p-2 border rounded bg-gray-50 text-sm">
+                                            <optgroup label="Income">
+                                                <option value="Sales">Revenue / Sales</option>
+                                                <option value="Other Income">Other Income</option>
+                                            </optgroup>
+                                            <optgroup label="Expenses">
+                                                <option value="Cost of Sales">Cost of Sales</option>
+                                                <option value="Admin Expense">Administrative Expense</option>
+                                                <option value="Selling Expense">Selling & Distribution</option>
+                                                <option value="Finance Cost">Finance Cost</option>
+                                                <option value="Petty Cash">Petty Cash Refill/Exp</option>
+                                                <option value="Tax">Tax Expense</option>
+                                            </optgroup>
+                                        </select>
+                                    </div>
+
+                                    <div class="flex items-center gap-2 pt-2">
+                                        <input type="checkbox" id="txIsPetty" class="w-4 h-4 text-amber-500 rounded">
+                                        <label for="txIsPetty" class="text-sm font-bold text-slate-700">This is a Petty Cash Record</label>
+                                    </div>
+
+                                    <button onclick="saveTransaction()" class="w-full bg-slate-900 text-white font-bold py-3 rounded-xl hover:bg-slate-800 mt-4 shadow-lg">SAVE TRANSACTION</button>
+                                </div>
                             </div>
+
+                            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 h-fit">
+                                <h3 class="font-bold text-lg text-slate-800 mb-4 flex items-center"><i class="fas fa-balance-scale text-blue-500 mr-2"></i> Balance Sheet Entry</h3>
+                                <p class="text-xs text-gray-400 mb-6">Enter Assets, Liabilities, and Equity values.</p>
+                                
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-500 mb-1">As of Date</label>
+                                        <input type="date" id="bsDate" class="w-full p-2 border rounded bg-gray-50">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-500 mb-1">Account Name</label>
+                                        <input type="text" id="bsName" class="w-full p-2 border rounded bg-gray-50" placeholder="e.g. Land at Kadigamuwa, Bank Loan">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-500 mb-1">Type</label>
+                                        <select id="bsType" class="w-full p-2 border rounded bg-gray-50">
+                                            <option value="Non-Current Asset">Non-Current Asset</option>
+                                            <option value="Current Asset">Current Asset</option>
+                                            <option value="Equity">Equity / Capital</option>
+                                            <option value="Non-Current Liability">Non-Current Liability</option>
+                                            <option value="Current Liability">Current Liability</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-500 mb-1">Value</label>
+                                        <input type="number" id="bsAmount" class="w-full p-2 border rounded bg-gray-50 font-bold text-slate-800" placeholder="0.00">
+                                    </div>
+
+                                    <button onclick="saveBSItem()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 mt-4 shadow-lg">SAVE B/S ITEM</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="fin-view-reports" class="hidden">
+                        
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-wrap gap-4 items-center mb-6">
+                            <div class="flex items-center gap-2">
+                                <label class="text-xs font-bold text-gray-500">From:</label>
+                                <input type="date" id="repFrom" class="p-2 border rounded bg-gray-50 text-sm">
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <label class="text-xs font-bold text-gray-500">To:</label>
+                                <input type="date" id="repTo" class="p-2 border rounded bg-gray-50 text-sm">
+                            </div>
+                            <div class="h-8 w-px bg-gray-300 mx-2"></div>
+                            <div class="flex gap-2">
+                                <button onclick="genReport('daybook')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-sm font-bold transition">Day Book</button>
+                                <button onclick="genReport('petty')" class="px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg text-sm font-bold transition">Petty Cash</button>
+                                <button onclick="genReport('pnl')" class="px-4 py-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg text-sm font-bold transition">P & L</button>
+                                <button onclick="genReport('bs')" class="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-sm font-bold transition">Balance Sheet</button>
+                            </div>
+                        </div>
+
+                        <div id="reportOutputArea" class="bg-white p-8 rounded-2xl shadow border border-gray-100 min-h-[400px]">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="font-bold text-gray-400 uppercase tracking-widest text-sm">Report Preview</h3>
+                                <button onclick="triggerPDFDownload()" class="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-bold shadow hover:bg-slate-800"><i class="fas fa-file-pdf mr-2"></i> Download PDF</button>
+                            </div>
+                            <div id="reportContent" class="overflow-x-auto border rounded-lg p-4 bg-gray-50 text-sm">
+                                <p class="text-center text-gray-400 py-10">Select a date range and click a report button above to view.</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div id="page-settings" class="hidden">
+                    <h2 class="text-2xl font-bold text-slate-800 mb-6">System Settings</h2>
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 max-w-md">
+                        <h3 class="font-bold text-lg mb-4 text-amber-600">Change Admin Password</h3>
+                        <input type="password" id="newAdminPass" placeholder="New Password" class="w-full p-3 border rounded-lg mb-4">
+                        <button onclick="updatePassword()" class="w-full bg-slate-900 text-white font-bold py-3 rounded-lg hover:bg-slate-800">Update Password</button>
                     </div>
                 </div>
 
             </main>
         </div>
     </div>
+
+    <div id="pettyCashModal" class="hidden fixed inset-0 bg-black/50 z-[60] flex items-center justify-center backdrop-blur-sm">
+         </div>
 
     <div id="newProjectModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm">
         <div class="bg-white p-8 rounded-2xl shadow-2xl w-96">
@@ -281,7 +366,7 @@
             </div>
         </div>
     </div>
-
+    
     <div id="newTaskModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm">
         <div class="bg-white p-8 rounded-2xl shadow-2xl w-96">
             <h2 class="text-xl font-bold mb-4 text-slate-800">Assign Site Task</h2>
@@ -297,7 +382,7 @@
     <div id="taskApproveModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl w-full max-w-4xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
             <div class="p-6 border-b flex justify-between items-center bg-gray-50">
-                <h2 class="text-xl font-bold text-slate-800">Review Task</h2>
+                <h2 class="text-xl font-bold text-slate-800" id="taskModalHeader">Review Task</h2>
                 <button onclick="document.getElementById('taskApproveModal').classList.add('hidden')" class="text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
             </div>
             <div class="p-6 overflow-y-auto flex-1">
@@ -333,7 +418,7 @@
                         <div class="flex gap-3">
                             <div class="w-1/3"><label class="text-[10px] font-bold text-blue-800">RATE %</label><input type="number" id="epRate" value="15" class="w-full p-2 border rounded text-center" oninput="calculateEP()"></div>
                             <div class="w-1/3"><label class="text-[10px] font-bold text-blue-800">MONTHS</label><input type="number" id="epMonths" value="60" class="w-full p-2 border rounded text-center" oninput="calculateEP()"></div>
-                            <div class="w-1/3"><label class="text-[10px] font-bold text-blue-800">CYCLE (DAYS)</label><input type="number" id="epCycle" value="30" class="w-full p-2 border rounded text-center font-bold text-blue-600"></div>
+                            <div class="w-1/3"><label class="text-[10px] font-bold text-blue-800">CYCLE</label><input type="number" id="epCycle" value="30" class="w-full p-2 border rounded text-center font-bold text-blue-600"></div>
                         </div>
                         <div class="flex justify-between items-center pt-2 border-t border-blue-200"><span class="text-sm font-bold text-blue-900">Monthly:</span><span id="epMonthlyInst" class="text-xl font-bold text-blue-700">0.00</span></div>
                         <div class="hidden"><span id="epTotalPayable"></span></div>
@@ -349,8 +434,21 @@
     <div id="paymentModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center overflow-y-auto">
         <div class="bg-white p-6 rounded-2xl w-full max-w-2xl shadow-2xl relative">
             <button onclick="document.getElementById('paymentModal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
-            <div class="flex justify-between items-start mb-6 border-b pb-4"><div><h2 class="text-2xl font-bold text-slate-800">Payment Record</h2><p id="payBlockInfo" class="text-amber-600 font-bold text-sm"></p></div><button id="editPlanBtn" class="text-xs text-blue-600 underline font-bold" onclick="toggleEditPlan()">Edit Interest/Plan</button></div>
-            <div id="editPlanSection" class="hidden bg-yellow-50 p-4 rounded-xl border border-yellow-200 mb-4"><h4 class="text-xs font-bold text-yellow-700 uppercase mb-2">Adjust Plan</h4><div class="flex gap-2 mb-2"><input type="number" id="editNewRate" placeholder="New Rate %" class="p-2 border rounded w-1/3 text-sm"><input type="number" id="editNewMonths" placeholder="New Months" class="p-2 border rounded w-1/3 text-sm"><button id="savePlanChangesBtn" class="bg-yellow-600 text-white px-3 rounded text-sm font-bold w-1/3 hover:bg-yellow-700">Update</button></div></div>
+            <div class="flex justify-between items-start mb-6 border-b pb-4">
+                <div><h2 class="text-2xl font-bold text-slate-800">Payment Record</h2><p id="payBlockInfo" class="text-amber-600 font-bold text-sm"></p></div>
+                <div class="flex flex-col items-end gap-1">
+                    <button id="editPlanBtn" class="text-xs text-blue-600 underline font-bold" onclick="toggleEditPlan()">Edit Interest/Plan</button>
+                    <button id="resellBtn" class="hidden text-xs bg-red-100 text-red-600 px-3 py-1 rounded font-bold hover:bg-red-200" onclick="processResell()">CANCEL & RESELL</button>
+                </div>
+            </div>
+            <div id="editPlanSection" class="hidden bg-yellow-50 p-4 rounded-xl border border-yellow-200 mb-4">
+                <h4 class="text-xs font-bold text-yellow-700 uppercase mb-2">Adjust Plan</h4>
+                <div class="flex gap-2 mb-2">
+                    <input type="number" id="editNewRate" placeholder="New Rate %" class="p-2 border rounded w-1/3 text-sm">
+                    <input type="number" id="editNewMonths" placeholder="New Months" class="p-2 border rounded w-1/3 text-sm">
+                    <button id="savePlanChangesBtn" class="bg-yellow-600 text-white px-3 rounded text-sm font-bold w-1/3 hover:bg-yellow-700">Update</button>
+                </div>
+            </div>
             <div class="grid grid-cols-3 gap-4 mb-6 text-center">
                 <div class="p-3 bg-slate-100 rounded-lg"><p class="text-[10px] uppercase font-bold text-gray-500">Payable</p><p id="pmTotal" class="font-bold text-slate-800 text-lg">0.00</p></div>
                 <div class="p-3 bg-green-50 rounded-lg border border-green-100"><p class="text-[10px] uppercase font-bold text-green-600">Paid</p><p id="pmPaid" class="font-bold text-green-700 text-lg">0.00</p></div>
@@ -376,7 +474,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-        import { getFirestore, collection, collectionGroup, addDoc, deleteDoc, onSnapshot, query, where, orderBy, doc, updateDoc, arrayUnion, getDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+        import { getFirestore, collection, collectionGroup, addDoc, deleteDoc, onSnapshot, query, where, orderBy, doc, updateDoc, arrayUnion, getDoc, getDocs, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAlhMTQ-_sorFg_0ULpjf9kvjuIAWQkDVY",
@@ -391,22 +489,29 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- LOGIN ---
-        const pinPad = document.getElementById('pinPad'); const pinInput = document.getElementById('pinInput');
-        [1,2,3,4,5,6,7,8,9,0].forEach(num => {
-            const btn = document.createElement('button'); 
-            btn.className = "h-16 w-16 rounded-full text-xl font-bold bg-white/10 hover:bg-amber-500/20 text-white border border-white/20 transition transform active:scale-95"; 
-            btn.innerText = num;
-            btn.onclick = () => { if(pinInput.value.length < 4) pinInput.value += num; }; 
-            pinPad.appendChild(btn);
-        });
-        const goBtn = document.createElement('button'); 
-        goBtn.innerHTML = "<i class='fas fa-arrow-right'></i>"; 
-        goBtn.className="h-16 w-16 bg-amber-500 text-white rounded-full font-bold shadow-[0_0_15px_#f59e0b] hover:bg-amber-600 transition";
-        goBtn.onclick = () => { if(pinInput.value==="1234"){ document.getElementById('loginScreen').classList.add('hidden'); document.getElementById('mainApp').classList.remove('hidden'); initApp(); } }; 
-        pinPad.appendChild(goBtn);
+        // --- AUTH & SETTINGS ---
+        window.attemptLogin = async () => {
+            const pwd = document.getElementById('loginPass').value;
+            const settingsRef = doc(db, "settings", "config");
+            const snap = await getDoc(settingsRef);
+            let correct = "Sandeep@1116"; 
+            if(snap.exists() && snap.data().adminPassword) correct = snap.data().adminPassword;
 
-        // --- NAVIGATION & UI ---
+            if(pwd === correct) {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                initApp();
+            } else { alert("Incorrect Password"); }
+        };
+
+        window.updatePassword = async () => {
+            const newP = document.getElementById('newAdminPass').value;
+            if(!newP || newP.length < 4) return alert("Password too short");
+            await setDoc(doc(db, "settings", "config"), { adminPassword: newP }, { merge: true });
+            alert("Password Updated"); document.getElementById('newAdminPass').value = "";
+        };
+
+        // --- UI NAVIGATION & SEARCH ---
         window.closeImgModal = () => document.getElementById('imgModal').classList.add('hidden');
         window.closeSellModal = () => document.getElementById('sellModal').classList.add('hidden');
         window.openExpenseModal = () => document.getElementById('expenseModal').classList.remove('hidden');
@@ -419,7 +524,10 @@
             const btn = document.getElementById(`nav-${page}`);
             if(btn) { btn.classList.add('bg-amber-600/20','text-amber-500'); btn.classList.remove('text-gray-400'); }
             if(page==='readings') loadMeterReadings();
-            if(page==='reports') loadSavedReports();
+            if(page==='reports') {
+                document.getElementById('txDate').valueAsDate = new Date();
+                document.getElementById('bsDate').valueAsDate = new Date();
+            }
         };
 
         window.subTab = (tab) => {
@@ -429,35 +537,12 @@
             document.getElementById(`view-${tab}`).classList.remove('hidden');
         };
 
-        window.calcBlockPrice = () => {
-            const size = parseFloat(document.getElementById('blockSize').value) || 0;
-            const price = parseFloat(document.getElementById('blockPerchPrice').value) || 0;
-            document.getElementById('blockPrice').value = size * price;
+        window.switchFinTab = (tab) => {
+            document.getElementById('fin-view-entry').classList.toggle('hidden', tab !== 'entry');
+            document.getElementById('fin-view-reports').classList.toggle('hidden', tab !== 'reports');
+            document.getElementById('ft-entry').className = tab === 'entry' ? "px-6 py-3 font-bold text-slate-800 border-b-2 border-slate-800 transition" : "px-6 py-3 font-bold text-gray-400 hover:text-slate-600 transition";
+            document.getElementById('ft-reports').className = tab === 'reports' ? "px-6 py-3 font-bold text-slate-800 border-b-2 border-slate-800 transition" : "px-6 py-3 font-bold text-gray-400 hover:text-slate-600 transition";
         };
-
-        window.toggleEPFields = () => {
-            const isEP = document.getElementById('payPlanType').value === 'EP';
-            document.getElementById('epFields').classList.toggle('hidden', !isEP);
-            if(isEP) window.calculateEP();
-        };
-
-        window.calculateEP = () => {
-            const price = parseFloat(document.getElementById('finalPrice').value) || 0;
-            const advance = parseFloat(document.getElementById('advancePay').value) || 0;
-            const rate = parseFloat(document.getElementById('epRate').value) || 15;
-            const months = parseFloat(document.getElementById('epMonths').value) || 60;
-            const balance = price - advance;
-            if(balance < 0) return;
-            const totalInterest = balance * (rate / 100) * (months/12);
-            const totalPayable = balance + totalInterest;
-            document.getElementById('epTotalPayable').innerText = totalPayable.toFixed(2);
-            document.getElementById('epMonthlyInst').innerText = (totalPayable / months).toFixed(2);
-        };
-
-        // --- DATA LOGIC ---
-        let currentProjId = null; let currentProjName = ""; let selectedBlockId = null; let selectedBlockData = null;
-
-        function initApp() { loadProjects(); listenForOverduePayments(); }
 
         // --- DEEP SEARCH ---
         document.getElementById('projSearch').addEventListener('input', async (e) => {
@@ -466,17 +551,19 @@
             resDiv.innerHTML = "";
             if(term.length < 2) { resDiv.classList.add('hidden'); return; }
 
+            // 1. Search Projects
             const projQ = query(collection(db, "projects"));
             const projSnap = await getDocs(projQ);
             let results = [];
-            projSnap.forEach(d => { if(d.data().name.toLowerCase().includes(term)) results.push({type:'Project', name:d.data().name, id:d.id}); });
+            projSnap.forEach(d => { if(d.data().name.toLowerCase().includes(term)) results.push({type:'Project', name:d.data().name, id:d.id, data: d.data()}); });
 
-            const blocksQ = query(collectionGroup(db, 'blocks'), where('status', 'in', ['sold', 'sold_finished']));
-            const blocksSnap = await getDocs(blocksQ);
-            blocksSnap.forEach(d => {
-                const b = d.data();
-                if(b.customer && b.customer.name.toLowerCase().includes(term)) {
-                    results.push({type:'Customer', name: b.customer.name, detail: `Block: ${b.name}`, ref: d.ref});
+            // 2. Search Customers
+            const cusQ = query(collection(db, "customers")); 
+            const cusSnap = await getDocs(cusQ);
+            cusSnap.forEach(d => {
+                const c = d.data();
+                if(c.name.toLowerCase().includes(term) || c.phone.includes(term) || c.nic.toLowerCase().includes(term)) {
+                    results.push({type:'Customer', name: c.name, detail: `Block: ${c.blockName} (${c.projectName})`, ref: d.ref, blockId: c.blockId, projId: c.projectId});
                 }
             });
 
@@ -486,15 +573,247 @@
                     const div = document.createElement('div');
                     div.className = "p-2 hover:bg-gray-50 cursor-pointer border-b text-sm";
                     div.innerHTML = `<span class="font-bold text-slate-800">${r.name}</span> <span class="text-xs text-gray-500 uppercase ml-2 bg-gray-200 px-1 rounded">${r.type}</span><div class="text-xs text-gray-400">${r.detail || ''}</div>`;
+                    
                     div.onclick = async () => {
                         resDiv.classList.add('hidden');
-                        if(r.type === 'Project') { openProject(r.id, {name:r.name, area:'...'}); }
-                        else { alert("Navigate to project containing this block to view details."); }
+                        document.getElementById('projSearch').value = "";
+                        
+                        if(r.type === 'Project') { 
+                            openProject(r.id, r.data); 
+                        }
+                        else { 
+                            const projSnap = await getDoc(doc(db, "projects", r.projId));
+                            if(projSnap.exists()) {
+                                openProject(r.projId, projSnap.data()); 
+                                const blockSnap = await getDoc(doc(db, `projects/${r.projId}/blocks/${r.blockId}`));
+                                if(blockSnap.exists()) {
+                                    setTimeout(() => {
+                                        selectedBlockId = r.blockId; 
+                                        openPaymentModal(blockSnap.data()); 
+                                    }, 500);
+                                }
+                            }
+                        }
                     };
                     resDiv.appendChild(div);
                 });
             } else { resDiv.innerHTML = "<div class='p-2 text-sm text-gray-400'>No matches found.</div>"; resDiv.classList.remove('hidden'); }
         });
+
+
+        // --- CORE DATA ---
+        let currentProjId = null; let currentProjName = ""; let selectedBlockId = null; let selectedBlockData = null;
+
+        function initApp() { loadProjects(); checkOverduePayments(); }
+
+        async function recordDailyTransaction(desc, amt, type, projName) {
+            const today = new Date().toLocaleDateString('en-CA'); 
+            await addDoc(collection(db, "daily_transactions"), {
+                date: today, description: desc, amount: amt, type: type, project: projName, timestamp: serverTimestamp()
+            });
+            // Also add to new system transactions for consistency
+            const cat = type === 'income' ? 'Sales' : 'Admin Expense';
+            await addDoc(collection(db, "transactions"), {
+                date: today, description: desc, vNo: '', type: type, category: cat, amount: amt, isPetty: false, timestamp: serverTimestamp()
+            });
+        }
+
+        // --- NEW FINANCIAL DATA ENTRY FUNCTIONS ---
+        window.saveTransaction = async () => {
+            const date = document.getElementById('txDate').value;
+            const vNo = document.getElementById('txVno').value;
+            const desc = document.getElementById('txDesc').value;
+            const type = document.getElementById('txType').value;
+            const category = document.getElementById('txCategory').value;
+            const amount = parseFloat(document.getElementById('txAmount').value);
+            const isPetty = document.getElementById('txIsPetty').checked;
+
+            if(!date || !desc || !amount) return alert("Please fill Date, Description and Amount");
+
+            try {
+                await addDoc(collection(db, "transactions"), {
+                    date, vNo, description: desc, type, category, amount, isPetty, timestamp: serverTimestamp()
+                });
+                
+                // Clear form
+                document.getElementById('txDesc').value = "";
+                document.getElementById('txAmount').value = "";
+                document.getElementById('txVno').value = "";
+                alert("Transaction Saved Successfully!");
+            } catch (e) {
+                console.error(e);
+                alert("Error saving transaction");
+            }
+        };
+
+        window.saveBSItem = async () => {
+            const date = document.getElementById('bsDate').value;
+            const name = document.getElementById('bsName').value;
+            const type = document.getElementById('bsType').value;
+            const amount = parseFloat(document.getElementById('bsAmount').value);
+
+            if(!date || !name || !amount) return alert("Please fill all Balance Sheet fields");
+
+            try {
+                await addDoc(collection(db, "bs_items"), {
+                    date, name, type, amount, timestamp: serverTimestamp()
+                });
+                
+                document.getElementById('bsName').value = "";
+                document.getElementById('bsAmount').value = "";
+                alert("Balance Sheet Item Saved!");
+            } catch (e) {
+                console.error(e);
+                alert("Error saving item");
+            }
+        };
+
+        // --- REPORT GENERATION LOGIC ---
+        window.genReport = async (type) => {
+            const from = document.getElementById('repFrom').value;
+            const to = document.getElementById('repTo').value;
+            
+            if(!from || !to) return alert("Please select a Date Range first.");
+
+            document.getElementById('overlayPrintTitle').innerText = type.toUpperCase() + " REPORT";
+            document.getElementById('overlayPrintDate').innerText = `${from} to ${to}`;
+
+            let html = "";
+            let q = query(collection(db, "transactions"), where("date", ">=", from), where("date", "<=", to), orderBy("date"));
+            
+            if(type === 'daybook') {
+                const snap = await getDocs(q);
+                let bal = 0; let totInc = 0; let totExp = 0;
+                html = `<table class="w-full border-collapse"><thead><tr class="bg-gray-200 border-b border-black"><th class="p-2 text-left">Date</th><th class="p-2 text-left">Desc</th><th class="p-2 text-left">V.No</th><th class="p-2 text-right">Income</th><th class="p-2 text-right">Expense</th><th class="p-2 text-right">Balance</th></tr></thead><tbody>`;
+                snap.forEach(d => {
+                    const t = d.data();
+                    let inc = t.type === 'Income' ? t.amount : 0;
+                    let exp = t.type === 'Expense' ? t.amount : 0;
+                    bal += (inc - exp);
+                    totInc += inc; totExp += exp;
+                    html += `<tr><td class="p-2 border-b text-xs">${t.date}</td><td class="p-2 border-b text-xs">${t.description}</td><td class="p-2 border-b text-xs">${t.vNo||'-'}</td><td class="p-2 border-b text-right text-xs text-green-600">${inc>0?inc.toLocaleString():'-'}</td><td class="p-2 border-b text-right text-xs text-red-600">${exp>0?exp.toLocaleString():'-'}</td><td class="p-2 border-b text-right text-xs font-bold">${bal.toLocaleString()}</td></tr>`;
+                });
+                html += `</tbody><tfoot><tr class="font-bold border-t-2 border-black"><td colspan="3" class="p-2 text-right">TOTALS:</td><td class="p-2 text-right">${totInc.toLocaleString()}</td><td class="p-2 text-right">${totExp.toLocaleString()}</td><td class="p-2 text-right">${bal.toLocaleString()}</td></tr></tfoot></table>`;
+            } 
+            else if (type === 'petty') {
+                const snap = await getDocs(q);
+                let tot = 0;
+                html = `<table class="w-full border-collapse"><thead><tr class="bg-amber-100 border-b border-amber-600"><th class="p-2 text-left">Date</th><th class="p-2 text-left">Description</th><th class="p-2 text-left">V.No</th><th class="p-2 text-right">Amount</th></tr></thead><tbody>`;
+                snap.forEach(d => {
+                    const t = d.data();
+                    if(t.isPetty) {
+                        tot += t.amount;
+                        html += `<tr><td class="p-2 border-b text-xs">${t.date}</td><td class="p-2 border-b text-xs">${t.description}</td><td class="p-2 border-b text-xs">${t.vNo||'-'}</td><td class="p-2 border-b text-right text-xs font-bold">${t.amount.toLocaleString()}</td></tr>`;
+                    }
+                });
+                html += `</tbody><tfoot><tr class="font-bold border-t border-amber-600"><td colspan="3" class="p-2 text-right">TOTAL PETTY CASH:</td><td class="p-2 text-right">${tot.toLocaleString()}</td></tr></tfoot></table>`;
+            }
+            else if (type === 'pnl') {
+                const snap = await getDocs(q);
+                let cats = {};
+                snap.forEach(d => {
+                    const t = d.data();
+                    if(!cats[t.category]) cats[t.category] = 0;
+                    cats[t.category] += t.amount;
+                });
+
+                const rev = (cats['Sales']||0) + (cats['Other Income']||0);
+                const cogs = cats['Cost of Sales']||0;
+                const gp = rev - cogs;
+                
+                // Expenses
+                const admin = cats['Admin Expense']||0;
+                const selling = cats['Selling Expense']||0;
+                const fin = cats['Finance Cost']||0;
+                const tax = cats['Tax']||0;
+                const petty = cats['Petty Cash']||0; // Usually grouped under admin, but showing separate if needed
+                
+                const totExp = admin + selling + fin + tax + petty;
+                const np = gp - totExp;
+
+                html = `<table class="w-full text-sm">
+                    <tr><td class="p-2 font-bold">Revenue</td><td class="p-2 text-right">${rev.toLocaleString()}</td></tr>
+                    <tr><td class="p-2 text-red-600">Cost of Sales</td><td class="p-2 text-right text-red-600">(${cogs.toLocaleString()})</td></tr>
+                    <tr class="border-t border-black bg-gray-100"><td class="p-2 font-bold">GROSS PROFIT</td><td class="p-2 text-right font-bold">${gp.toLocaleString()}</td></tr>
+                    <tr><td class="p-2 pt-4 font-bold text-gray-500 uppercase">Expenses</td><td></td></tr>
+                    <tr><td class="p-2 pl-6">Admin Expenses</td><td class="p-2 text-right">${admin.toLocaleString()}</td></tr>
+                    <tr><td class="p-2 pl-6">Selling & Distribution</td><td class="p-2 text-right">${selling.toLocaleString()}</td></tr>
+                    <tr><td class="p-2 pl-6">Finance Costs</td><td class="p-2 text-right">${fin.toLocaleString()}</td></tr>
+                    <tr><td class="p-2 pl-6">Tax</td><td class="p-2 text-right">${tax.toLocaleString()}</td></tr>
+                    ${petty>0 ? `<tr><td class="p-2 pl-6">Petty Cash Exp</td><td class="p-2 text-right">${petty.toLocaleString()}</td></tr>` : ''}
+                    <tr class="border-t border-black"><td class="p-2 font-bold">Total Expenses</td><td class="p-2 text-right">(${totExp.toLocaleString()})</td></tr>
+                    <tr class="border-t-2 border-double border-black bg-gray-200"><td class="p-2 font-bold text-lg">NET PROFIT</td><td class="p-2 text-right font-bold text-lg">${np.toLocaleString()}</td></tr>
+                </table>`;
+            }
+            else if (type === 'bs') {
+                const snap = await getDocs(query(collection(db, "bs_items"))); // Get all BS items (ignoring date range usually, or handle 'as of')
+                let grp = { 'Non-Current Asset':0, 'Current Asset':0, 'Equity':0, 'Non-Current Liability':0, 'Current Liability':0 };
+                let items = [];
+                snap.forEach(d => {
+                    const t = d.data();
+                    if(t.date <= to) { // Filter strictly by date if needed
+                        grp[t.type] += t.amount;
+                        items.push(t);
+                    }
+                });
+
+                html = `<div class="grid grid-cols-2 gap-8">
+                    <div>
+                        <h4 class="font-bold border-b mb-2">ASSETS</h4>
+                        <div class="mb-4">
+                            <p class="font-bold text-xs text-gray-500 uppercase">Non-Current Assets</p>
+                            ${items.filter(i=>i.type==='Non-Current Asset').map(i=>`<div class="flex justify-between text-xs p-1"><span>${i.name}</span><span>${i.amount.toLocaleString()}</span></div>`).join('')}
+                            <div class="flex justify-between font-bold border-t mt-1 p-1 bg-gray-50"><span>Total</span><span>${grp['Non-Current Asset'].toLocaleString()}</span></div>
+                        </div>
+                        <div class="mb-4">
+                            <p class="font-bold text-xs text-gray-500 uppercase">Current Assets</p>
+                            ${items.filter(i=>i.type==='Current Asset').map(i=>`<div class="flex justify-between text-xs p-1"><span>${i.name}</span><span>${i.amount.toLocaleString()}</span></div>`).join('')}
+                            <div class="flex justify-between font-bold border-t mt-1 p-1 bg-gray-50"><span>Total</span><span>${grp['Current Asset'].toLocaleString()}</span></div>
+                        </div>
+                        <div class="flex justify-between font-bold text-lg border-t-2 border-black p-2"><span>TOTAL ASSETS</span><span>${(grp['Non-Current Asset']+grp['Current Asset']).toLocaleString()}</span></div>
+                    </div>
+                    <div>
+                        <h4 class="font-bold border-b mb-2">EQUITY & LIABILITIES</h4>
+                         <div class="mb-4">
+                            <p class="font-bold text-xs text-gray-500 uppercase">Equity</p>
+                            ${items.filter(i=>i.type==='Equity').map(i=>`<div class="flex justify-between text-xs p-1"><span>${i.name}</span><span>${i.amount.toLocaleString()}</span></div>`).join('')}
+                            <div class="flex justify-between font-bold border-t mt-1 p-1 bg-gray-50"><span>Total Equity</span><span>${grp['Equity'].toLocaleString()}</span></div>
+                        </div>
+                        <div class="mb-4">
+                            <p class="font-bold text-xs text-gray-500 uppercase">Liabilities</p>
+                            ${items.filter(i=>i.type.includes('Liability')).map(i=>`<div class="flex justify-between text-xs p-1"><span>${i.name}</span><span>${i.amount.toLocaleString()}</span></div>`).join('')}
+                            <div class="flex justify-between font-bold border-t mt-1 p-1 bg-gray-50"><span>Total Liab.</span><span>${(grp['Non-Current Liability']+grp['Current Liability']).toLocaleString()}</span></div>
+                        </div>
+                        <div class="flex justify-between font-bold text-lg border-t-2 border-black p-2"><span>TOTAL EQ & LIAB</span><span>${(grp['Equity']+grp['Non-Current Liability']+grp['Current Liability']).toLocaleString()}</span></div>
+                    </div>
+                </div>`;
+            }
+
+            // Render to hidden print area & Preview
+            document.getElementById('overlayPrintContent').innerHTML = html;
+            document.getElementById('reportContent').innerHTML = html;
+        };
+
+        window.triggerPDFDownload = async () => {
+            const content = document.getElementById('overlayPrintContent').innerHTML;
+            if(!content) return alert("Please Load Data or Generate Report first.");
+            await downloadPDF();
+        };
+        
+        // --- ADDED: PROJECT SPECIFIC DOWNLOAD ---
+        window.downloadFinancialReport = async () => {
+            const inc = document.getElementById('finIncome').innerText;
+            const exp = document.getElementById('finExpense').innerText;
+            const prof = document.getElementById('finProfit').innerText;
+            
+            // Set content to overlay
+            document.getElementById('overlayPrintTitle').innerText = "Financial Report: " + currentProjName;
+            document.getElementById('overlayPrintDate').innerText = new Date().toLocaleDateString();
+            document.getElementById('overlayPrintContent').innerHTML = `<h2>Project Summary</h2><table style="width:100%; margin-top:20px; font-size:18px;"><tr><td style="padding:10px;">Total Revenue</td><td style="text-align:right;">${inc}</td></tr><tr><td style="padding:10px;">Total Costs</td><td style="text-align:right; color:red;">${exp}</td></tr><tr style="font-weight:bold; border-top:2px solid black;"><td style="padding:10px;">NET PROFIT</td><td style="text-align:right;">${prof}</td></tr></table>`;
+            
+            // Trigger download with delay
+            await downloadPDF();
+        };
 
         // --- PROJECTS ---
         function loadProjects() {
@@ -505,12 +824,7 @@
                     const el = document.createElement('div');
                     el.className = "bg-white p-6 rounded-2xl shadow-sm hover:shadow-xl cursor-pointer border border-gray-100 transition relative overflow-hidden group";
                     el.onclick = () => openProject(docSnap.id, d);
-                    el.innerHTML = `
-                        <div class="absolute top-0 left-0 w-2 h-full bg-slate-900 group-hover:bg-amber-500 transition"></div>
-                        <h3 class="font-bold text-lg text-slate-900 pl-2">${d.name}</h3>
-                        <p class="text-sm text-gray-500 pl-2"><i class="fas fa-map-marker-alt mr-1"></i> ${d.area}</p>
-                        <span class="text-[10px] uppercase font-bold bg-gray-100 px-2 py-1 rounded absolute top-4 right-4 text-gray-500 tracking-wider">${d.status}</span>
-                    `;
+                    el.innerHTML = `<div class="absolute top-0 left-0 w-2 h-full bg-slate-900 group-hover:bg-amber-500 transition"></div><h3 class="font-bold text-lg text-slate-900 pl-2">${d.name}</h3><p class="text-sm text-gray-500 pl-2"><i class="fas fa-map-marker-alt mr-1"></i> ${d.area}</p><span class="text-[10px] uppercase font-bold bg-gray-100 px-2 py-1 rounded absolute top-4 right-4 text-gray-500 tracking-wider">${d.status}</span>`;
                     grid.appendChild(el);
                 });
             });
@@ -528,14 +842,11 @@
             nav('detail');
             document.getElementById('detailName').innerText = data.name; document.getElementById('detailArea').innerText = data.area || 'Unknown';
             document.getElementById('detailStatus').innerText = data.status || 'Active';
-            
             const isDev = data.status === 'development';
             document.getElementById('devPhaseUI').style.display = isDev ? 'grid' : 'none';
             document.getElementById('endDevBtn').style.display = isDev ? 'block' : 'none';
-
             const vList = document.getElementById('vehicleList'); vList.innerHTML = "";
             (data.assignedVehicles || []).forEach(v => vList.innerHTML += `<span class="bg-gray-200 px-2 py-1 rounded text-xs font-bold mr-1">${v}</span>`);
-
             loadBlocks(id, isDev);
             loadExpensesAndProfit(id);
             loadProjectTasks(id);
@@ -549,30 +860,33 @@
             document.getElementById('blockName').value = ""; document.getElementById('blockPrice').value = "";
         });
 
-        document.getElementById('regVehicleBtn').addEventListener('click', async () => {
-            const vNo = document.getElementById('regVehicleNo').value.toUpperCase(); if(!vNo) return;
-            await updateDoc(doc(db, "projects", currentProjId), { assignedVehicles: arrayUnion(vNo) });
-            document.getElementById('regVehicleNo').value = "";
-        });
+        // --- TASKS ---
+        let projectTasksData = {}; 
 
-        document.getElementById('endDevBtn').addEventListener('click', async () => {
-            if(confirm("End Development?")) { await updateDoc(doc(db, "projects", currentProjId), { status: "sales" }); openProject(currentProjId, {name:currentProjName, area:'...', status:'sales'}); }
-        });
-
-        // --- TASKS (ADMIN) ---
         function loadProjectTasks(pid) {
             onSnapshot(query(collection(db, `projects/${pid}/tasks`), orderBy("createdAt", "desc")), (snap) => {
                 const list = document.getElementById('adminTaskList'); list.innerHTML = "";
+                projectTasksData = {}; 
                 snap.forEach(d => {
                     const t = d.data();
-                    let statusBadge = t.status === 'completed' ? '<span class="text-green-600 font-bold text-xs bg-green-100 px-2 rounded">Paid</span>' : (t.status === 'pending_approval' ? '<span class="text-yellow-600 font-bold text-xs bg-yellow-100 px-2 rounded animate-pulse">Needs Review</span>' : '<span class="text-gray-400 text-xs bg-gray-100 px-2 rounded">Pending</span>');
+                    projectTasksData[d.id] = t; 
                     
-                    const el = document.createElement('div');
-                    el.className = "bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex justify-between items-center";
-                    el.innerHTML = `
-                        <div><h4 class="font-bold text-slate-800">${t.title}</h4><p class="text-xs text-gray-500">${t.description||'-'}</p><div class="mt-1">${statusBadge} ${t.submittedCost ? `<span class="ml-2 font-bold">Rs. ${t.submittedCost}</span>` : ''}</div></div>
-                        ${t.status === 'pending_approval' ? `<button onclick="openApproveModal('${d.id}', '${t.title}', ${t.submittedCost}, '${t.photos.join(',')}')" class="bg-slate-900 text-white px-4 py-2 rounded text-xs font-bold">Review</button>` : ''}
-                    `;
+                    let statusBadge = "";
+                    let actionBtn = "";
+
+                    if (t.status === 'completed') {
+                        statusBadge = '<span class="text-green-600 font-bold text-xs bg-green-100 px-2 rounded">Paid</span>';
+                        // ADDED VIEW BUTTON FOR COMPLETED TASKS
+                        actionBtn = `<button onclick="openApproveModal('${d.id}', true)" class="bg-slate-200 text-slate-800 px-4 py-2 rounded text-xs font-bold hover:bg-slate-300">View</button>`;
+                    } else if (t.status === 'pending_approval') {
+                        statusBadge = '<span class="text-yellow-600 font-bold text-xs bg-yellow-100 px-2 rounded animate-pulse">Needs Review</span>';
+                        actionBtn = `<button onclick="openApproveModal('${d.id}', false)" class="bg-slate-900 text-white px-4 py-2 rounded text-xs font-bold">Review</button>`;
+                    } else {
+                        statusBadge = '<span class="text-gray-400 text-xs bg-gray-100 px-2 rounded">Pending</span>';
+                    }
+
+                    const el = document.createElement('div'); el.className = "bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex justify-between items-center";
+                    el.innerHTML = `<div><h4 class="font-bold text-slate-800">${t.title}</h4><p class="text-xs text-gray-500">${t.description||'-'}</p><div class="mt-1">${statusBadge} ${t.submittedCost ? `<span class="ml-2 font-bold">Rs. ${t.submittedCost}</span>` : ''}</div></div>${actionBtn}`;
                     list.appendChild(el);
                 });
             });
@@ -583,20 +897,280 @@
         });
         
         let activeApproveId = null; let activeApproveCost = 0;
-        window.openApproveModal = (id, title, cost, photosStr) => {
-            activeApproveId = id; activeApproveCost = cost;
-            document.getElementById('approveTaskTitle').innerText = title; document.getElementById('approveTaskCost').innerText = "Rs. " + cost.toLocaleString();
+        
+        // MODIFIED: Accepts readOnly parameter
+        window.openApproveModal = (id, readOnly) => {
+            const task = projectTasksData[id];
+            if(!task) return alert("Error loading task data");
+            
+            activeApproveId = id; activeApproveCost = task.submittedCost;
+            document.getElementById('approveTaskTitle').innerText = task.title; 
+            document.getElementById('approveTaskCost').innerText = "Rs. " + (task.submittedCost || 0).toLocaleString();
+            
+            // Adjust UI for Read Only vs Approve
+            document.getElementById('taskModalHeader').innerText = readOnly ? "Task Details" : "Review Task";
+            document.getElementById('confirmApproveTaskBtn').style.display = readOnly ? 'none' : 'block';
+
             const div = document.getElementById('approveTaskPhotos'); div.innerHTML = "";
-            photosStr.split(',').forEach(src => div.innerHTML += `<img src="${src}" class="w-full h-32 object-cover rounded border cursor-pointer" onclick="document.getElementById('imgModalSrc').src='${src}';document.getElementById('imgModal').classList.remove('hidden')">`);
+            if(task.photos && task.photos.length > 0) {
+                task.photos.forEach(src => div.innerHTML += `<img src="${src}" class="w-full h-32 object-cover rounded border cursor-pointer hover:opacity-90 transition" onclick="document.getElementById('imgModalSrc').src='${src}';document.getElementById('imgModal').classList.remove('hidden')">`);
+            } else { div.innerHTML = "<p class='text-xs text-gray-400'>No photos.</p>"; }
             document.getElementById('taskApproveModal').classList.remove('hidden');
         };
+
         document.getElementById('confirmApproveTaskBtn').addEventListener('click', async () => {
+            const title = document.getElementById('approveTaskTitle').innerText;
             await updateDoc(doc(db, `projects/${currentProjId}/tasks/${activeApproveId}`), { status: 'completed' });
-            await addDoc(collection(db, `projects/${currentProjId}/expenses`), { description: `Task: ${document.getElementById('approveTaskTitle').innerText}`, amount: activeApproveCost, date: new Date().toISOString().split('T')[0], createdAt: serverTimestamp() });
+            await addDoc(collection(db, `projects/${currentProjId}/expenses`), { description: `Task: ${title}`, amount: activeApproveCost, date: new Date().toLocaleDateString('en-CA'), createdAt: serverTimestamp() });
+            await recordDailyTransaction(`Site Task: ${title}`, activeApproveCost, 'expense', currentProjName);
             document.getElementById('taskApproveModal').classList.add('hidden');
         });
 
-        // --- BLOCKS & SALES ---
+        // --- SALES & PAYMENTS ---
+        window.processSale = async (downloadPdf) => {
+            const cus = { name: document.getElementById('cusName').value, address: document.getElementById('cusAddress').value, nic: document.getElementById('cusNIC').value, phone: document.getElementById('cusPhone').value };
+            const advance = parseFloat(document.getElementById('advancePay').value);
+            const price = parseFloat(document.getElementById('finalPrice').value);
+            const plan = document.getElementById('payPlanType').value;
+            let ep = {}; let nextD = null;
+            if(plan === 'EP') {
+                const cycle = parseInt(document.getElementById('epCycle').value);
+                ep = { rate: document.getElementById('epRate').value, months: document.getElementById('epMonths').value, cycleDays: cycle, totalPayable: parseFloat(document.getElementById('epTotalPayable').innerText), paidAmount: advance };
+                const d = new Date(); d.setDate(d.getDate() + cycle); nextD = d;
+            }
+            if(!cus.name || !advance) return alert("Missing Info");
+            
+            await updateDoc(doc(db, `projects/${currentProjId}/blocks/${selectedBlockId}`), {
+                status: 'sold', soldPrice: price, customer: cus, soldDate: new Date(),
+                payment: { totalPrice: price, advancePaid: advance, planType: plan, epDetails: ep, nextPaymentDate: nextD, history: [{date: new Date(), amount: advance, type: 'Advance'}] }
+            });
+
+            await addDoc(collection(db, "customers"), {
+                name: cus.name, nic: cus.nic, phone: cus.phone, address: cus.address,
+                projectId: currentProjId, projectName: currentProjName,
+                blockId: selectedBlockId, blockName: selectedBlockData.name,
+                purchasedDate: new Date()
+            });
+
+            await recordDailyTransaction(`Sale Advance: ${selectedBlockData.name} - ${cus.name}`, advance, 'income', currentProjName);
+            
+            if(downloadPdf) {
+                document.getElementById('overlayPrintTitle').innerText = "OFFICIAL RECEIPT";
+                document.getElementById('overlayPrintDate').innerText = new Date().toLocaleDateString();
+                document.getElementById('overlayPrintContent').innerHTML = `<div style="margin-top:30px; line-height:1.8;"><p><strong>Received From:</strong> ${cus.name}</p><p><strong>Amount:</strong> Rs. ${advance.toLocaleString()}</p><hr class="my-6 border-gray-400"><p><strong>Project:</strong> ${currentProjName}</p><p><strong>Block:</strong> ${selectedBlockData.name}</p><p><strong>Payment Plan:</strong> ${plan === 'EP' ? 'Easy Payment (Installment)' : 'Cash / Outright'}</p></div>`;
+                await downloadPDF();
+            }
+            closeSellModal();
+        };
+
+        window.openPaymentModal = async (data) => {
+            selectedBlockData = data; 
+            document.getElementById('paymentModal').classList.remove('hidden');
+            const isFin = data.status === 'sold_finished';
+            const isEP = data.payment.planType === 'EP';
+            document.getElementById('addPaymentSection').style.display = isFin ? 'none' : 'block';
+            document.getElementById('editPlanBtn').style.display = (isFin || !isEP) ? 'none' : 'block';
+            document.getElementById('resellBtn').classList.toggle('hidden', isFin || !isEP); 
+            document.getElementById('paymentCompleteMsg').classList.toggle('hidden', !isFin);
+            document.getElementById('payBlockInfo').innerText = `${data.name} - ${data.customer.name}`;
+            let total = data.soldPrice; let paid = data.soldPrice;
+            if(isEP) { total = data.payment.epDetails.totalPayable; paid = data.payment.epDetails.paidAmount || 0; }
+            
+            if(isEP && !isFin && data.payment.nextPaymentDate) {
+                const nextD = data.payment.nextPaymentDate.seconds ? new Date(data.payment.nextPaymentDate.seconds*1000) : new Date(data.payment.nextPaymentDate);
+                const today = new Date();
+                const diffTime = Math.abs(today - nextD);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                if(today > nextD && diffDays > 5) {
+                    const lastHist = data.payment.history[data.payment.history.length-1];
+                    const isPenaltyToday = lastHist.type.includes('Penalty') && new Date(lastHist.date.seconds*1000).toDateString() === today.toDateString();
+                    if(!isPenaltyToday) {
+                        const bal = total - paid;
+                        const penalty = bal * 0.04;
+                        const newTotal = total + penalty;
+                        await updateDoc(doc(db, `projects/${currentProjId}/blocks/${data.id}`), {
+                            "payment.epDetails.totalPayable": newTotal,
+                            "payment.history": arrayUnion({date: new Date(), amount: 0, type: 'Late Penalty (4%)', note: `Rs.${penalty.toFixed(2)} added`})
+                        });
+                        total = newTotal; alert(`Late Fee Applied! \nPayment overdue by ${diffDays} days. \n4% Penalty added.`);
+                        selectedBlockData.payment.epDetails.totalPayable = newTotal;
+                    }
+                }
+            }
+            document.getElementById('pmTotal').innerText = total.toLocaleString(); 
+            document.getElementById('pmPaid').innerText = paid.toLocaleString(); 
+            document.getElementById('pmBalance').innerText = (total-paid).toLocaleString();
+            const tbody = document.getElementById('paymentHistoryList'); tbody.innerHTML = "";
+            (data.payment.history||[]).forEach(h => {
+                const d = h.date.seconds ? new Date(h.date.seconds*1000) : new Date(h.date);
+                tbody.innerHTML += `<tr><td class="py-2">${d.toLocaleDateString()}</td><td class="font-bold">Rs.${(h.amount||0).toLocaleString()}</td><td class="text-gray-500">${h.type} ${h.note?`(${h.note})`:''}</td></tr>`;
+            });
+            document.getElementById('newPayDate').valueAsDate = new Date();
+        };
+
+        window.toggleEditPlan = () => document.getElementById('editPlanSection').classList.toggle('hidden');
+        
+        document.getElementById('savePlanChangesBtn').addEventListener('click', async () => {
+            const rate = parseFloat(document.getElementById('editNewRate').value);
+            const months = parseFloat(document.getElementById('editNewMonths').value);
+            
+            if(!rate || !months) return alert("Please enter valid Rate and Months");
+            
+            const b = selectedBlockData;
+            if(!b || !b.payment || b.payment.planType !== 'EP') return alert("Invalid Block Data for Edit");
+
+            const bal = b.soldPrice - b.payment.advancePaid; 
+            const newInt = bal * (rate/100) * (months/12);
+            const newTot = bal + newInt + b.payment.advancePaid;
+
+            await updateDoc(doc(db, `projects/${currentProjId}/blocks/${selectedBlockId}`), { 
+                "payment.epDetails.rate": rate, 
+                "payment.epDetails.months": months, 
+                "payment.epDetails.totalPayable": newTot 
+            });
+
+            alert("Plan Updated Successfully!"); 
+            document.getElementById('paymentModal').classList.add('hidden');
+            openProject(currentProjId, {name: currentProjName, area: '...'});
+        });
+
+        document.getElementById('submitPayBtn').addEventListener('click', async () => {
+            const amt = parseFloat(document.getElementById('newPayAmount').value);
+            if(!amt) return;
+            const b = selectedBlockData;
+            if(b.payment.planType === 'EP') {
+                const newPaid = (b.payment.epDetails.paidAmount||0) + amt;
+                const nextD = new Date(); nextD.setDate(nextD.getDate() + (b.payment.epDetails.cycleDays || 30));
+                let up = { "payment.epDetails.paidAmount": newPaid, "payment.nextPaymentDate": nextD, "payment.history": arrayUnion({date:new Date(), amount:amt, type:'Installment'}) };
+                if(newPaid >= b.payment.epDetails.totalPayable - 100) up["status"] = "sold_finished"; 
+                await updateDoc(doc(db, `projects/${currentProjId}/blocks/${selectedBlockId}`), up);
+            }
+            await recordDailyTransaction(`Payment: ${b.name} (${b.customer.name})`, amt, 'income', currentProjName);
+            document.getElementById('paymentModal').classList.add('hidden');
+        });
+
+        window.processResell = async () => {
+            if(!confirm("Are you sure you want to CANCEL this sale?\nThis will calculate the refund and reset the block.")) return;
+            const b = selectedBlockData;
+            const paid = b.payment.epDetails ? b.payment.epDetails.paidAmount : b.soldPrice;
+            await addDoc(collection(db, `projects/${currentProjId}/expenses`), { description: `REFUND: Cancelled Sale ${b.name} (${b.customer.name})`, amount: paid, date: new Date().toLocaleDateString('en-CA'), createdAt: serverTimestamp() });
+            await recordDailyTransaction(`REFUND: ${b.name}`, paid, 'expense', currentProjName);
+            await updateDoc(doc(db, `projects/${currentProjId}/blocks/${selectedBlockId}`), { status: 'available', customer: null, payment: null, soldPrice: null, soldDate: null });
+            alert(`Sale Cancelled.\nRefund of Rs.${paid.toLocaleString()} recorded.\nBlock is now AVAILABLE.`);
+            document.getElementById('paymentModal').classList.add('hidden');
+        };
+
+        document.getElementById('saveExpenseBtn').addEventListener('click', async () => {
+            const amt = parseFloat(document.getElementById('expAmount').value);
+            const desc = document.getElementById('expDesc').value;
+            await addDoc(collection(db, `projects/${currentProjId}/expenses`), { description: desc, amount: amt, date: new Date().toLocaleDateString('en-CA'), createdAt: serverTimestamp() });
+            await recordDailyTransaction(`Expense: ${desc}`, amt, 'expense', currentProjName);
+            document.getElementById('expenseModal').classList.add('hidden');
+        });
+
+        async function checkOverduePayments() {
+            const blocksQ = query(collectionGroup(db, 'blocks'), where('status', '==', 'sold'));
+            const snap = await getDocs(blocksQ);
+            const list = document.getElementById('notifList'); list.innerHTML = "";
+            let count = 0;
+            snap.forEach(d => {
+                const b = d.data();
+                if(b.payment && b.payment.planType === 'EP' && b.payment.nextPaymentDate) {
+                    const nextD = b.payment.nextPaymentDate.seconds ? new Date(b.payment.nextPaymentDate.seconds*1000) : new Date(b.payment.nextPaymentDate);
+                    if(nextD < new Date()) {
+                        count++;
+                        const div = document.createElement('div');
+                        div.className = "p-3 border-b hover:bg-red-50 cursor-pointer";
+                        div.innerHTML = `<p class="font-bold text-slate-800 text-xs">${b.name} - ${b.customer.name}</p><p class="text-[10px] text-red-500 font-bold">Due: ${nextD.toLocaleDateString()}</p>`;
+                        div.onclick = async () => { 
+                            const pid = d.ref.parent.parent.id;
+                            const pSnap = await getDoc(doc(db, "projects", pid));
+                            openProject(pid, pSnap.data()); 
+                            setTimeout(()=> { selectedBlockId=d.id; openPaymentModal(b); }, 1000); 
+                        };
+                        list.appendChild(div);
+                    }
+                }
+            });
+            if(count > 0) {
+                document.getElementById('notifBadge').innerText = count;
+                document.getElementById('notifBadge').classList.remove('hidden');
+                document.getElementById('bellIcon').classList.add('text-red-500', 'animate-pulse');
+            }
+        }
+        
+        // --- HELPERS ---
+        window.calcBlockPrice = () => {
+            const size = parseFloat(document.getElementById('blockSize').value) || 0;
+            const price = parseFloat(document.getElementById('blockPerchPrice').value) || 0;
+            document.getElementById('blockPrice').value = size * price;
+        };
+        window.toggleEPFields = () => {
+            const isEP = document.getElementById('payPlanType').value === 'EP';
+            document.getElementById('epFields').classList.toggle('hidden', !isEP);
+            if(isEP) window.calculateEP();
+        };
+        window.calculateEP = () => {
+            const price = parseFloat(document.getElementById('finalPrice').value) || 0;
+            const advance = parseFloat(document.getElementById('advancePay').value) || 0;
+            const rate = parseFloat(document.getElementById('epRate').value) || 15;
+            const months = parseFloat(document.getElementById('epMonths').value) || 60;
+            const balance = price - advance;
+            if(balance < 0) return;
+            const totalInterest = balance * (rate / 100) * (months/12);
+            const totalPayable = balance + totalInterest;
+            document.getElementById('epTotalPayable').innerText = totalPayable.toFixed(2);
+            document.getElementById('epMonthlyInst').innerText = (totalPayable / months).toFixed(2);
+        };
+        window.downloadPDF = async () => {
+            const overlay = document.getElementById('pdfPreviewOverlay'); 
+            overlay.style.display = 'block'; 
+            
+            // Add slight delay to ensure content renders
+            await new Promise(r => setTimeout(r, 500));
+
+            try { 
+                await html2pdf().set({ 
+                    margin: 10, 
+                    filename: 'Report.pdf', 
+                    image: { type: 'jpeg', quality: 0.98 }, 
+                    html2canvas: { scale: 2 }, 
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
+                }).from(overlay.querySelector('.print-container')).save(); 
+            } 
+            catch (err) { 
+                console.error(err); 
+                alert("Error generating PDF. Please check console."); 
+            } 
+            finally { 
+                setTimeout(() => { overlay.style.display = 'none'; }, 1000); 
+            }
+        };
+        function loadExpensesAndProfit(pid) {
+            let inc = 0;
+            onSnapshot(collection(db, `projects/${pid}/blocks`), (snap) => {
+                inc = 0; snap.forEach(d => { const b = d.data(); if(b.status.includes('sold')) inc += b.soldPrice; });
+                document.getElementById('finIncome').innerText = "Rs. " + inc.toLocaleString(); updateNet(inc, null);
+            });
+            onSnapshot(query(collection(db, `projects/${pid}/expenses`), orderBy("date","desc")), (snap) => {
+                let exp = 0; const list = document.getElementById('expenseList'); list.innerHTML = "";
+                snap.forEach(d => { const e = d.data(); exp += e.amount; list.innerHTML += `<tr class="border-b"><td class="p-3 text-gray-500">${e.date}</td><td class="p-3 font-bold">${e.description}</td><td class="p-3 text-right text-red-600">-${e.amount.toLocaleString()}</td></tr>`; });
+                document.getElementById('finExpense').innerText = "Rs. " + exp.toLocaleString(); updateNet(null, exp);
+            });
+        }
+        let cInc=0, cExp=0; function updateNet(i,e) { if(i!==null) cInc=i; if(e!==null) cExp=e; const net = cInc-cExp; document.getElementById('finProfit').innerText = "Rs. " + net.toLocaleString(); document.getElementById('finProfit').className = `text-3xl font-bold relative z-10 ${net>=0?'text-slate-800':'text-red-600'}`; }
+        function loadMeterReadings() {
+            onSnapshot(query(collection(db, "meter_readings"), orderBy("timestamp", "desc")), (snap) => {
+                const list = document.getElementById('readingsList'); list.innerHTML = "";
+                snap.forEach(d => {
+                    const r = d.data();
+                    const el = document.createElement('div'); el.className = "bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex gap-4";
+                    el.innerHTML = `<img src="${r.imageBase64}" onclick="document.getElementById('imgModalSrc').src='${r.imageBase64}';document.getElementById('imgModal').classList.remove('hidden')" class="w-24 h-24 object-cover rounded-lg cursor-pointer"><div class="flex-1"><h4 class="font-bold text-lg text-slate-800">${r.vehicleNo} <span class="text-sm text-gray-500 font-normal">(${r.projectName})</span></h4><p class="text-sm text-gray-600 font-bold mt-1">Worked: ${r.hours} hrs @ Rs. ${r.rate}/hr</p><p class="text-lg text-blue-600 font-bold">Total: Rs. ${r.totalCost.toLocaleString()}</p>${r.status!=='approved' ? `<button onclick="approveReading('${d.id}')" class="mt-2 bg-green-600 text-white px-4 py-1 rounded shadow text-sm font-bold">Approve</button>` : '<span class="text-green-600 font-bold text-xs border border-green-200 px-2 rounded">Approved</span>'}</div>`;
+                    list.appendChild(el);
+                });
+            });
+        }
+        window.approveReading = async (id) => { await updateDoc(doc(db, "meter_readings", id), { status: 'approved' }); };
         function loadBlocks(pid, isDevMode) {
             const container = document.getElementById('blocksContainer');
             onSnapshot(collection(db, `projects/${pid}/blocks`), (snap) => {
@@ -612,322 +1186,12 @@
                 });
             });
         }
-
         function openSellModal() {
             document.getElementById('sellModal').classList.remove('hidden');
             document.getElementById('sellBlockName').innerText = selectedBlockData.name;
             document.getElementById('finalPrice').value = selectedBlockData.price;
             document.getElementById('payPlanType').value = "Cash"; toggleEPFields();
         }
-
-        window.processSale = async (downloadPdf) => {
-            const cus = { name: document.getElementById('cusName').value, address: document.getElementById('cusAddress').value, nic: document.getElementById('cusNIC').value, phone: document.getElementById('cusPhone').value };
-            const advance = parseFloat(document.getElementById('advancePay').value);
-            const price = parseFloat(document.getElementById('finalPrice').value);
-            const plan = document.getElementById('payPlanType').value;
-            
-            let ep = {}; let nextD = null;
-            if(plan === 'EP') {
-                const cycle = parseInt(document.getElementById('epCycle').value);
-                ep = { rate: document.getElementById('epRate').value, months: document.getElementById('epMonths').value, cycleDays: cycle, totalPayable: parseFloat(document.getElementById('epTotalPayable').innerText), paidAmount: advance };
-                const d = new Date(); d.setDate(d.getDate() + cycle); nextD = d;
-            }
-
-            if(!cus.name || !advance) return alert("Missing Info");
-
-            await updateDoc(doc(db, `projects/${currentProjId}/blocks/${selectedBlockId}`), {
-                status: 'sold', soldPrice: price, customer: cus, soldDate: new Date(),
-                payment: { totalPrice: price, advancePaid: advance, planType: plan, epDetails: ep, nextPaymentDate: nextD, history: [{date: new Date(), amount: advance, type: 'Advance'}] }
-            });
-
-            if(downloadPdf) {
-                document.getElementById('overlayPrintTitle').innerText = "OFFICIAL RECEIPT";
-                document.getElementById('overlayPrintDate').innerText = new Date().toLocaleDateString();
-                document.getElementById('overlayPrintContent').innerHTML = `
-                    <div style="margin-top:30px; line-height:1.8;">
-                        <p><strong>Received From:</strong> ${cus.name}</p>
-                        <p><strong>Amount:</strong> Rs. ${advance.toLocaleString()}</p>
-                        <hr class="my-6 border-gray-400">
-                        <p><strong>Project:</strong> ${currentProjName}</p>
-                        <p><strong>Block:</strong> ${selectedBlockData.name}</p>
-                        <p><strong>Payment Plan:</strong> ${plan === 'EP' ? 'Easy Payment (Installment)' : 'Cash / Outright'}</p>
-                    </div>
-                `;
-                await downloadPDF();
-            }
-            closeSellModal();
-        };
-
-        // --- PAYMENTS & AUTO-LOCK ---
-        window.openPaymentModal = (data) => {
-            document.getElementById('paymentModal').classList.remove('hidden');
-            const isFin = data.status === 'sold_finished';
-            document.getElementById('addPaymentSection').style.display = isFin ? 'none' : 'block';
-            document.getElementById('editPlanBtn').style.display = (isFin || data.payment.planType !== 'EP') ? 'none' : 'block';
-            document.getElementById('paymentCompleteMsg').classList.toggle('hidden', !isFin);
-            document.getElementById('payBlockInfo').innerText = `${data.name} - ${data.customer.name}`;
-            
-            let total = data.soldPrice; let paid = data.soldPrice;
-            if(data.payment.planType === 'EP') { total = data.payment.epDetails.totalPayable; paid = data.payment.epDetails.paidAmount || 0; }
-            document.getElementById('pmTotal').innerText = total.toLocaleString(); document.getElementById('pmPaid').innerText = paid.toLocaleString(); document.getElementById('pmBalance').innerText = (total-paid).toLocaleString();
-            
-            const tbody = document.getElementById('paymentHistoryList'); tbody.innerHTML = "";
-            (data.payment.history||[]).forEach(h => {
-                const d = h.date.seconds ? new Date(h.date.seconds*1000) : new Date(h.date);
-                tbody.innerHTML += `<tr><td class="py-2">${d.toLocaleDateString()}</td><td class="font-bold">Rs.${h.amount.toLocaleString()}</td><td class="text-gray-500">${h.type}</td></tr>`;
-            });
-            document.getElementById('newPayDate').valueAsDate = new Date();
-        };
-
-        document.getElementById('submitPayBtn').addEventListener('click', async () => {
-            const amt = parseFloat(document.getElementById('newPayAmount').value);
-            if(!amt) return;
-            const b = selectedBlockData;
-            
-            if(b.payment.planType === 'EP') {
-                const newPaid = (b.payment.epDetails.paidAmount||0) + amt;
-                const nextD = new Date(); nextD.setDate(nextD.getDate() + (b.payment.epDetails.cycleDays || 30));
-                let up = { "payment.epDetails.paidAmount": newPaid, "payment.nextPaymentDate": nextD, "payment.history": arrayUnion({date:new Date(), amount:amt, type:'Installment'}) };
-                if(newPaid >= b.payment.epDetails.totalPayable - 100) up["status"] = "sold_finished"; // Auto Lock
-                await updateDoc(doc(db, `projects/${currentProjId}/blocks/${selectedBlockId}`), up);
-            }
-            document.getElementById('paymentModal').classList.add('hidden');
-        });
-
-        window.toggleEditPlan = () => document.getElementById('editPlanSection').classList.toggle('hidden');
-        document.getElementById('savePlanChangesBtn').addEventListener('click', async () => {
-            const rate = parseFloat(document.getElementById('editNewRate').value);
-            const months = parseFloat(document.getElementById('editNewMonths').value);
-            const b = selectedBlockData;
-            const bal = b.soldPrice - b.payment.advancePaid; 
-            const newInt = bal * (rate/100) * (months/12);
-            const newTot = bal + newInt + b.payment.advancePaid;
-            await updateDoc(doc(db, `projects/${currentProjId}/blocks/${selectedBlockId}`), { "payment.epDetails.rate": rate, "payment.epDetails.months": months, "payment.epDetails.totalPayable": newTot });
-            alert("Updated"); document.getElementById('paymentModal').classList.add('hidden');
-        });
-
-        // --- PROFIT & EXPENSES ---
-        document.getElementById('saveExpenseBtn').addEventListener('click', async () => {
-            await addDoc(collection(db, `projects/${currentProjId}/expenses`), { description: document.getElementById('expDesc').value, amount: parseFloat(document.getElementById('expAmount').value), date: new Date().toISOString().split('T')[0], createdAt: serverTimestamp() });
-            document.getElementById('expenseModal').classList.add('hidden');
-        });
-
-        function loadExpensesAndProfit(pid) {
-            let inc = 0;
-            onSnapshot(collection(db, `projects/${pid}/blocks`), (snap) => {
-                inc = 0; snap.forEach(d => { const b = d.data(); if(b.status.includes('sold')) inc += b.soldPrice; });
-                document.getElementById('finIncome').innerText = "Rs. " + inc.toLocaleString(); updateNet(inc, null);
-            });
-            onSnapshot(query(collection(db, `projects/${pid}/expenses`), orderBy("date","desc")), (snap) => {
-                let exp = 0; const list = document.getElementById('expenseList'); list.innerHTML = "";
-                snap.forEach(d => { 
-                    const e = d.data(); exp += e.amount;
-                    list.innerHTML += `<tr class="border-b"><td class="p-3 text-gray-500">${e.date}</td><td class="p-3 font-bold">${e.description}</td><td class="p-3 text-right text-red-600">-${e.amount.toLocaleString()}</td></tr>`;
-                });
-                document.getElementById('finExpense').innerText = "Rs. " + exp.toLocaleString(); updateNet(null, exp);
-            });
-        }
-        let cInc=0, cExp=0; 
-        function updateNet(i,e) { 
-            if(i!==null) cInc=i; if(e!==null) cExp=e; 
-            const net = cInc-cExp; 
-            document.getElementById('finProfit').innerText = "Rs. " + net.toLocaleString(); 
-            document.getElementById('finProfit').className = `text-3xl font-bold relative z-10 ${net>=0?'text-slate-800':'text-red-600'}`;
-        }
-
-        // --- METER APPROVALS ---
-        function loadMeterReadings() {
-            onSnapshot(query(collection(db, "meter_readings"), orderBy("timestamp", "desc")), (snap) => {
-                const list = document.getElementById('readingsList'); list.innerHTML = "";
-                snap.forEach(d => {
-                    const r = d.data();
-                    const el = document.createElement('div'); el.className = "bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex gap-4";
-                    el.innerHTML = `
-                        <img src="${r.imageBase64}" onclick="document.getElementById('imgModalSrc').src='${r.imageBase64}';document.getElementById('imgModal').classList.remove('hidden')" class="w-24 h-24 object-cover rounded-lg cursor-pointer">
-                        <div class="flex-1">
-                            <h4 class="font-bold text-lg text-slate-800">${r.vehicleNo} <span class="text-sm text-gray-500 font-normal">(${r.projectName})</span></h4>
-                            <p class="text-sm text-gray-600 font-bold mt-1">Worked: ${r.hours} hrs @ Rs. ${r.rate}/hr</p>
-                            <p class="text-lg text-blue-600 font-bold">Total: Rs. ${r.totalCost.toLocaleString()}</p>
-                            ${r.status!=='approved' ? `<button onclick="approveReading('${d.id}')" class="mt-2 bg-green-600 text-white px-4 py-1 rounded shadow text-sm font-bold">Approve</button>` : '<span class="text-green-600 font-bold text-xs border border-green-200 px-2 rounded">Approved</span>'}
-                        </div>
-                    `;
-                    list.appendChild(el);
-                });
-            });
-        }
-        window.approveReading = async (id) => { await updateDoc(doc(db, "meter_readings", id), { status: 'approved' }); };
-
-        function listenForOverduePayments() { /* Logic intact */ }
-
-        // --- REPORTS & PDF DOWNLOAD ---
-        let currentReportType = "";
-        
-        window.openReportGen = async (type) => {
-            currentReportType = type;
-            document.getElementById('reportGenArea').classList.remove('hidden');
-            document.getElementById('reportInputTable').classList.remove('hidden');
-            document.getElementById('reportRows').innerHTML = ""; 
-            
-            const titles = { 'cost': 'Project Cost Breakdown', 'petty': 'Petty Cash Statement', 'pl': 'Profit & Loss Statement', 'bs': 'Balance Sheet' };
-            document.getElementById('reportTitle').innerText = titles[type];
-            document.getElementById('overlayPrintTitle').innerText = titles[type];
-            document.getElementById('overlayPrintDate').innerText = `Generated: ${new Date().toLocaleDateString()}`;
-
-            const projSel = document.getElementById('reportProjectSelect');
-            if(type === 'cost') {
-                projSel.classList.remove('hidden');
-                const dd = document.getElementById('repProjDropdown');
-                dd.innerHTML = "<option>Loading Projects...</option>";
-                try {
-                    const q = query(collection(db, "projects"), orderBy("name"));
-                    const snap = await getDocs(q);
-                    dd.innerHTML = "";
-                    if(snap.empty) dd.innerHTML = "<option>No Projects Found</option>";
-                    else snap.forEach(d => dd.innerHTML += `<option value="${d.id}">${d.data().name}</option>`);
-                } catch (error) {
-                    console.error("Error loading projects:", error);
-                    dd.innerHTML = "<option>Error</option>";
-                }
-            } else {
-                projSel.classList.add('hidden');
-                if(type === 'pl') { addRow('Revenue (Sales)', 0); addRow('Cost of Sales', 0); addRow('Admin Expenses', 0); }
-                else if (type === 'bs') { addRow('Current Assets', 0); addRow('Non-current Assets', 0); addRow('Liabilities', 0); addRow('Equity', 0); }
-                else { addRow('Balance Brought Forward', 0); }
-            }
-        };
-
-        // UX Improved Add Row: Selects text on focus, clear 0 if value is 0
-        window.addReportRow = () => addRow("", 0);
-        function addRow(desc, amt) {
-            const tr = document.createElement('tr');
-            // Logic: if amt is 0, show empty string in value, but keep logic
-            const valStr = amt === 0 ? '' : amt;
-            tr.innerHTML = `<td><input type="text" class="w-full p-1 border rounded" value="${desc}" placeholder="Item Description"></td><td><input type="number" class="w-full p-1 border rounded text-right" value="${valStr}" placeholder="0" onfocus="this.select()"></td><td><button onclick="this.closest('tr').remove(); updatePrintPreview()" class="text-red-500"><i class="fas fa-trash"></i></button></td>`;
-            document.getElementById('reportRows').appendChild(tr);
-            updatePrintPreview();
-        }
-
-        window.generateProjectCostReport = async () => {
-            const pid = document.getElementById('repProjDropdown').value;
-            const pname = document.getElementById('repProjDropdown').options[document.getElementById('repProjDropdown').selectedIndex].text;
-            const expSnap = await getDocs(collection(db, `projects/${pid}/expenses`));
-            let items = [];
-            expSnap.forEach(d => items.push({ desc: d.data().description, amt: d.data().amount }));
-            document.getElementById('reportRows').innerHTML = "";
-            items.forEach(i => addRow(i.desc, i.amt));
-            document.getElementById('overlayPrintTitle').innerText = `Project Cost: ${pname}`;
-        };
-
-        function updatePrintPreview() {
-            const rows = document.querySelectorAll('#reportRows tr');
-            let html = '<table style="width:100%; border-collapse: collapse; margin-top: 20px;"><thead><tr style="border-bottom: 2px solid black;"><th style="text-align:left; padding:8px;">Description</th><th style="text-align:right; padding:8px;">Amount (Rs)</th></tr></thead><tbody>';
-            let total = 0;
-            rows.forEach(r => {
-                const inputs = r.querySelectorAll('input');
-                const val = parseFloat(inputs[1].value) || 0;
-                total += val;
-                html += `<tr><td style="padding:8px; border-bottom:1px solid #ddd;">${inputs[0].value}</td><td style="text-align:right; padding:8px; border-bottom:1px solid #ddd;">${val.toLocaleString()}</td></tr>`;
-            });
-            html += `<tr style="font-weight:bold; font-size:1.2em;"><td style="padding:15px 8px; text-align:right;">TOTAL</td><td style="padding:15px 8px; text-align:right;">Rs. ${total.toLocaleString()}</td></tr></tbody></table>`;
-            document.getElementById('overlayPrintContent').innerHTML = html;
-        }
-        document.getElementById('reportRows').addEventListener('input', updatePrintPreview);
-
-        // --- SAVE REPORT LOGIC ---
-        window.saveCurrentReport = async () => {
-            const rows = document.querySelectorAll('#reportRows tr');
-            const items = [];
-            let total = 0;
-            rows.forEach(r => {
-                const inputs = r.querySelectorAll('input');
-                const val = parseFloat(inputs[1].value) || 0;
-                items.push({ description: inputs[0].value, amount: val });
-                total += val;
-            });
-            
-            const title = document.getElementById('overlayPrintTitle').innerText;
-            
-            try {
-                await addDoc(collection(db, "saved_reports"), {
-                    type: currentReportType,
-                    title: title,
-                    date: new Date().toLocaleDateString(),
-                    timestamp: serverTimestamp(),
-                    items: items,
-                    total: total
-                });
-                alert("Report saved to history successfully!");
-                loadSavedReports(); // Refresh list
-            } catch (e) {
-                console.error(e);
-                alert("Error saving report.");
-            }
-        };
-
-        function loadSavedReports() {
-            const container = document.getElementById('savedReportsList');
-            if(!container) return;
-            container.innerHTML = "<p>Loading...</p>";
-            
-            onSnapshot(query(collection(db, "saved_reports"), orderBy("timestamp", "desc")), (snap) => {
-                container.innerHTML = "";
-                if(snap.empty) { container.innerHTML = "<p class='text-gray-400'>No saved reports.</p>"; return; }
-                
-                snap.forEach(d => {
-                    const r = d.data();
-                    const el = document.createElement('div');
-                    el.className = "bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center";
-                    el.innerHTML = `
-                        <div>
-                            <h4 class="font-bold text-slate-800">${r.title}</h4>
-                            <p class="text-xs text-gray-500">${r.date}</p>
-                            <p class="text-sm font-bold text-blue-600 mt-1">Total: Rs. ${r.total.toLocaleString()}</p>
-                        </div>
-                        <button onclick="viewSavedReport('${d.id}')" class="text-slate-800 hover:text-blue-600"><i class="fas fa-eye"></i></button>
-                    `;
-                    // Storing data in element to avoid re-fetching for viewing
-                    el.dataset.report = JSON.stringify(r);
-                    container.appendChild(el);
-                });
-            });
-        }
-
-        window.viewSavedReport = async (id) => {
-            // Find the report data from the already loaded list (optimization)
-            // Or fetch single doc if preferred. Since we have realtime listener, finding in DOM or array is easier.
-            // Let's just fetch doc for reliability in this snippet
-            const docSnap = await getDoc(doc(db, "saved_reports", id));
-            if(!docSnap.exists()) return;
-            const r = docSnap.data();
-            
-            // Open Gen Area
-            document.getElementById('reportGenArea').classList.remove('hidden');
-            document.getElementById('reportInputTable').classList.remove('hidden');
-            document.getElementById('reportProjectSelect').classList.add('hidden'); // Hide project selector for saved ones
-            
-            document.getElementById('reportTitle').innerText = "View: " + r.title;
-            document.getElementById('overlayPrintTitle').innerText = r.title;
-            document.getElementById('overlayPrintDate').innerText = "Date: " + r.date;
-            
-            document.getElementById('reportRows').innerHTML = "";
-            r.items.forEach(i => addRow(i.description, i.amount));
-        };
-
-        window.downloadPDF = async () => {
-            const overlay = document.getElementById('pdfPreviewOverlay');
-            overlay.style.display = 'block'; 
-            const element = overlay.querySelector('.print-container'); 
-            const opt = {
-                margin: 10,
-                filename: 'Report_' + new Date().toISOString().split('T')[0] + '.pdf',
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2 },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-            try { await html2pdf().set(opt).from(element).save(); } catch (err) { console.error(err); alert("Error"); } 
-            finally { setTimeout(() => { overlay.style.display = 'none'; }, 1000); }
-        };
-
     </script>
 </body>
 </html>
