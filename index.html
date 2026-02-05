@@ -24,6 +24,9 @@
         }
         /* New Transition for Progress Bar */
         .progress-bar-fill { transition: width 0.8s ease-in-out; }
+        
+        /* SCROLL FIX: Ensure modals are scrollable if content overflows */
+        .modal-content-scroll { max-height: 85vh; overflow-y: auto; }
     </style>
 </head>
 <body class="bg-gray-100 h-screen overflow-hidden text-gray-800">
@@ -68,7 +71,7 @@
             <div class="p-6 border-b border-slate-800">
                 <h2 class="text-2xl luxury-font text-amber-500">Sithuliya <span class="text-[10px] font-sans text-slate-500 block tracking-widest mt-1">ADMIN CONSOLE</span></h2>
             </div>
-            <nav class="flex-1 p-4 space-y-2">
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
                 <button onclick="nav('projects')" id="nav-projects" class="nav-btn w-full text-left p-3 rounded-xl bg-amber-600/20 text-amber-500 font-bold border border-amber-600/30"><i class="fas fa-map-marked-alt mr-3"></i> Projects</button>
                 <button onclick="nav('readings')" id="nav-readings" class="nav-btn w-full text-left p-3 rounded-xl hover:bg-slate-800 text-gray-400 font-medium transition"><i class="fas fa-tachometer-alt mr-3"></i> Meter Approvals</button>
                 <button onclick="nav('reports')" id="nav-reports" class="nav-btn w-full text-left p-3 rounded-xl hover:bg-slate-800 text-gray-400 font-medium transition"><i class="fas fa-file-invoice-dollar mr-3"></i> Financial Center</button>
@@ -104,7 +107,7 @@
                 <div id="notifList" class="max-h-80 overflow-y-auto bg-gray-50"></div>
             </div>
 
-            <main class="flex-1 overflow-auto p-8">
+            <main class="flex-1 overflow-auto p-8" id="mainScrollContainer">
                 
                 <div id="page-projects">
                     <h2 class="text-2xl font-bold text-slate-800 mb-6">Active Developments</h2>
@@ -259,7 +262,7 @@
     </div>
 
     <div id="newProjectModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl w-96">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-96 modal-content-scroll">
             <h2 class="text-xl font-bold mb-6 text-slate-800">New Project</h2>
             <input type="text" id="newProjName" placeholder="Project Name" class="w-full p-3 border rounded-lg mb-3 bg-gray-50">
             <input type="text" id="newProjArea" placeholder="Location" class="w-full p-3 border rounded-lg mb-6 bg-gray-50">
@@ -268,7 +271,7 @@
     </div>
     
     <div id="newTaskModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl w-96">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-96 modal-content-scroll">
             <h2 class="text-xl font-bold mb-4 text-slate-800">Assign Site Task</h2>
             <input type="text" id="newTaskTitle" placeholder="Title" class="w-full p-3 border rounded-lg mb-3">
             <textarea id="newTaskDesc" placeholder="Instructions" class="w-full p-3 border rounded-lg mb-6 h-24"></textarea>
@@ -285,7 +288,7 @@
     </div>
 
     <div id="sellModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center overflow-y-auto">
-        <div class="bg-white p-8 rounded-2xl w-full max-w-4xl my-10 shadow-2xl relative">
+        <div class="bg-white p-8 rounded-2xl w-full max-w-4xl my-10 shadow-2xl relative modal-content-scroll">
             <button onclick="closeSellModal()" class="absolute top-6 right-6 text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
             <div class="border-b pb-4 mb-6"><h2 class="text-3xl font-bold text-slate-800 luxury-font">Sales Agreement</h2><p class="text-amber-600 font-bold mt-1">Block: <span id="sellBlockName"></span></p></div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -316,7 +319,7 @@
     </div>
 
     <div id="paymentModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center overflow-y-auto">
-        <div class="bg-white p-6 rounded-2xl w-full max-w-2xl shadow-2xl relative">
+        <div class="bg-white p-6 rounded-2xl w-full max-w-2xl shadow-2xl relative modal-content-scroll">
             <button onclick="document.getElementById('paymentModal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
             <div class="flex justify-between items-start mb-4 border-b pb-4">
                 <div><h2 class="text-2xl font-bold text-slate-800">Payment Record</h2><p id="payBlockInfo" class="text-amber-600 font-bold text-sm"></p></div>
@@ -370,7 +373,7 @@
     </div>
     
     <div id="expenseModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-        <div class="bg-white p-6 rounded-xl w-96 shadow-xl">
+        <div class="bg-white p-6 rounded-xl w-96 shadow-xl modal-content-scroll">
             <h2 class="text-lg font-bold mb-4 text-red-600">Add Expense</h2>
             <input type="text" id="expDesc" placeholder="Description" class="w-full p-2 border rounded mb-2">
             <input type="number" id="expAmount" placeholder="Amount" class="w-full p-2 border rounded mb-4 font-bold">
@@ -563,7 +566,7 @@
                 const rev = (cats['Sales']||0) + (cats['Other Income']||0); const cogs = cats['Cost of Sales']||0; const gp = rev - cogs;
                 const admin = cats['Admin Expense']||0; const selling = cats['Selling Expense']||0; const fin = cats['Finance Cost']||0; const tax = cats['Tax']||0; const petty = cats['Petty Cash']||0;
                 const totExp = admin + selling + fin + tax + petty; const np = gp - totExp;
-                html = `<table class="w-full text-sm"><tr><td class="p-2 font-bold">Revenue</td><td class="p-2 text-right">${rev.toLocaleString()}</td></tr><tr><td class="p-2 text-red-600">Cost of Sales</td><td class="p-2 text-right text-red-600">(${cogs.toLocaleString()})</td></tr><tr class="border-t border-black bg-gray-100"><td class="p-2 font-bold">GROSS PROFIT</td><td class="p-2 text-right font-bold">${gp.toLocaleString()}</td></tr><tr><td class="p-2 pt-4 font-bold text-gray-500 uppercase">Expenses</td><td></td></tr><tr><td class="p-2 pl-6">Admin Expenses</td><td class="p-2 text-right">${admin.toLocaleString()}</td></tr><tr><td class="p-2 pl-6">Selling & Distribution</td><td class="p-2 text-right">${selling.toLocaleString()}</td></tr><tr><td class="p-2 pl-6">Finance Costs</td><td class="p-2 text-right">${fin.toLocaleString()}</td></tr><tr><td class="p-2 pl-6">Tax</td><td class="p-2 text-right">${tax.toLocaleString()}</td></tr>${petty>0 ? `<tr><td class="p-2 pl-6">Petty Cash Exp</td><td class="p-2 text-right">${petty.toLocaleString()}</td></tr>` : ''}<tr class="border-t border-black"><td class="p-2 font-bold">Total Expenses</td><td class="p-2 text-right">(${totExp.toLocaleString()})</td></tr><tr class="border-t-2 border-double border-black bg-gray-200"><td class="p-2 font-bold text-lg">NET PROFIT</td><td class="p-2 text-right font-bold text-lg">${np.toLocaleString()}</td></tr></table>`;
+                html = `<table class="w-full text-sm"><tr><td class="p-2 font-bold">Revenue</td><td class="p-2 text-right">${rev.toLocaleString()}</td></tr><tr><td class="p-2 text-red-600">Cost of Sales</td><td class="p-2 text-right text-red-600">(${cogs.toLocaleString()})</td></tr><tr class="border-t border-black bg-gray-100"><td class="p-2 font-bold">GROSS PROFIT</td><td class="p-2 text-right font-bold">${gp.toLocaleString()}</td></tr><tr><td class="p-2 pt-4 font-bold text-gray-500 uppercase">Expenses</td><td></td></tr><tr><td class="p-2 pl-6">Admin Expenses</td><td class="p-2 text-right">${admin.toLocaleString()}</td></tr><tr><td class="p-2 pl-6">Selling & Distribution</td><td class="p-2 text-right">${selling.toLocaleString()}</td></tr><tr><td class="p-2 pl-6">Finance Costs</td><td class="p-2 text-right">${fin.toLocaleString()}</td></tr><tr><td class="p-2 pl-6">Tax</td><td class="p-2 text-right">${tax.toLocaleString()}</td></tr>${petty>0 ? `<tr><td class="p-2 pl-6">Petty Cash Exp</td><td class="p-2 text-right">${petty.toLocaleString()}</td></tr>` : ''}<tr class="border-t border-black"><td class="p-2 font-bold">Total Expenses</td><td class="p-2 text-right">(${totExp.toLocaleString()})</td></tr><tr class="border-t-2 border-double border-black bg-gray-100"><td class="p-2 font-bold text-lg">NET PROFIT</td><td class="p-2 text-right font-bold text-lg">${np.toLocaleString()}</td></tr></table>`;
             }
             else if (type === 'bs') {
                 const snap = await getDocs(query(collection(db, "bs_items")));
@@ -822,14 +825,10 @@
             }
 
             // --- CALCULATE DYNAMIC MONTHLY INSTALLMENT (REDUCING BALANCE LOGIC) ---
-            // Formula: (Current Balance / Remaining Months) + (Current Balance * AnnualRate/12/100)
-            
             const rate = parseFloat(data.payment.epDetails.rate) || 15;
             const totalMonths = parseFloat(data.payment.epDetails.months) || 60;
             const currentBal = data.payment.epDetails.totalPayable - (data.payment.epDetails.paidAmount || 0);
 
-            // Estimate Remaining Months: Total - (Elapsed Time / 30 days)
-            // Or better: Use Sold Date vs Now
             const soldDate = data.soldDate.seconds ? new Date(data.soldDate.seconds*1000) : new Date(data.soldDate);
             let monthsPassed = (today.getFullYear() - soldDate.getFullYear()) * 12;
             monthsPassed -= soldDate.getMonth();
@@ -837,13 +836,10 @@
             if(monthsPassed < 0) monthsPassed = 0;
             
             let remMonths = totalMonths - monthsPassed;
-            if(remMonths < 1) remMonths = 1; // Minimum 1 to avoid division by zero
+            if(remMonths < 1) remMonths = 1; 
 
-            // Interest for this month
             const monthlyInt = currentBal * (rate / 100 / 12);
-            // Principal for this month
             const monthlyPrin = currentBal / remMonths;
-            
             const totalDueNow = monthlyInt + monthlyPrin;
 
             document.getElementById('epNextDueAmt').innerText = "Rs. " + totalDueNow.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
@@ -886,7 +882,7 @@
             alert("Updated!"); document.getElementById('paymentModal').classList.add('hidden'); openProject(currentProjId, {name: currentProjName, area: '...'});
         });
 
-        // --- UPDATED PAYMENT SUBMIT (RESET LOGIC) ---
+        // --- UPDATED PAYMENT SUBMIT LOGIC (ADVANCE PAYMENT & INTEREST REMOVAL & EARLY SETTLEMENT) ---
         document.getElementById('submitPayBtn').addEventListener('click', async () => {
             const amt = parseFloat(document.getElementById('newPayAmount').value); 
             if(!amt) return;
@@ -896,15 +892,80 @@
             let totalDue = 0; let currentPaid = 0;
 
             if (b.payment.planType === 'EP') {
+                const currentBal = b.payment.epDetails.totalPayable - (b.payment.epDetails.paidAmount||0);
+                const rate = parseFloat(b.payment.epDetails.rate)||15;
+                const totalMonths = parseFloat(b.payment.epDetails.months)||60;
+                
+                // --- EARLY SETTLEMENT LOGIC START ---
+                // Calculate "Fair Value" if closed today: Principal + Interest for elapsed months ONLY
+                const soldDate = b.soldDate.seconds ? new Date(b.soldDate.seconds*1000) : new Date(b.soldDate);
+                const today = new Date();
+                let monthsPassed = (today.getFullYear() - soldDate.getFullYear()) * 12;
+                monthsPassed -= soldDate.getMonth();
+                monthsPassed += today.getMonth();
+                if(monthsPassed <= 0) monthsPassed = 1; // Min 1 month interest
+
+                const principal = b.soldPrice - b.payment.advancePaid;
+                const interestForElapsed = principal * (rate / 100 / 12) * monthsPassed;
+                const fairTotalPayable = principal + interestForElapsed + b.payment.advancePaid;
+                const fairBalance = fairTotalPayable - (b.payment.epDetails.paidAmount || 0);
+
+                // Check if user is paying off the FULL fair balance (Settlement)
+                if (amt >= (fairBalance - 100)) { // Allow small buffer
+                     // Early Settlement Detected
+                     const finalTotal = (b.payment.epDetails.paidAmount || 0) + amt;
+                     updateData["payment.epDetails.paidAmount"] = finalTotal;
+                     updateData["payment.epDetails.totalPayable"] = finalTotal; // Adjust Total to match what was paid
+                     updateData["status"] = "sold_finished";
+                     updateData["payment.history"] = arrayUnion(
+                        {date: new Date(), amount: amt, type: 'Final Settlement'},
+                        {date: new Date(), amount: 0, type: 'Interest Adjustment', note: `Waived future interest. Settled in ${monthsPassed} months.`}
+                     );
+                     
+                     await updateDoc(doc(db, `projects/${currentProjId}/blocks/${selectedBlockId}`), updateData);
+                     await recordDailyTransaction(`Settlement: ${b.name} (${b.customer.name})`, amt, 'income', currentProjName);
+                     document.getElementById('paymentModal').classList.add('hidden');
+                     alert("Early Settlement Complete! Account Closed.");
+                     return;
+                }
+                // --- EARLY SETTLEMENT LOGIC END ---
+
+                const cycleDays = parseInt(b.payment.epDetails.cycleDays || 30);
+                const initBal = b.soldPrice - b.payment.advancePaid;
+                const monthlyIntAvg = initBal * (rate / 100 / 12); 
+                const stdInst = (initBal / totalMonths) + monthlyIntAvg;
+                
+                const monthsCovered = Math.floor(amt / stdInst);
+                const extraMonths = monthsCovered > 0 ? monthsCovered : 0; 
+                
+                let interestRebate = 0;
+                let cyclesToPush = 1; 
+
+                if (monthsCovered >= 2) { 
+                    interestRebate = monthlyIntAvg * (monthsCovered - 1);
+                    cyclesToPush = monthsCovered;
+                }
+
+                let newTotalPayable = b.payment.epDetails.totalPayable - interestRebate;
+                if(interestRebate > 0) {
+                     updateData["payment.history"] = arrayUnion(
+                        {date: new Date(), amount: amt, type: 'Payment'},
+                        {date: new Date(), amount: 0, type: 'Interest Rebate', note: `Paid ${monthsCovered} months. Rebate: Rs.${interestRebate.toFixed(2)}`}
+                     );
+                }
+
                 const newPaid = (b.payment.epDetails.paidAmount||0) + amt;
                 
-                // RESET LOGIC: Set next payment date to Today + CycleDays
-                const nextD = new Date(); nextD.setDate(nextD.getDate() + (b.payment.epDetails.cycleDays || 30));
+                const nextD = new Date(b.payment.nextPaymentDate.seconds*1000); 
+                const isOverdue = new Date() > nextD;
+                let baseDate = isOverdue ? new Date() : nextD;
+                baseDate.setDate(baseDate.getDate() + (cycleDays * cyclesToPush));
                 
                 updateData["payment.epDetails.paidAmount"] = newPaid;
-                updateData["payment.nextPaymentDate"] = nextD;
+                updateData["payment.epDetails.totalPayable"] = newTotalPayable;
+                updateData["payment.nextPaymentDate"] = baseDate;
                 
-                totalDue = b.payment.epDetails.totalPayable; currentPaid = newPaid;
+                totalDue = newTotalPayable; currentPaid = newPaid;
             } else {
                 totalDue = b.soldPrice;
                 const prevPaid = (b.payment.history || []).reduce((sum, h) => sum + (h.amount || 0), 0);
@@ -916,7 +977,7 @@
             await updateDoc(doc(db, `projects/${currentProjId}/blocks/${selectedBlockId}`), updateData);
             await recordDailyTransaction(`Payment: ${b.name} (${b.customer.name})`, amt, 'income', currentProjName);
             document.getElementById('paymentModal').classList.add('hidden');
-            alert("Payment Added & Cycle Reset!");
+            alert("Payment Added! Cycle Updated.");
         });
 
         window.processResell = async () => {
@@ -958,7 +1019,6 @@
         window.calcBlockPrice = () => { document.getElementById('blockPrice').value = (parseFloat(document.getElementById('blockSize').value)||0) * (parseFloat(document.getElementById('blockPerchPrice').value)||0); };
         window.toggleEPFields = () => { const isEP = document.getElementById('payPlanType').value === 'EP'; document.getElementById('epFields').classList.toggle('hidden', !isEP); if(isEP) window.calculateEP(); };
         
-        // --- UPDATED CALCULATE EP (NEW SALE) ---
         window.calculateEP = () => { 
             const price = parseFloat(document.getElementById('finalPrice').value)||0; 
             const advance = parseFloat(document.getElementById('advancePay').value)||0; 
@@ -968,15 +1028,11 @@
             const balance = price - advance; 
             if(balance < 0) return; 
 
-            // Logic: Balance + Total Interest (Simple Approx for Total Payable record)
-            // But monthly installment shows FIRST MONTH Max Payment (Prin + Int)
             const monthlyRate = rate / 100 / 12;
             const monthlyPrin = balance / months;
             const firstMonthInt = balance * monthlyRate;
             const firstMonthTotal = monthlyPrin + firstMonthInt;
 
-            // Total Payable for record (Standard Flat or Approx Reducing)
-            // Let's use Simple Interest Total for the record to be safe, actual math happens monthly
             const totalInterestSimple = balance * (rate/100) * (months/12);
             const totalPayable = balance + totalInterestSimple;
 
