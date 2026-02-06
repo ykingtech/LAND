@@ -72,10 +72,38 @@
                         <i class="fas fa-truck absolute right-4 top-4 text-gray-500 pointer-events-none"></i>
                     </div>
 
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <div class="flex flex-col">
+                            <label class="text-[10px] text-green-400 uppercase font-bold tracking-wider mb-1 block">Start Meter</label>
+                            <label id="startMeterBox" class="w-full aspect-square border-2 border-dashed border-slate-600 rounded-lg flex flex-col items-center justify-center cursor-pointer active:bg-slate-800 bg-slate-800/50 relative overflow-hidden">
+                                <input type="file" id="startCameraInput" accept="image/*" capture="environment" class="hidden" disabled>
+                                <div id="startPlaceholder" class="flex flex-col items-center">
+                                    <i class="fas fa-play-circle text-2xl text-green-500 mb-1"></i>
+                                    <span class="text-[10px] text-slate-400">Tap Start</span>
+                                </div>
+                                <img id="startPreview" class="hidden absolute inset-0 w-full h-full object-cover">
+                                <div id="startTimeBadge" class="hidden absolute bottom-0 left-0 right-0 bg-black/70 text-white text-[10px] text-center py-1"></div>
+                            </label>
+                        </div>
+
+                        <div class="flex flex-col">
+                            <label class="text-[10px] text-red-400 uppercase font-bold tracking-wider mb-1 block">End Meter</label>
+                            <label id="endMeterBox" class="w-full aspect-square border-2 border-dashed border-slate-600 rounded-lg flex flex-col items-center justify-center cursor-not-allowed bg-slate-900/50 relative overflow-hidden opacity-50">
+                                <input type="file" id="endCameraInput" accept="image/*" capture="environment" class="hidden" disabled>
+                                <div id="endPlaceholder" class="flex flex-col items-center">
+                                    <i class="fas fa-stop-circle text-2xl text-red-500 mb-1"></i>
+                                    <span class="text-[10px] text-slate-400">Tap End</span>
+                                </div>
+                                <img id="endPreview" class="hidden absolute inset-0 w-full h-full object-cover">
+                                <div id="endTimeBadge" class="hidden absolute bottom-0 left-0 right-0 bg-black/70 text-white text-[10px] text-center py-1"></div>
+                            </label>
+                        </div>
+                    </div>
+
                     <div class="grid grid-cols-2 gap-3 mb-5">
                         <div>
-                            <label class="text-[10px] text-blue-300 uppercase font-bold tracking-wider mb-1 block">Hours</label>
-                            <input type="number" id="meterHours" placeholder="0" class="w-full bg-slate-800 p-3 rounded-lg border border-slate-600 font-bold text-center text-lg focus:border-blue-500 outline-none text-white">
+                            <label class="text-[10px] text-blue-300 uppercase font-bold tracking-wider mb-1 block">Total Hours (Auto)</label>
+                            <input type="number" id="meterHours" placeholder="0.0" class="w-full bg-slate-900 p-3 rounded-lg border border-slate-600 font-bold text-center text-lg text-yellow-400 outline-none" readonly>
                         </div>
                         <div>
                             <label class="text-[10px] text-blue-300 uppercase font-bold tracking-wider mb-1 block">Rate (Rs)</label>
@@ -83,16 +111,9 @@
                         </div>
                     </div>
 
-                    <label class="block mb-4 w-full aspect-[4/3] border-2 border-dashed border-slate-600 rounded-xl flex flex-col items-center justify-center cursor-pointer active:bg-slate-800 bg-slate-800/50 relative overflow-hidden group">
-                        <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden"> 
-                        <div id="cameraPlaceholder" class="flex flex-col items-center group-active:scale-95 transition">
-                            <div class="w-14 h-14 rounded-full bg-blue-600 flex items-center justify-center mb-2 shadow-lg shadow-blue-500/30">
-                                <i class="fas fa-camera text-xl text-white"></i>
-                            </div>
-                            <span class="text-xs text-slate-300 font-medium">Tap to Photo</span>
-                        </div>
-                        <img id="previewImg" class="hidden absolute inset-0 w-full h-full object-cover">
-                    </label>
+                    <button id="resetTripBtn" onclick="clearTrip()" class="hidden w-full mb-3 bg-slate-800 border border-red-900/30 text-red-400 py-2 rounded-lg text-xs font-bold uppercase">
+                        <i class="fas fa-trash-alt mr-1"></i> Cancel Trip
+                    </button>
 
                     <button id="uploadBtn" disabled class="w-full bg-slate-700 text-gray-500 py-4 rounded-xl font-bold text-base transition shadow-lg disabled:cursor-not-allowed flex justify-center items-center gap-2 active:scale-95">
                         UPLOAD READING
@@ -166,34 +187,12 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- PWA INSTALL LOGIC (Enhanced) ---
+        // --- PWA INSTALL LOGIC ---
         let deferredPrompt;
         const installBtn = document.getElementById('installAppBtn');
-
-        // Check if already in standalone mode
-        if (window.matchMedia('(display-mode: standalone)').matches) {
-            installBtn.classList.add('hidden');
-        }
-
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            // Only show if NOT in standalone
-            if (!window.matchMedia('(display-mode: standalone)').matches) {
-                installBtn.classList.remove('hidden');
-            }
-        });
-
-        installBtn.addEventListener('click', async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') {
-                    installBtn.classList.add('hidden'); // Hide immediately upon acceptance
-                }
-                deferredPrompt = null;
-            }
-        });
+        if (window.matchMedia('(display-mode: standalone)').matches) { installBtn.classList.add('hidden'); }
+        window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; if (!window.matchMedia('(display-mode: standalone)').matches) { installBtn.classList.remove('hidden'); } });
+        installBtn.addEventListener('click', async () => { if (deferredPrompt) { deferredPrompt.prompt(); const { outcome } = await deferredPrompt.userChoice; if (outcome === 'accepted') { installBtn.classList.add('hidden'); } deferredPrompt = null; } });
 
         // UI HELPERS
         window.switchTab = (tab) => {
@@ -205,7 +204,7 @@
 
         window.resetProject = () => { if(confirm("Change Project Site?")) { localStorage.removeItem('site_proj_id'); localStorage.removeItem('site_proj_name'); location.reload(); } };
 
-        // DATA LOADING & LOCK LOGIC
+        // DATA LOADING
         const vehicleSelect = document.getElementById('vehicleSelect');
         const projSearchInput = document.getElementById('projectSearchInput');
         const projListDiv = document.getElementById('projectResultsList');
@@ -231,10 +230,7 @@
                     allProjects = [];
                     snapshot.forEach(doc => allProjects.push({id: doc.id, ...doc.data()}));
                     renderProjectList(allProjects);
-                } catch(e) { 
-                    console.error("Project Load Error:", e);
-                    projListDiv.innerHTML = '<div class="text-red-500 text-center text-xs">Error loading projects.</div>';
-                }
+                } catch(e) { console.error("Project Load Error:", e); projListDiv.innerHTML = '<div class="text-red-500 text-center text-xs">Error loading projects.</div>'; }
             }
         }
         setTimeout(initData, 500);
@@ -247,10 +243,7 @@
 
         function renderProjectList(list) {
             projListDiv.innerHTML = "";
-            if(list.length === 0) {
-                projListDiv.innerHTML = '<div class="text-gray-500 text-center text-xs">No projects found.</div>';
-                return;
-            }
+            if(list.length === 0) { projListDiv.innerHTML = '<div class="text-gray-500 text-center text-xs">No projects found.</div>'; return; }
             list.forEach(p => {
                 const el = document.createElement('div');
                 el.className = "bg-slate-800 p-4 rounded-xl border border-slate-700 flex justify-between items-center active:bg-slate-700 transition cursor-pointer";
@@ -273,11 +266,14 @@
                 onSnapshot(doc(db, "projects", pid), (docSnap) => {
                     if (docSnap.exists()) {
                         const vehicles = docSnap.data().assignedVehicles || [];
+                        // Save currently selected value to restore after rebuild
+                        const currentVal = vehicleSelect.value;
                         vehicleSelect.innerHTML = '<option value="">Select Vehicle...</option>';
                         vehicles.forEach(v => {
                             const opt = document.createElement('option'); opt.value = v; opt.text = v;
                             vehicleSelect.appendChild(opt);
                         });
+                        if(currentVal) vehicleSelect.value = currentVal;
                     }
                 });
                 loadMeterHistory(pid);
@@ -285,20 +281,151 @@
             } catch(e) { console.error("Data Load Error", e); }
         }
 
-        // --- METER LOGIC ---
-        let meterImgBase64 = null;
-        document.getElementById('cameraInput').addEventListener('change', async (e) => {
+        // --- NEW MULTI-VEHICLE LOGIC ---
+        // Store trips as object: { "WP-1234": { start: 12345678, img: "base64..." }, "WP-5678": ... }
+        
+        function getTrips() {
+            return JSON.parse(localStorage.getItem('site_active_trips') || '{}');
+        }
+        
+        function saveTrip(vNo, data) {
+            let trips = getTrips();
+            trips[vNo] = data;
+            localStorage.setItem('site_active_trips', JSON.stringify(trips));
+        }
+        
+        function removeTrip(vNo) {
+            let trips = getTrips();
+            delete trips[vNo];
+            localStorage.setItem('site_active_trips', JSON.stringify(trips));
+        }
+
+        let currentStartImg = null;
+        let currentEndImg = null;
+        let currentStartTime = null;
+        let currentEndTime = null;
+
+        // When Vehicle Changes -> Update UI
+        vehicleSelect.addEventListener('change', () => {
+            updateUIForVehicle();
+        });
+
+        function updateUIForVehicle() {
+            const vNo = vehicleSelect.value;
+            const startBox = document.getElementById('startMeterBox');
+            const endBox = document.getElementById('endMeterBox');
+            const startInput = document.getElementById('startCameraInput');
+            const endInput = document.getElementById('endCameraInput');
+            const resetBtn = document.getElementById('resetTripBtn');
+            const uploadBtn = document.getElementById('uploadBtn');
+            
+            // Reset fields visually first
+            document.getElementById('startPreview').classList.add('hidden');
+            document.getElementById('startPlaceholder').classList.remove('hidden');
+            document.getElementById('startTimeBadge').classList.add('hidden');
+            startBox.classList.remove('border-green-500');
+            
+            document.getElementById('endPreview').classList.add('hidden');
+            document.getElementById('endPlaceholder').classList.remove('hidden');
+            document.getElementById('endTimeBadge').classList.add('hidden');
+            endBox.classList.remove('border-red-500');
+            endBox.classList.add('opacity-50', 'cursor-not-allowed');
+            
+            document.getElementById('meterHours').value = "";
+            currentStartImg = null; currentEndImg = null; currentStartTime = null; currentEndTime = null;
+            
+            if(!vNo) {
+                startInput.disabled = true; endInput.disabled = true;
+                return;
+            }
+
+            const trips = getTrips();
+            const tripData = trips[vNo];
+
+            if(tripData) {
+                // Trip Active
+                currentStartTime = new Date(tripData.startTime);
+                currentStartImg = tripData.startImg;
+                
+                // Show Start Data
+                document.getElementById('startPreview').src = currentStartImg;
+                document.getElementById('startPreview').classList.remove('hidden');
+                document.getElementById('startPlaceholder').classList.add('hidden');
+                document.getElementById('startTimeBadge').innerText = currentStartTime.toLocaleTimeString();
+                document.getElementById('startTimeBadge').classList.remove('hidden');
+                startBox.classList.add('border-green-500');
+                
+                // Lock Start, Enable End
+                startInput.disabled = true;
+                endInput.disabled = false;
+                endBox.classList.remove('opacity-50', 'cursor-not-allowed');
+                resetBtn.classList.remove('hidden');
+            } else {
+                // No Trip Active -> Ready to Start
+                startInput.disabled = false;
+                endInput.disabled = true;
+                resetBtn.classList.add('hidden');
+            }
+            
+            // Reset Upload Button
+            uploadBtn.disabled = true;
+            uploadBtn.classList.replace('bg-blue-600', 'bg-slate-700');
+            uploadBtn.classList.replace('text-white', 'text-gray-500');
+        }
+
+        // Handle Start Camera
+        document.getElementById('startCameraInput').addEventListener('change', async (e) => {
+            const vNo = vehicleSelect.value;
+            if(!vNo) return;
+            
             if(e.target.files[0]) {
-                document.getElementById('cameraPlaceholder').innerHTML = '<i class="fas fa-spinner fa-spin text-2xl text-blue-500"></i>';
-                meterImgBase64 = await processImage(e.target.files[0]);
-                document.getElementById('previewImg').src = meterImgBase64;
-                document.getElementById('previewImg').classList.remove('hidden');
-                const btn = document.getElementById('uploadBtn');
-                btn.disabled = false; btn.classList.replace('bg-slate-700', 'bg-blue-600'); btn.classList.replace('text-gray-500', 'text-white');
-                document.getElementById('cameraPlaceholder').classList.add('hidden');
+                const file = e.target.files[0];
+                const b64 = await processImage(file);
+                const time = new Date().getTime();
+                
+                saveTrip(vNo, { startTime: time, startImg: b64 });
+                updateUIForVehicle(); // Refresh UI
             }
         });
 
+        // Handle End Camera
+        document.getElementById('endCameraInput').addEventListener('change', async (e) => {
+            if(e.target.files[0]) {
+                const file = e.target.files[0];
+                currentEndImg = await processImage(file);
+                currentEndTime = new Date();
+                
+                // Update UI Manually for End State
+                document.getElementById('endPreview').src = currentEndImg;
+                document.getElementById('endPreview').classList.remove('hidden');
+                document.getElementById('endPlaceholder').classList.add('hidden');
+                document.getElementById('endTimeBadge').innerText = currentEndTime.toLocaleTimeString();
+                document.getElementById('endTimeBadge').classList.remove('hidden');
+                document.getElementById('endMeterBox').classList.add('border-red-500');
+
+                // Calc Hours
+                const diffMs = currentEndTime - currentStartTime;
+                const hours = diffMs / (1000 * 60 * 60);
+                document.getElementById('meterHours').value = hours.toFixed(2);
+
+                // Enable Upload
+                const btn = document.getElementById('uploadBtn');
+                btn.disabled = false; 
+                btn.classList.replace('bg-slate-700', 'bg-blue-600'); 
+                btn.classList.replace('text-gray-500', 'text-white');
+            }
+        });
+
+        // Clear Current Vehicle Trip
+        window.clearTrip = () => {
+            const vNo = vehicleSelect.value;
+            if(confirm(`Cancel trip for ${vNo}?`)) {
+                removeTrip(vNo);
+                updateUIForVehicle();
+            }
+        }
+
+        // Upload Logic
         document.getElementById('uploadBtn').addEventListener('click', async () => {
             const btn = document.getElementById('uploadBtn');
             const pid = localStorage.getItem('site_proj_id');
@@ -306,16 +433,33 @@
             const vNo = vehicleSelect.value;
             const hours = document.getElementById('meterHours').value;
             const rate = document.getElementById('meterRate').value;
-            if(!vNo || !meterImgBase64 || !hours || !rate) return alert("Fill all fields & take photo!");
+            
+            if(!vNo || !currentStartImg || !currentEndImg || !hours || !rate) return alert("Please complete all steps!");
+            
             btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> UPLOADING...'; btn.disabled = true;
             try {
                 await addDoc(collection(db, "meter_readings"), {
-                    projectId: pid, projectName: pname, vehicleNo: vNo,
-                    imageBase64: meterImgBase64, timestamp: serverTimestamp(), status: "pending",
-                    hours: parseFloat(hours), rate: parseFloat(rate), totalCost: parseFloat(hours)*parseFloat(rate)
+                    projectId: pid, 
+                    projectName: pname, 
+                    vehicleNo: vNo,
+                    startPhoto: currentStartImg,
+                    endPhoto: currentEndImg,
+                    startTime: currentStartTime,
+                    endTime: currentEndTime,
+                    timestamp: serverTimestamp(), 
+                    status: "pending",
+                    hours: parseFloat(hours), 
+                    rate: parseFloat(rate), 
+                    totalCost: parseFloat(hours)*parseFloat(rate)
                 });
-                alert("Upload Successful!"); location.reload();
-            } catch(e) { console.error(e); alert("Error uploading"); btn.disabled = false; }
+                
+                // Clear Local Storage for this vehicle
+                removeTrip(vNo);
+                
+                alert("Upload Successful!"); 
+                updateUIForVehicle(); // Reset UI
+                btn.innerHTML = "UPLOAD READING";
+            } catch(e) { console.error(e); alert("Error uploading"); btn.disabled = false; btn.innerHTML = "UPLOAD READING"; }
         });
 
         function loadMeterHistory(pid) {
@@ -325,7 +469,7 @@
                     const data = d.data();
                     const statusColor = data.status === 'approved' ? 'text-green-400 border-green-500/50 bg-green-500/10' : 'text-yellow-400 border-yellow-500/50 bg-yellow-500/10';
                     const icon = data.status === 'approved' ? 'fa-check-circle' : 'fa-clock';
-                    list.innerHTML += `<div class="glass-panel p-3 rounded-xl border border-slate-700 flex gap-3 items-center"><img src="${data.imageBase64}" class="w-14 h-14 rounded-lg object-cover border border-slate-600"><div class="flex-1 min-w-0"><div class="flex justify-between items-start"><h4 class="font-bold text-white text-sm truncate">${data.vehicleNo}</h4><span class="text-[10px] border px-2 py-0.5 rounded-full uppercase font-bold flex items-center gap-1 ${statusColor}"><i class="fas ${icon}"></i> ${data.status}</span></div><div class="flex justify-between mt-1 text-xs text-slate-400"><span>${data.hours}h @ ${data.rate}</span><span class="font-bold">Rs.${data.totalCost.toLocaleString()}</span></div></div></div>`;
+                    list.innerHTML += `<div class="glass-panel p-3 rounded-xl border border-slate-700 flex gap-3 items-center"><img src="${data.startPhoto}" class="w-14 h-14 rounded-lg object-cover border border-slate-600"><div class="flex-1 min-w-0"><div class="flex justify-between items-start"><h4 class="font-bold text-white text-sm truncate">${data.vehicleNo}</h4><span class="text-[10px] border px-2 py-0.5 rounded-full uppercase font-bold flex items-center gap-1 ${statusColor}"><i class="fas ${icon}"></i> ${data.status}</span></div><div class="flex justify-between mt-1 text-xs text-slate-400"><span>${data.hours}h @ ${data.rate}</span><span class="font-bold">Rs.${data.totalCost.toLocaleString()}</span></div></div></div>`;
                 });
             });
         }
@@ -386,7 +530,9 @@
             if(document.getElementById('taskImg1').dataset.b64) photos.push(document.getElementById('taskImg1').dataset.b64);
             if(document.getElementById('taskImg2').dataset.b64) photos.push(document.getElementById('taskImg2').dataset.b64);
             if(document.getElementById('taskImg3').dataset.b64) photos.push(document.getElementById('taskImg3').dataset.b64);
+            
             if(!cost || photos.length === 0) return alert("Enter cost and at least 1 photo.");
+            
             const btn = document.getElementById('submitTaskBtn');
             btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> SENDING..."; btn.disabled = true;
             try {
