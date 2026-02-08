@@ -21,7 +21,12 @@
             background: #525659; z-index: 10000; overflow-y: auto; display: none;
         }
         .pdf-container-flex { display: flex; justify-content: center; padding: 40px 0; background: #525659; min-height: 100%; }
-        .print-paper { width: 210mm; min-height: 297mm; background: white; padding: 20mm; color: black; font-family: 'Times New Roman', serif; box-shadow: 0 0 15px rgba(0,0,0,0.5); box-sizing: border-box; margin: auto; }
+        /* Adjusted for A4 alignment */
+        .print-paper { 
+            width: 210mm; min-height: 297mm; background: white; padding: 15mm; 
+            color: black; font-family: 'Times New Roman', serif; 
+            box-shadow: 0 0 15px rgba(0,0,0,0.5); box-sizing: border-box; margin: 0 auto; 
+        }
         @media (max-width: 768px) { .print-paper { width: 95%; padding: 10mm; zoom: 0.6; } }
         
         .receipt-box { border: 2px solid #333; padding: 20px; position: relative; }
@@ -46,6 +51,13 @@
         
         .prose h3 { font-weight: bold; margin-top: 1em; }
         .prose ul { list-style-type: disc; margin-left: 1.5em; }
+
+        /* Custom Input for Data Modal to show numbers clearly */
+        .input-number-clear {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: #1e3a8a;
+        }
     </style>
 </head>
 <body class="bg-gray-100 h-screen overflow-hidden text-gray-800">
@@ -612,17 +624,20 @@
                          <div class="bg-blue-50 px-2 py-1 rounded border border-blue-100"><span class="text-[9px] font-bold text-blue-400 uppercase block">Current Rate</span><span id="dispRate" class="text-xs font-bold text-blue-700"></span></div>
                          <div class="bg-blue-50 px-2 py-1 rounded border border-blue-100"><span class="text-[9px] font-bold text-blue-400 uppercase block">Plan Period</span><span id="dispMonths" class="text-xs font-bold text-blue-700"></span></div>
                     </div>
-                    <div class="mt-3 bg-indigo-50 p-2 rounded-lg border border-indigo-100 flex justify-between items-center">
-                        <div>
-                            <p class="text-[10px] font-bold text-indigo-400 uppercase">This Month Payable (EMI)</p>
-                            <p class="text-xs text-indigo-500" id="epNextDueDetail">...</p>
+                    <div class="mt-3 grid grid-cols-2 gap-4">
+                        <div class="bg-indigo-50 p-2 rounded-lg border border-indigo-100">
+                            <p class="text-[10px] font-bold text-indigo-400 uppercase">This Month Payable</p>
+                            <p class="text-xl font-bold text-indigo-700" id="epNextDueAmt">Rs. 0.00</p>
                         </div>
-                        <p class="text-xl font-bold text-indigo-700" id="epNextDueAmt">Rs. 0.00</p>
+                        <div class="bg-indigo-50 p-2 rounded-lg border border-indigo-100">
+                            <p class="text-[10px] font-bold text-indigo-400 uppercase">Next Month Payable</p>
+                            <p class="text-xl font-bold text-indigo-700" id="epFutureDueAmt">Rs. 0.00</p>
+                        </div>
                     </div>
-                    <!-- ADDED MISSING ELEMENT -->
-                    <div class="flex justify-between items-center mt-1 text-xs text-gray-500">
-                        <span>Future Balance:</span>
-                        <span id="epRealtimeFuture" class="font-bold"></span>
+                    <!-- Future Balance: Total Payable - Paid Amount -->
+                    <div class="flex justify-between items-center mt-2 text-xs text-gray-500 border-t pt-2">
+                        <span class="font-bold text-red-500 uppercase">Settlement Balance (Today):</span>
+                        <span id="epRealtimeFuture" class="font-bold text-red-600 text-sm"></span>
                     </div>
                 </div>
             </div>
@@ -723,7 +738,7 @@
                                 <h3 class="font-bold text-blue-900 text-sm uppercase tracking-wide">4. Survey Costs</h3>
                                 <span class="text-xs font-bold text-slate-500">Total: <span id="rpt_survey_total_disp">0</span></span>
                             </div>
-                            <div id="surveyRows" class="space-y-2 text-xs"></div>
+                            <div id="surveyRows" class="space-y-3 text-xs"></div>
                         </div>
                     </div>
 
@@ -871,7 +886,23 @@
              p.classList.toggle('hidden');
         }
         
-        window.openNewProjectModal = () => document.getElementById('newProjectModal').classList.remove('hidden');
+        // --- NEW: Populate Land Dropdown on Modal Open ---
+        window.openNewProjectModal = async () => {
+             document.getElementById('newProjectModal').classList.remove('hidden');
+             const landSelect = document.getElementById('landLinkSelect');
+             landSelect.innerHTML = '<option value="">Select Land...</option>';
+             
+             // Fetch all lands
+             const snap = await getDocs(collection(db, "company_lands"));
+             snap.forEach(d => {
+                 const l = d.data();
+                 // Show land if it's NOT linked to another project
+                 if (!l.linkedProjectId) {
+                     landSelect.innerHTML += `<option value="${d.id}">${l.name}</option>`;
+                 }
+             });
+        }
+
         window.closeImgModal = () => document.getElementById('imgModal').classList.add('hidden');
         window.openExpenseModal = () => document.getElementById('expenseModal').classList.remove('hidden');
         window.closeSellModal = () => document.getElementById('sellModal').classList.add('hidden');
@@ -974,11 +1005,24 @@
         window.createProject = async () => {
             const name = document.getElementById('newProjName').value;
             const area = document.getElementById('newProjArea').value;
+            const linkedLandId = document.getElementById('landLinkSelect').value;
+
             if(!name) return alert("Name required");
             try {
-                await addDoc(collection(db, "projects"), {
+                const pData = {
                     name, area, status: 'development', createdAt: serverTimestamp()
-                });
+                };
+                if(linkedLandId) pData.linkedLandId = linkedLandId;
+
+                const ref = await addDoc(collection(db, "projects"), pData);
+                
+                // If a land was linked, update the Land document
+                if(linkedLandId) {
+                    await updateDoc(doc(db, "company_lands", linkedLandId), {
+                        linkedProjectId: ref.id
+                    });
+                }
+
                 document.getElementById('newProjectModal').classList.add('hidden');
                 alert("Project Created");
             } catch(e) { console.error(e); alert("Error"); }
@@ -1219,12 +1263,24 @@
                 const lSnap = await getDoc(doc(db, "company_lands", p.linkedLandId));
                 if(lSnap.exists()) s('rpt_purchase_price', lSnap.data().cost);
             } else { s('rpt_purchase_price', d.purchase_price || 0); }
+            
+            // --- FIX: IMPROVED SURVEY ROW LAYOUT TO PREVENT CUT-OFF ---
             const surveyDiv = document.getElementById('surveyRows'); surveyDiv.innerHTML = "";
             let sData = d.surveyData || reportDataCache.surveyRows;
-            sData.forEach((row, i) => { surveyDiv.innerHTML += `<div class="grid grid-cols-6 gap-2 items-center"><div class="col-span-3"><input type="text" class="w-full p-1 border" value="${row.desc}" id="sur_d_${i}"></div><div><input type="number" class="w-full p-1 border" value="${row.unit}" placeholder="Unit" id="sur_u_${i}" oninput="calcSurveyRow(${i})"></div><div><input type="number" class="w-full p-1 border" value="${row.price}" placeholder="Price" id="sur_p_${i}" oninput="calcSurveyRow(${i})"></div><div><input type="number" class="w-full p-1 border bg-gray-100" value="${row.unit*row.price}" id="sur_c_${i}" readonly></div></div>`; }); calcSurveyTotal();
+            sData.forEach((row, i) => { 
+                surveyDiv.innerHTML += `
+                <div class="grid grid-cols-12 gap-2 items-center mb-2">
+                    <div class="col-span-4"><input type="text" class="w-full p-1 border text-xs" value="${row.desc}" id="sur_d_${i}"></div>
+                    <div class="col-span-2"><input type="number" class="w-full p-1 border text-xs text-right input-number-clear" value="${row.unit}" placeholder="Unit" id="sur_u_${i}" oninput="calcSurveyRow(${i})"></div>
+                    <div class="col-span-3"><input type="number" class="w-full p-1 border text-xs text-right input-number-clear" value="${row.price}" placeholder="Price" id="sur_p_${i}" oninput="calcSurveyRow(${i})"></div>
+                    <div class="col-span-3"><input type="number" class="w-full p-1 border bg-gray-100 text-xs text-right input-number-clear" value="${row.unit*row.price}" id="sur_c_${i}" readonly></div>
+                </div>`; 
+            }); 
+            calcSurveyTotal();
+            
             const devDiv = document.getElementById('devCostContainer'); devDiv.innerHTML = "";
             let devCats = d.devCategories || reportDataCache.devCategories; let devItems = d.devItems || {}; 
-            devCats.forEach(cat => { let itemsHtml = ""; const items = devItems[cat] || [{desc: "", price: 0}]; items.forEach(item => { itemsHtml += `<div class="flex gap-2 mb-1 dev-item-row"><input type="text" class="flex-1 p-1 border text-xs" placeholder="Item Desc" value="${item.desc}"><input type="number" class="w-24 p-1 border text-xs dev-item-price" placeholder="Cost" value="${item.price}" oninput="calcDevTotal()"><button onclick="this.parentElement.remove();calcDevTotal()" class="text-red-500">x</button></div>`; }); devDiv.innerHTML += `<div class="border p-2 rounded mb-2 dev-category" data-cat="${cat}"><div class="flex justify-between font-bold text-xs bg-gray-100 p-1 mb-2"><span>${cat}</span><button onclick="addDevItem(this)" class="text-blue-600">+ Item</button></div><div class="dev-items-container">${itemsHtml}</div><div class="text-right text-xs font-bold mt-1">Subtotal: <span class="cat-total">0</span></div></div>`; }); calcDevTotal();
+            devCats.forEach(cat => { let itemsHtml = ""; const items = devItems[cat] || [{desc: "", price: 0}]; items.forEach(item => { itemsHtml += `<div class="flex gap-2 mb-1 dev-item-row"><input type="text" class="flex-1 p-1 border text-xs w-full" placeholder="Item Desc" value="${item.desc}"><input type="number" class="w-24 p-1 border text-xs dev-item-price" placeholder="Cost" value="${item.price}" oninput="calcDevTotal()"><button onclick="this.parentElement.remove();calcDevTotal()" class="text-red-500">x</button></div>`; }); devDiv.innerHTML += `<div class="border p-2 rounded mb-2 dev-category" data-cat="${cat}"><div class="flex justify-between font-bold text-xs bg-gray-100 p-1 mb-2"><span>${cat}</span><button onclick="addDevItem(this)" class="text-blue-600">+ Item</button></div><div class="dev-items-container">${itemsHtml}</div><div class="text-right text-xs font-bold mt-1">Subtotal: <span class="cat-total">0</span></div></div>`; }); calcDevTotal();
             const sysList = document.getElementById('systemActualsList'); sysList.innerHTML = "Loading...";
             const expSnap = await getDocs(collection(db, `projects/${currentProjId}/expenses`)); let sysHtml = ""; expSnap.forEach(doc => { const e = doc.data(); sysHtml += `<div class="flex justify-between border-b border-gray-100"><span>${e.description}</span><span>${e.amount.toLocaleString()}</span></div>`; }); sysList.innerHTML = sysHtml || "No expenses found.";
             s('rpt_tax_ps', d.tax_ps); s('rpt_tax_plan', d.tax_plan); s('rpt_ad_cost', d.ad_cost); s('rpt_fin_cap', d.fin_cap || 200000); s('rpt_fin_vat', d.fin_vat || 0); s('rpt_sig_mgr', d.sig_mgr); s('rpt_sig_dir', d.sig_dir); s('rpt_sig_chm', d.sig_chm);
@@ -1234,7 +1290,7 @@
         window.calcSurveyRow = (i) => { const u = parseFloat(document.getElementById(`sur_u_${i}`).value) || 0; const p = parseFloat(document.getElementById(`sur_p_${i}`).value) || 0; document.getElementById(`sur_c_${i}`).value = u * p; calcSurveyTotal(); };
         window.calcSurveyTotal = () => { let tot = 0; const inputs = document.querySelectorAll('[id^="sur_c_"]'); inputs.forEach(inp => tot += parseFloat(inp.value) || 0); document.getElementById('rpt_survey_total_disp').innerText = tot.toLocaleString(); };
         window.addDevCategory = () => { const name = prompt("Enter Category Name:"); if(name) { const devDiv = document.getElementById('devCostContainer'); devDiv.innerHTML += `<div class="border p-2 rounded mb-2 dev-category" data-cat="${name}"><div class="flex justify-between font-bold text-xs bg-gray-100 p-1 mb-2"><span>${name}</span><button onclick="addDevItem(this)" class="text-blue-600">+ Item</button></div><div class="dev-items-container"></div><div class="text-right text-xs font-bold mt-1">Subtotal: <span class="cat-total">0</span></div></div>`; } };
-        window.addDevItem = (btn) => { const container = btn.parentElement.nextElementSibling; container.innerHTML += `<div class="flex gap-2 mb-1 dev-item-row"><input type="text" class="flex-1 p-1 border text-xs" placeholder="Item Desc"><input type="number" class="w-24 p-1 border text-xs dev-item-price" placeholder="Cost" oninput="calcDevTotal()"><button onclick="this.parentElement.remove();calcDevTotal()" class="text-red-500">x</button></div>`; };
+        window.addDevItem = (btn) => { const container = btn.parentElement.nextElementSibling; container.innerHTML += `<div class="flex gap-2 mb-1 dev-item-row"><input type="text" class="flex-1 p-1 border text-xs w-full" placeholder="Item Desc"><input type="number" class="w-24 p-1 border text-xs dev-item-price" placeholder="Cost" oninput="calcDevTotal()"><button onclick="this.parentElement.remove();calcDevTotal()" class="text-red-500">x</button></div>`; };
         window.calcDevTotal = () => { let grandTot = 0; document.querySelectorAll('.dev-category').forEach(cat => { let sub = 0; cat.querySelectorAll('.dev-item-price').forEach(inp => sub += parseFloat(inp.value) || 0); cat.querySelector('.cat-total').innerText = sub.toLocaleString(); grandTot += sub; }); document.getElementById('rpt_dev_total_disp').innerText = grandTot.toLocaleString(); };
         window.saveReportData = async () => { const getV = (id) => document.getElementById(id).value; let surveyData = []; document.querySelectorAll('[id^="sur_d_"]').forEach((inp, i) => { surveyData.push({ desc: inp.value, unit: document.getElementById(`sur_u_${i}`).value, price: document.getElementById(`sur_p_${i}`).value }); }); let devCats = []; let devItems = {}; document.querySelectorAll('.dev-category').forEach(cat => { const name = cat.dataset.cat; devCats.push(name); devItems[name] = []; cat.querySelectorAll('.dev-item-row').forEach(row => { const inputs = row.querySelectorAll('input'); devItems[name].push({ desc: inputs[0].value, price: inputs[1].value }); }); }); const data = { owner: getV('rpt_owner'), introducer: getV('rpt_introducer'), acres: getV('rpt_acres'), roods: getV('rpt_roods'), perches: getV('rpt_perches'), road_pct: getV('rpt_road_pct'), res_pct: getV('rpt_res_pct'), period: getV('rpt_period'), purchase_price: getV('rpt_purchase_price'), title_ins_pct: getV('rpt_title_ins_pct'), stamp_pct: getV('rpt_stamp_pct'), legal_pct: getV('rpt_legal_pct'), val_pct: getV('rpt_val_pct'), title_rep: getV('rpt_title_rep'), intro_comm: getV('rpt_intro_comm'), surveyData: surveyData, devCategories: devCats, devItems: devItems, tax_ps: getV('rpt_tax_ps'), tax_plan: getV('rpt_tax_plan'), ad_cost: getV('rpt_ad_cost'), fin_cap: getV('rpt_fin_cap'), fin_vat: getV('rpt_fin_vat'), sig_mgr: getV('rpt_sig_mgr'), sig_dir: getV('rpt_sig_dir'), sig_chm: getV('rpt_sig_chm') }; await updateDoc(doc(db, "projects", currentProjId), { reportData: data }); document.getElementById('newProjectReportDataModal').classList.add('hidden'); alert("Full Report Data Saved!"); };
 
@@ -1259,13 +1315,13 @@
             d.surveyData.forEach(row => { const cost = f(row.unit) * f(row.price); surTot += cost; surHtml += `<tr><td>${row.desc}</td><td>${row.unit}</td><td style="text-align:right">${f(row.price).toLocaleString()}</td><td style="text-align:right">${cost.toLocaleString()}</td></tr>`; });
             let devHtml = ""; let devTot = 0;
             d.devCategories.forEach(cat => { const items = d.devItems[cat] || []; let catSub = 0; items.forEach(item => { catSub += f(item.price); }); devTot += catSub; devHtml += `<tr><td><strong>${cat}</strong></td><td colspan="2"></td><td style="text-align:right"><strong>${catSub.toLocaleString()}</strong></td></tr>`; items.forEach(item => { devHtml += `<tr><td style="padding-left:20px;">${item.desc}</td><td colspan="2"></td><td style="text-align:right">${f(item.price).toLocaleString()}</td></tr>`; }); });
-            let expenseListHtml = ""; const expSnap = await getDocs(collection(db, `projects/${currentProjId}/expenses`)); let totalMiscExp = 0; 
             
+            // REMOVED: Expense Breakdown Table Generation
+            let totalMiscExp = 0; 
+            const expSnap = await getDocs(collection(db, `projects/${currentProjId}/expenses`)); 
             expSnap.forEach(doc => { 
                 const e = doc.data(); 
-                // FILTER: Exclude if description contains "Commission" (case-insensitive)
                 if(!e.description.toLowerCase().includes('commission') && !e.description.toLowerCase().includes('comm:')) {
-                    expenseListHtml += `<tr><td>${e.date}</td><td>${e.description}</td><td style="text-align:right">${e.amount.toLocaleString()}</td></tr>`; 
                     totalMiscExp += e.amount; 
                 }
             });
@@ -1275,7 +1331,7 @@
             const grandTotal = totPurchase + surTot + devTot + taxes + f(d.ad_cost) + finance + totalMiscExp;
             let salesTotal = 0; const bSnap = await getDocs(collection(db, `projects/${currentProjId}/blocks`)); bSnap.forEach(b => salesTotal += (b.data().soldPrice || b.data().price));
             const netProfit = salesTotal - grandTotal; const netProfitPct = salesTotal > 0 ? (netProfit/salesTotal)*100 : 0; const roi = grandTotal > 0 ? (netProfit/grandTotal)*100 : 0; const annualizedRoi = (roi / f(d.period)) * 12;
-            const html = `<div style="font-family: 'Times New Roman', serif; padding: 20px;"><div style="text-align:center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;"><h1 style="font-size: 28px; font-weight: bold; margin: 0;">SITHULIYA REAL ESTATE</h1><p style="font-size: 12px; margin: 5px 0;">Kurunegala, Sri Lanka</p><h2 style="font-size: 20px; text-decoration: underline; margin-top: 15px;">PROJECT EVALUATION REPORT</h2></div><h3 style="text-align:center; margin-bottom:20px;">${p.name} - ${p.area}</h3><div class="report-header-bg">1. PROJECT OVERVIEW</div><table class="report-table"><tr><td>Owner: ${d.owner||'-'}</td><td>Introducer: ${d.introducer||'-'}</td></tr><tr><td>Extent: ${d.acres||0}A ${d.roods||0}R ${d.perches||0}P (${totPerches} Perches)</td><td>Agreed Value: Rs. ${purPrice.toLocaleString()}</td></tr></table><div class="report-header-bg">2. LAND ALLOCATION</div><table class="report-table"><tr><td>Roadways: ${d.road_pct}%</td><td>Reservations: ${d.res_pct}%</td><td>Sellable: ${sellArea.toFixed(2)} P (${(sellArea/totPerches*100).toFixed(1)}%)</td></tr></table><div class="report-header-bg">3. COST OF PURCHASE</div><table class="report-table"><tr><td>Purchase Price</td><td style="text-align:right">${purPrice.toLocaleString()}</td></tr><tr><td>Stamp Duty (${d.stamp_pct}%)</td><td style="text-align:right">${stamp.toLocaleString()}</td></tr><tr><td>Legal Fees (${d.legal_pct}%)</td><td style="text-align:right">${legal.toLocaleString()}</td></tr><tr><td>Title Reports</td><td style="text-align:right">${f(d.title_rep).toLocaleString()}</td></tr><tr><td>Introducer Comm. (Cumulative)</td><td style="text-align:right">${f(d.intro_comm).toLocaleString()}</td></tr><tr style="font-weight:bold; background:#eee"><td>TOTAL PURCHASE COST</td><td style="text-align:right">${totPurchase.toLocaleString()}</td></tr></table><div class="report-header-bg">4. SURVEY CHARGES</div><table class="report-table"><tr><th>Description</th><th>Units</th><th>Price</th><th>Cost</th></tr>${surHtml}<tr style="font-weight:bold; background:#eee"><td colspan="3">TOTAL SURVEY</td><td style="text-align:right">${surTot.toLocaleString()}</td></tr></table><div class="report-header-bg">5. DEVELOPMENT COST</div><table class="report-table">${devHtml}<tr style="font-weight:bold; background:#eee"><td colspan="3">TOTAL DEVELOPMENT</td><td style="text-align:right">${devTot.toLocaleString()}</td></tr></table><div class="report-header-bg">6-8. OTHER COSTS</div><table class="report-table"><tr><td>Taxes & Approvals</td><td style="text-align:right">${taxes.toLocaleString()}</td></tr><tr><td>Advertising</td><td style="text-align:right">${f(d.ad_cost).toLocaleString()}</td></tr><tr><td>Financial (Capital + VAT)</td><td style="text-align:right">${finance.toLocaleString()}</td></tr></table><div class="report-header-bg">9. SALES & PROFITABILITY</div><table class="report-table"><tr><td>Total Sales Proceeds</td><td style="text-align:right; font-weight:bold">${salesTotal.toLocaleString()}</td></tr><tr><td>Total Cost of Project (Inc Misc)</td><td style="text-align:right; color:red">(${grandTotal.toLocaleString()})</td></tr><tr style="font-weight:bold; background:#ddd"><td>NET PROFIT</td><td style="text-align:right">${netProfit.toLocaleString()}</td></tr></table><div class="report-header-bg">10. PROFITABILITY RATIOS</div><table class="report-table"><tr><td>Net Profit on Sales Proceeds</td><td style="text-align:right">${netProfitPct.toFixed(1)}%</td></tr><tr><td>ROI (Project Period)</td><td style="text-align:right">${roi.toFixed(1)}%</td></tr><tr><td>ROI (Per Annum)</td><td style="text-align:right">${annualizedRoi.toFixed(1)}%</td></tr></table><div class="report-header-bg">11. SUMMARY OF COST</div><table class="report-table"><tr><td>Land Cost</td><td style="text-align:right">${totPurchase.toLocaleString()}</td></tr><tr><td>Survey</td><td style="text-align:right">${surTot.toLocaleString()}</td></tr><tr><td>Development</td><td style="text-align:right">${devTot.toLocaleString()}</td></tr><tr><td>Other (Tax, Ad, Fin)</td><td style="text-align:right">${(taxes + f(d.ad_cost) + finance).toLocaleString()}</td></tr><tr><td>Misc Expenses</td><td style="text-align:right">${totalMiscExp.toLocaleString()}</td></tr><tr style="font-weight:bold; border-top:2px solid #000"><td>TOTAL PROJECT COST</td><td style="text-align:right">${grandTotal.toLocaleString()}</td></tr></table><div class="report-header-bg">EXPENSE BREAKDOWN (MISC)</div><table class="report-table"><tr><th>Date</th><th>Description</th><th style="text-align:right">Amount</th></tr>${expenseListHtml}</table><div style="margin-top:60px; display:flex; justify-content:space-between; text-align:center; font-size:12px;"><div style="border-top:1px dotted #000; width:30%; padding-top:5px;">${d.sig_mgr || 'Manager'}</div><div style="border-top:1px dotted #000; width:30%; padding-top:5px;">${d.sig_dir || 'Director'}</div><div style="border-top:1px dotted #000; width:30%; padding-top:5px;">${d.sig_chm || 'Chairman'}</div></div><div style="text-align:right; margin-top:20px; font-size:10px;">Date: ${new Date().toLocaleDateString()}</div></div>`;
+            const html = `<div style="font-family: 'Times New Roman', serif; padding: 20px;"><div style="text-align:center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;"><h1 style="font-size: 28px; font-weight: bold; margin: 0;">SITHULIYA REAL ESTATE</h1><p style="font-size: 12px; margin: 5px 0;">Kurunegala, Sri Lanka</p><h2 style="font-size: 20px; text-decoration: underline; margin-top: 15px;">PROJECT EVALUATION REPORT</h2></div><h3 style="text-align:center; margin-bottom:20px;">${p.name} - ${p.area}</h3><div class="report-header-bg">1. PROJECT OVERVIEW</div><table class="report-table"><tr><td>Owner: ${d.owner||'-'}</td><td>Introducer: ${d.introducer||'-'}</td></tr><tr><td>Extent: ${d.acres||0}A ${d.roods||0}R ${d.perches||0}P (${totPerches} Perches)</td><td>Agreed Value: Rs. ${purPrice.toLocaleString()}</td></tr></table><div class="report-header-bg">2. LAND ALLOCATION</div><table class="report-table"><tr><td>Roadways: ${d.road_pct}%</td><td>Reservations: ${d.res_pct}%</td><td>Sellable: ${sellArea.toFixed(2)} P (${(sellArea/totPerches*100).toFixed(1)}%)</td></tr></table><div class="report-header-bg">3. COST OF PURCHASE</div><table class="report-table"><tr><td>Purchase Price</td><td style="text-align:right">${purPrice.toLocaleString()}</td></tr><tr><td>Stamp Duty (${d.stamp_pct}%)</td><td style="text-align:right">${stamp.toLocaleString()}</td></tr><tr><td>Legal Fees (${d.legal_pct}%)</td><td style="text-align:right">${legal.toLocaleString()}</td></tr><tr><td>Title Reports</td><td style="text-align:right">${f(d.title_rep).toLocaleString()}</td></tr><tr><td>Introducer Comm. (Cumulative)</td><td style="text-align:right">${f(d.intro_comm).toLocaleString()}</td></tr><tr style="font-weight:bold; background:#eee"><td>TOTAL PURCHASE COST</td><td style="text-align:right">${totPurchase.toLocaleString()}</td></tr></table><div class="report-header-bg">4. SURVEY CHARGES</div><table class="report-table"><tr><th>Description</th><th>Units</th><th>Price</th><th>Cost</th></tr>${surHtml}<tr style="font-weight:bold; background:#eee"><td colspan="3">TOTAL SURVEY</td><td style="text-align:right">${surTot.toLocaleString()}</td></tr></table><div class="report-header-bg">5. DEVELOPMENT COST</div><table class="report-table">${devHtml}<tr style="font-weight:bold; background:#eee"><td colspan="3">TOTAL DEVELOPMENT</td><td style="text-align:right">${devTot.toLocaleString()}</td></tr></table><div class="report-header-bg">6-8. OTHER COSTS</div><table class="report-table"><tr><td>Taxes & Approvals</td><td style="text-align:right">${taxes.toLocaleString()}</td></tr><tr><td>Advertising</td><td style="text-align:right">${f(d.ad_cost).toLocaleString()}</td></tr><tr><td>Financial (Capital + VAT)</td><td style="text-align:right">${finance.toLocaleString()}</td></tr></table><div class="report-header-bg">9. SALES & PROFITABILITY</div><table class="report-table"><tr><td>Total Sales Proceeds</td><td style="text-align:right; font-weight:bold">${salesTotal.toLocaleString()}</td></tr><tr><td>Total Cost of Project (Inc Misc)</td><td style="text-align:right; color:red">(${grandTotal.toLocaleString()})</td></tr><tr style="font-weight:bold; background:#ddd"><td>NET PROFIT</td><td style="text-align:right">${netProfit.toLocaleString()}</td></tr></table><div class="report-header-bg">10. PROFITABILITY RATIOS</div><table class="report-table"><tr><td>Net Profit on Sales Proceeds</td><td style="text-align:right">${netProfitPct.toFixed(1)}%</td></tr><tr><td>ROI (Project Period)</td><td style="text-align:right">${roi.toFixed(1)}%</td></tr><tr><td>ROI (Per Annum)</td><td style="text-align:right">${annualizedRoi.toFixed(1)}%</td></tr></table><div class="report-header-bg">11. SUMMARY OF COST</div><table class="report-table"><tr><td>Land Cost</td><td style="text-align:right">${totPurchase.toLocaleString()}</td></tr><tr><td>Survey</td><td style="text-align:right">${surTot.toLocaleString()}</td></tr><tr><td>Development</td><td style="text-align:right">${devTot.toLocaleString()}</td></tr><tr><td>Other (Tax, Ad, Fin)</td><td style="text-align:right">${(taxes + f(d.ad_cost) + finance).toLocaleString()}</td></tr><tr><td>Misc Expenses</td><td style="text-align:right">${totalMiscExp.toLocaleString()}</td></tr><tr style="font-weight:bold; border-top:2px solid #000"><td>TOTAL PROJECT COST</td><td style="text-align:right">${grandTotal.toLocaleString()}</td></tr></table><div style="margin-top:60px; display:flex; justify-content:space-between; text-align:center; font-size:12px;"><div style="border-top:1px dotted #000; width:30%; padding-top:5px;">${d.sig_mgr || 'Manager'}</div><div style="border-top:1px dotted #000; width:30%; padding-top:5px;">${d.sig_dir || 'Director'}</div><div style="border-top:1px dotted #000; width:30%; padding-top:5px;">${d.sig_chm || 'Chairman'}</div></div><div style="text-align:right; margin-top:20px; font-size:10px;">Date: ${new Date().toLocaleDateString()}</div></div>`;
             document.getElementById('printContainer').innerHTML = html;
             document.getElementById('pdfPreviewOverlay').style.display = 'block';
         };
@@ -1283,15 +1339,37 @@
         window.downloadPDFActual = async () => {
              const element = document.getElementById('printContainer');
              const opt = { 
-                 margin: [10, 10, 10, 10], // Top, Left, Bottom, Right
+                 margin: 0,
                  filename: `Report_${currentProjName}.pdf`, 
                  image: { type: 'jpeg', quality: 0.98 }, 
-                 html2canvas: { scale: 2, useCORS: true }, 
+                 html2canvas: { scale: 2, useCORS: true, scrollY: 0 }, 
                  jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
              };
             await html2pdf().set(opt).from(element).save();
             document.getElementById('pdfPreviewOverlay').style.display = 'none';
         }
+        
+        // NEW: Download Financial Report (Profit Analysis)
+        window.downloadFinancialReport = async () => {
+             if(!currentProjId) return alert("Select a project first.");
+             const el = document.getElementById('view-finance');
+             // Temporarily hide buttons to clean up PDF
+             const buttons = el.querySelectorAll('button');
+             buttons.forEach(b => b.style.display = 'none');
+             
+             const opt = { 
+                 margin: 10,
+                 filename: `Financial_Report_${currentProjName}.pdf`, 
+                 image: { type: 'jpeg', quality: 0.98 }, 
+                 html2canvas: { scale: 2, useCORS: true }, 
+                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } 
+             };
+             
+             await html2pdf().set(opt).from(el).save();
+             
+             // Restore buttons
+             buttons.forEach(b => b.style.display = 'inline-block');
+        };
 
         window.filterStaffGrid = () => {
             const input = document.getElementById('staffSearchInput').value.toLowerCase();
@@ -1414,8 +1492,13 @@
                     const d = e.date.seconds ? new Date(e.date.seconds*1000) : new Date(e.date);
                     totalEarn += (e.amount || 0);
                     let color = e.type === 'Salary' ? 'text-blue-600' : 'text-purple-600';
+                    // Added Project/Description display for commissions
+                    let desc = e.description || '';
                     html += `<tr class="border-b border-gray-100">
-                        <td class="p-1 text-gray-500">${d.toLocaleDateString()}</td>
+                        <td class="p-1 text-gray-500">
+                            ${d.toLocaleDateString()}<br>
+                            <span class="text-[9px] text-gray-400">${desc}</span>
+                        </td>
                         <td class="p-1 font-bold ${color}">${e.type}</td>
                         <td class="p-1 text-right font-bold">Rs. ${e.amount.toLocaleString()}</td>
                     </tr>`;
@@ -1600,101 +1683,134 @@
         }
         
         window.loadMeterReadings = () => { 
-            const q = query(collection(db, "meter_readings"), orderBy("date", "desc"));
-            onSnapshot(q, (snap) => { 
-                const list = document.getElementById('readingsList'); 
-                list.innerHTML = ""; 
-                snap.forEach(d => { 
-                    const r = d.data(); 
-                    const el = document.createElement('div'); 
-                    el.className = "bg-white p-4 rounded-xl shadow-sm border border-blue-100 flex gap-4"; 
-                    el.innerHTML = `<div class="flex-1"><h4 class="font-bold text-lg text-slate-800">${r.vehicleNo}</h4><p class="text-lg text-blue-600 font-bold">Rs. ${r.totalCost.toLocaleString()}</p>${r.status!=='approved' ? `<button onclick="openApproveModal('${d.id}', 'meter')" class="mt-2 bg-green-600 text-white px-4 py-1 rounded shadow text-sm font-bold">Review</button>` : `<button onclick="openApproveModal('${d.id}', 'meter')" class="mt-2 bg-gray-200 text-gray-700 px-4 py-1 rounded shadow text-sm font-bold">View</button>`}</div>`; 
-                    list.appendChild(el); 
-                }); 
-            }); 
+            try {
+                // Modified query to sort client-side if index is missing to prevent crash
+                const q = collection(db, "meter_readings");
+                onSnapshot(q, (snap) => { 
+                    const list = document.getElementById('readingsList'); 
+                    list.innerHTML = ""; 
+                    
+                    if(snap.empty) {
+                        list.innerHTML = "<p class='text-gray-500 p-4'>No readings found.</p>";
+                        return;
+                    }
+
+                    // Client-side sort to be safe
+                    let readings = [];
+                    snap.forEach(d => readings.push({id: d.id, ...d.data()}));
+                    readings.sort((a,b) => (b.date > a.date) ? 1 : -1);
+
+                    readings.forEach(r => { 
+                        const el = document.createElement('div'); 
+                        el.className = "bg-white p-4 rounded-xl shadow-sm border border-blue-100 flex gap-4"; 
+                        el.innerHTML = `<div class="flex-1"><h4 class="font-bold text-lg text-slate-800">${r.vehicleNo}</h4><p class="text-lg text-blue-600 font-bold">Rs. ${r.totalCost.toLocaleString()}</p>${r.status!=='approved' ? `<button onclick="openApproveModal('${r.id}', 'meter')" class="mt-2 bg-green-600 text-white px-4 py-1 rounded shadow text-sm font-bold">Review</button>` : `<button onclick="openApproveModal('${r.id}', 'meter')" class="mt-2 bg-gray-200 text-gray-700 px-4 py-1 rounded shadow text-sm font-bold">View</button>`}</div>`; 
+                        list.appendChild(el); 
+                    }); 
+                }, (error) => {
+                    console.error("Error loading meter readings:", error);
+                    document.getElementById('readingsList').innerHTML = "<p class='text-red-500 p-4'>Error loading data. Check permissions.</p>";
+                });
+            } catch(e) {
+                console.error(e);
+            }
         }
 
         window.processSale = async (downloadPdf) => {
-            const nic = document.getElementById('cusNIC').value; const name = document.getElementById('cusName').value; const phone = document.getElementById('cusPhone').value; const address = document.getElementById('cusAddress').value;
-            if(!nic || !name) return alert("Customer Name and NIC are required!");
-            
-            let customerId = ""; 
-            const q = query(collection(db, "customers"), where("nic", "==", nic)); 
-            const snap = await getDocs(q);
-            if(!snap.empty) { customerId = snap.docs[0].data().customerId; } else { const nicPrefix = nic.substring(0, 5); const randomNum = Math.floor(Math.random() * 10); const randomChar = String.fromCharCode(65 + Math.floor(Math.random() * 26)); customerId = `${nicPrefix}${randomNum}${randomChar}`; }
-            
-            await addDoc(collection(db, "customers"), { customerId, name, nic, phone, address, joinedDate: new Date(), projectName: currentProjName, projectId: currentProjId, blockName: selectedBlockData.name, blockId: selectedBlockId });
-            
-            const cus = { customerId, name, address, nic, phone }; 
-            const price = parseFloat(document.getElementById('finalPrice').value); 
-            const plan = document.getElementById('payPlanType').value; 
-            const planFee = parseFloat(document.getElementById('planFee').value) || 0; 
-            const deedFee = parseFloat(document.getElementById('deedFee').value) || 0;
-            const salespersonName = document.getElementById('salesPersonInput').value; // Get Name
-            
-            let ep = {}; let nextD = null; let status = 'sold'; let paidNow = 0;
-
-            if(plan === 'EP') { 
-                const cycle = parseInt(document.getElementById('epCycle').value);
-                const rate = parseFloat(document.getElementById('epRate').value);
-                const months = parseFloat(document.getElementById('epMonths').value);
-                const booking = parseFloat(document.getElementById('bookingFee').value) || 0;
-                const dpPct = parseFloat(document.getElementById('downPayPct').value);
-                const dpTotal = price * (dpPct / 100);
-                const loanAmt = price - dpTotal; 
-                let totalPayable = 0;
-                if (rate === 0) { totalPayable = loanAmt; } else { const r = (rate / 100) / 12; const emi = (loanAmt * r * Math.pow(1 + r, months)) / (Math.pow(1 + r, months) - 1); totalPayable = emi * months; }
-                ep = { rate: rate, months: months, cycleDays: cycle, totalPayable: totalPayable, paidAmount: 0, downPayment: { required: dpTotal, paid: booking, isComplete: false } }; 
-                const d = new Date(); d.setDate(d.getDate() + 30); nextD = d;
-                paidNow = booking;
-            } else { 
-                paidNow = parseFloat(document.getElementById('cashAdvancePay').value) || 0;
-                if(paidNow >= price) status = 'sold_finished'; 
-            }
-
-            // --- COMMISSION LOGIC ---
-            if(salespersonName) { 
-                const comm = price * 0.0075; 
-                
-                // Add Global Expense
-                await addDoc(collection(db, `projects/${currentProjId}/expenses`), { description: `Commission: ${salespersonName} (Block ${selectedBlockData.name})`, amount: comm, date: new Date().toLocaleDateString('en-CA'), createdAt: serverTimestamp() }); 
-                await recordDailyTransaction(`Commission: ${salespersonName}`, comm, 'expense', currentProjName); 
-                
-                // Add to Staff Earnings (Search by name - simplistic)
-                const s = staffListCache.find(x => x.name === salespersonName);
-                if(s) {
-                    await addDoc(collection(db, `staff/${s.id}/earnings`), {
-                        date: new Date(),
-                        amount: comm,
-                        type: 'Commission',
-                        description: `0.75% from ${selectedBlockData.name} Sale`
-                    });
+            // --- FIX: ADDED ERROR HANDLING & VALIDATION FOR BUTTONS ---
+            try {
+                if(!currentProjId || !selectedBlockId) {
+                    return alert("System Error: Project or Block context lost. Please refresh and try again.");
                 }
-            }
-            
-            const poolComm = price * 0.0025;
-            await addDoc(collection(db, "transactions"), { date: new Date().toLocaleDateString('en-CA'), description: `Staff Pool: ${selectedBlockData.name} - ${currentProjName}`, amount: poolComm, type: 'Income', category: 'Staff Welfare', timestamp: serverTimestamp() });
 
-            const histEntry = {date: new Date(), amount: paidNow, type: plan === 'EP' ? 'Booking Fee' : 'Payment'};
-            
-            // SAVE TO DB
-            await updateDoc(doc(db, `projects/${currentProjId}/blocks/${selectedBlockId}`), { 
-                status: status, soldPrice: price, customer: cus, soldDate: new Date(), fees: { planFee, deedFee }, 
-                payment: { totalPrice: price, advancePaid: paidNow, planType: plan, epDetails: ep, nextPaymentDate: nextD, history: [histEntry] } 
-            });
-            await recordDailyTransaction(`Sale Payment: ${selectedBlockData.name} - ${cus.name}`, paidNow, 'income', currentProjName);
-            
-            // UPDATE LOCAL OBJECT FOR IMMEDIATE RECEIPT
-            selectedBlockData.customer = cus;
-            selectedBlockData.projectName = currentProjName;
-            selectedBlockData.payment = { totalPrice: price, planType: plan };
-            
-            if(downloadPdf) {
-                 document.getElementById('newPayAmount').value = paidNow;
-                 document.getElementById('newPayDate').valueAsDate = new Date();
-                 await downloadPaymentReceipt(); 
-                 closeSellModal();
-            } else { closeSellModal(); }
+                const nic = document.getElementById('cusNIC').value; const name = document.getElementById('cusName').value; const phone = document.getElementById('cusPhone').value; const address = document.getElementById('cusAddress').value;
+                if(!nic || !name) return alert("Customer Name and NIC are required!");
+                
+                let customerId = ""; 
+                const q = query(collection(db, "customers"), where("nic", "==", nic)); 
+                const snap = await getDocs(q);
+                if(!snap.empty) { customerId = snap.docs[0].data().customerId; } else { const nicPrefix = nic.substring(0, 5); const randomNum = Math.floor(Math.random() * 10); const randomChar = String.fromCharCode(65 + Math.floor(Math.random() * 26)); customerId = `${nicPrefix}${randomNum}${randomChar}`; }
+                
+                await addDoc(collection(db, "customers"), { customerId, name, nic, phone, address, joinedDate: new Date(), projectName: currentProjName, projectId: currentProjId, blockName: selectedBlockData.name, blockId: selectedBlockId });
+                
+                const cus = { customerId, name, address, nic, phone }; 
+                const price = parseFloat(document.getElementById('finalPrice').value); 
+                const plan = document.getElementById('payPlanType').value; 
+                const planFee = parseFloat(document.getElementById('planFee').value) || 0; 
+                const deedFee = parseFloat(document.getElementById('deedFee').value) || 0;
+                const salespersonName = document.getElementById('salesPersonInput').value; // Get Name
+                
+                let ep = {}; let nextD = null; let status = 'sold'; let paidNow = 0;
+
+                if(plan === 'EP') { 
+                    const cycle = parseInt(document.getElementById('epCycle').value);
+                    const rate = parseFloat(document.getElementById('epRate').value);
+                    const months = parseFloat(document.getElementById('epMonths').value);
+                    const booking = parseFloat(document.getElementById('bookingFee').value) || 0;
+                    const dpPct = parseFloat(document.getElementById('downPayPct').value);
+                    const dpTotal = price * (dpPct / 100);
+                    const loanAmt = price - dpTotal; 
+                    let totalPayable = 0;
+                    if (rate === 0) { totalPayable = loanAmt; } else { const r = (rate / 100) / 12; const emi = (loanAmt * r * Math.pow(1 + r, months)) / (Math.pow(1 + r, months) - 1); totalPayable = emi * months; }
+                    ep = { rate: rate, months: months, cycleDays: cycle, totalPayable: totalPayable, paidAmount: 0, downPayment: { required: dpTotal, paid: booking, isComplete: false } }; 
+                    const d = new Date(); d.setDate(d.getDate() + 30); nextD = d;
+                    paidNow = booking;
+                } else { 
+                    paidNow = parseFloat(document.getElementById('cashAdvancePay').value) || 0;
+                    if(paidNow >= price) status = 'sold_finished'; 
+                }
+
+                // --- COMMISSION LOGIC (FIXED) ---
+                if(salespersonName) { 
+                    const comm = price * 0.0075; 
+                    
+                    // Add Global Expense
+                    await addDoc(collection(db, `projects/${currentProjId}/expenses`), { description: `Commission: ${salespersonName} (Block ${selectedBlockData.name})`, amount: comm, date: new Date().toLocaleDateString('en-CA'), createdAt: serverTimestamp() }); 
+                    await recordDailyTransaction(`Commission: ${salespersonName}`, comm, 'expense', currentProjName); 
+                    
+                    // Add to Staff Earnings (Search by name - simplistic)
+                    const s = staffListCache.find(x => x.name === salespersonName);
+                    if(s) {
+                        // --- FIX: Include Project Name in Description ---
+                        await addDoc(collection(db, `staff/${s.id}/earnings`), {
+                            date: new Date(),
+                            amount: comm,
+                            type: 'Commission',
+                            description: `Commission: ${selectedBlockData.name} (${currentProjName})`
+                        });
+                    }
+                }
+                
+                // --- FIX: WELFARE POOL DESCRIPTION ---
+                const poolComm = price * 0.0025;
+                await addDoc(collection(db, "transactions"), { date: new Date().toLocaleDateString('en-CA'), description: `Staff Pool: ${selectedBlockData.name} - ${currentProjName}`, amount: poolComm, type: 'Income', category: 'Staff Welfare', timestamp: serverTimestamp() });
+
+                const histEntry = {date: new Date(), amount: paidNow, type: plan === 'EP' ? 'Booking Fee' : 'Payment'};
+                
+                // SAVE TO DB
+                await updateDoc(doc(db, `projects/${currentProjId}/blocks/${selectedBlockId}`), { 
+                    status: status, soldPrice: price, customer: cus, soldDate: new Date(), fees: { planFee, deedFee }, 
+                    payment: { totalPrice: price, advancePaid: paidNow, planType: plan, epDetails: ep, nextPaymentDate: nextD, history: [histEntry] } 
+                });
+                await recordDailyTransaction(`Sale Payment: ${selectedBlockData.name} - ${cus.name}`, paidNow, 'income', currentProjName);
+                
+                // UPDATE LOCAL OBJECT FOR IMMEDIATE RECEIPT
+                selectedBlockData.customer = cus;
+                selectedBlockData.projectName = currentProjName;
+                selectedBlockData.payment = { totalPrice: price, planType: plan };
+                
+                if(downloadPdf) {
+                    document.getElementById('newPayAmount').value = paidNow;
+                    document.getElementById('newPayDate').valueAsDate = new Date();
+                    await downloadPaymentReceipt(); 
+                    closeSellModal();
+                } else { 
+                    alert("Sale Complete!");
+                    closeSellModal(); 
+                }
+            } catch (error) {
+                console.error("Process Sale Error:", error);
+                alert("Error processing sale. Please check your connection and try again.\nError: " + error.message);
+            }
         };
 
         window.openPaymentModal = async (data) => {
@@ -1732,13 +1848,56 @@
                     const totalPayable = data.payment.epDetails.totalPayable; 
                     const paidEp = data.payment.epDetails.paidAmount || 0;
                     
-                    // Future Balance logic requested:
-                    // Interest is calculated monthly on reducing balance. 
-                    // However, in EMI schemes, the "Future Balance" is simply the remaining Total Payable (which includes future interest).
-                    // Or if early settlement, it is Principal Outstanding.
-                    // Based on "add all to balance", we display the remaining total payable amount.
-                    const futureBal = totalPayable - paidEp;
-                    document.getElementById('epRealtimeFuture').innerText = "Rs. " + futureBal.toLocaleString();
+                    // --- NEW LOGIC: Reducing Balance Calculation ---
+                    // 1. Calculate Full Settlement Balance (Principal Only)
+                    // soldPrice (Cash Price) - Total Paid (DP + EP)
+                    const totalPaid = (data.payment.epDetails.paidAmount || 0) + (data.payment.epDetails.downPayment.paid || 0);
+                    const settlementBalance = data.soldPrice - totalPaid;
+                    document.getElementById('epRealtimeFuture').innerText = "Rs. " + (settlementBalance > 0 ? settlementBalance.toLocaleString() : "0.00");
+
+                    // 2. Calculate Monthly Payable (Reducing Balance Method)
+                    // Assumption: Remaining principal is divided by remaining months, plus interest on outstanding principal.
+                    // We need to estimate remaining months.
+                    const fullTerm = data.payment.epDetails.months;
+                    // Approximation of installments paid based on history or standard amount
+                    // Better: Calculate reducing balance based on current settlement balance
+                    
+                    // Simple logic for display as requested:
+                    // Monthly Principal Portion = Outstanding Principal / Remaining Months
+                    // We will assume remaining months based on unpaid principal proportion or calendar if available
+                    // Fallback: Use full term - estimated paid months
+                    // Let's use a simpler approach: Just divide current principal balance by remaining term (approx)
+                    // NOTE: Without strict schedule tracking, we estimate remaining months
+                    
+                    // Estimate remaining months:
+                    const originalLoan = data.soldPrice - data.payment.epDetails.downPayment.required;
+                    const principalPaid = (data.payment.epDetails.paidAmount || 0); // Assuming paidAmount covers principal roughly
+                    const pctPaid = principalPaid / originalLoan;
+                    let monthsLeft = Math.max(1, Math.round(fullTerm * (1 - pctPaid)));
+                    
+                    if (settlementBalance <= 0) monthsLeft = 0;
+
+                    let thisMonthPayable = 0;
+                    let nextMonthPayable = 0;
+
+                    if (monthsLeft > 0) {
+                        const monthlyPrincipal = settlementBalance / monthsLeft;
+                        const annualRate = data.payment.epDetails.rate || 0;
+                        const monthlyRate = (annualRate / 12) / 100;
+                        
+                        const thisMonthInterest = settlementBalance * monthlyRate;
+                        thisMonthPayable = monthlyPrincipal + thisMonthInterest;
+
+                        // Next Month Projection
+                        const nextBalance = settlementBalance - monthlyPrincipal;
+                        if (nextBalance > 0) {
+                            const nextMonthInterest = nextBalance * monthlyRate;
+                            nextMonthPayable = monthlyPrincipal + nextMonthInterest;
+                        }
+                    }
+
+                    document.getElementById('epNextDueAmt').innerText = "Rs. " + thisMonthPayable.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    document.getElementById('epFutureDueAmt').innerText = "Rs. " + nextMonthPayable.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
                 }
             } else { cycleSec.classList.add('hidden'); document.getElementById('epRealtimeFuture').innerText = "N/A"; }
             
@@ -1801,8 +1960,10 @@
                 monthly = ep.totalPayable / ep.months; 
             }
             
-            document.getElementById('epNextDueAmt').innerText = "Rs. " + monthly.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 0});
-            document.getElementById('epNextDueDetail').innerText = "(Installment)";
+            // Current EMI
+            // document.getElementById('epNextDueAmt').innerText = "Rs. " + monthly.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 0});
+            // Next Month EMI (Same for standard plans unless rescheduled, but requested to show)
+            // document.getElementById('epFutureDueAmt').innerText = "Rs. " + monthly.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 0});
         }
         
         async function applyLatePenalty(data) {
