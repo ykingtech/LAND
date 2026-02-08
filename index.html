@@ -58,6 +58,14 @@
             font-weight: bold;
             color: #1e3a8a;
         }
+        
+        /* New Styles for Excel-like Form */
+        .excel-like-row { display: flex; border-bottom: 1px solid #e5e7eb; padding: 4px 0; align-items: center; }
+        .excel-like-label { width: 200px; flex-shrink: 0; font-size: 12px; font-weight: bold; color: #374151; padding-right: 10px; }
+        .excel-like-input { flex-grow: 1; padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 12px; }
+        .excel-like-input:focus { outline: none; border-color: #2563eb; ring: 1px; }
+        .excel-section-header { background-color: #f3f4f6; padding: 8px; font-weight: bold; font-size: 13px; color: #111827; border-top: 2px solid #e5e7eb; border-bottom: 1px solid #e5e7eb; margin-top: 15px; text-transform: uppercase; }
+        .excel-sub-row { margin-left: 20px; }
     </style>
 </head>
 <body class="bg-gray-100 h-screen overflow-hidden text-gray-800">
@@ -624,14 +632,19 @@
                          <div class="bg-blue-50 px-2 py-1 rounded border border-blue-100"><span class="text-[9px] font-bold text-blue-400 uppercase block">Current Rate</span><span id="dispRate" class="text-xs font-bold text-blue-700"></span></div>
                          <div class="bg-blue-50 px-2 py-1 rounded border border-blue-100"><span class="text-[9px] font-bold text-blue-400 uppercase block">Plan Period</span><span id="dispMonths" class="text-xs font-bold text-blue-700"></span></div>
                     </div>
-                    <div class="mt-3 grid grid-cols-2 gap-4">
-                        <div class="bg-indigo-50 p-2 rounded-lg border border-indigo-100">
-                            <p class="text-[10px] font-bold text-indigo-400 uppercase">This Month Payable</p>
-                            <p class="text-xl font-bold text-indigo-700" id="epNextDueAmt">Rs. 0.00</p>
+                    <div class="mt-3 bg-indigo-50 p-4 rounded-lg border border-indigo-100 text-center">
+                        <p class="text-[10px] font-bold text-indigo-400 uppercase mb-2">This Month Breakdown</p>
+                        <div class="flex justify-between items-center text-xs mb-1">
+                            <span class="text-gray-500">Capital:</span>
+                            <span id="epThisMonthCapital" class="font-bold text-slate-700">Rs. 0.00</span>
                         </div>
-                        <div class="bg-indigo-50 p-2 rounded-lg border border-indigo-100">
-                            <p class="text-[10px] font-bold text-indigo-400 uppercase">Next Month Payable</p>
-                            <p class="text-xl font-bold text-indigo-700" id="epFutureDueAmt">Rs. 0.00</p>
+                        <div class="flex justify-between items-center text-xs mb-2 pb-2 border-b border-indigo-200">
+                            <span class="text-gray-500">Interest:</span>
+                            <span id="epThisMonthInterest" class="font-bold text-slate-700">Rs. 0.00</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-bold text-indigo-900 uppercase">Total Due:</span>
+                            <span id="epNextDueAmt" class="text-xl font-bold text-indigo-700">Rs. 0.00</span>
                         </div>
                     </div>
                     <!-- Future Balance: Total Payable - Paid Amount -->
@@ -674,117 +687,85 @@
     <div id="taskApproveModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"><div class="bg-white rounded-2xl w-full max-w-4xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"><div class="p-6 border-b flex justify-between items-center bg-gray-50"><h2 class="text-xl font-bold text-slate-800" id="taskModalHeader">Review</h2><button onclick="document.getElementById('taskApproveModal').classList.add('hidden')" class="text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button></div><div class="p-6 overflow-y-auto flex-1"><h3 id="approveTaskTitle" class="text-2xl font-bold text-slate-800 mb-2"></h3><p class="text-lg mb-4">Cost: <span id="approveTaskCost" class="font-bold text-green-600 text-2xl"></span></p><p class="text-sm mb-4 bg-yellow-50 p-2 rounded border border-yellow-200" id="approveTaskTimeInfo"></p><div id="approveTaskPhotos" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div></div><div class="p-6 border-t bg-gray-50 flex justify-end"><button id="confirmApproveTaskBtn" class="px-8 py-3 bg-green-600 text-white rounded-lg font-bold shadow hover:bg-green-700">APPROVE</button></div></div></div>
 
     <div id="newProjectReportDataModal" class="hidden fixed inset-0 bg-black/90 z-[70] flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl w-full max-w-6xl h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+        <div class="bg-white rounded-2xl w-full max-w-5xl h-[90vh] flex flex-col shadow-2xl overflow-hidden">
             <div class="p-4 border-b flex justify-between items-center bg-slate-50">
-                <h2 class="text-xl font-bold text-slate-800"><i class="fas fa-file-contract mr-2 text-blue-600"></i>Project Report Data Configuration</h2>
+                <h2 class="text-xl font-bold text-slate-800"><i class="fas fa-file-invoice mr-2 text-blue-600"></i>Project Budget & Cash Flow</h2>
                 <button onclick="document.getElementById('newProjectReportDataModal').classList.add('hidden')" class="text-gray-400 hover:text-red-500 transition"><i class="fas fa-times text-2xl"></i></button>
             </div>
             
-            <div class="flex-1 overflow-y-auto p-8 bg-gray-50/50">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <!-- Left Column: Basic Info & Purchase -->
-                    <div class="space-y-6">
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-blue-100">
-                            <h3 class="font-bold text-blue-900 border-b pb-2 mb-4 text-sm uppercase tracking-wide">1. Basic Information</h3>
-                            <div class="grid grid-cols-2 gap-4 mb-4">
-                                <div><label class="block text-xs font-bold text-gray-500">Project Name</label><input id="rpt_name" class="w-full p-2 border rounded bg-gray-100 font-bold" readonly></div>
-                                <div><label class="block text-xs font-bold text-gray-500">Location</label><input id="rpt_location" class="w-full p-2 border rounded bg-gray-100" readonly></div>
-                            </div>
-                            <div class="mb-4"><label class="block text-xs font-bold text-gray-500">Land Owner</label><input id="rpt_owner" class="w-full p-2 border rounded focus:ring-blue-500"></div>
-                            <div class="mb-4"><label class="block text-xs font-bold text-gray-500">Introducer</label><input id="rpt_introducer" class="w-full p-2 border rounded focus:ring-blue-500"></div>
-                            
-                            <h4 class="font-bold text-xs text-slate-700 mt-4 mb-2">Land Extent</h4>
-                            <div class="flex gap-2">
-                                <input type="number" id="rpt_acres" placeholder="A" class="w-full p-2 border rounded text-center" oninput="calcReportTotals()">
-                                <input type="number" id="rpt_roods" placeholder="R" class="w-full p-2 border rounded text-center" oninput="calcReportTotals()">
-                                <input type="number" id="rpt_perches" placeholder="P" class="w-full p-2 border rounded text-center" oninput="calcReportTotals()">
-                            </div>
-                            <div class="mt-2 text-right text-xs font-bold text-blue-600">Total: <input id="rpt_tot_perches" class="w-20 text-right bg-transparent border-none font-bold" readonly> P</div>
-                        </div>
-
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-blue-100">
-                            <h3 class="font-bold text-blue-900 border-b pb-2 mb-4 text-sm uppercase tracking-wide">2. Purchase Cost</h3>
-                            <div class="mb-2"><label class="block text-xs font-bold text-gray-500">Purchase Price</label><input type="number" id="rpt_purchase_price" class="w-full p-2 border rounded font-bold text-slate-800" oninput="calcReportTotals()"></div>
-                            <div class="grid grid-cols-2 gap-4 mb-2">
-                                <div><label class="block text-xs font-bold text-gray-500">Agreed Value</label><input id="rpt_agreed_val" class="w-full p-2 border rounded bg-gray-100" readonly></div>
-                                <div><label class="block text-xs font-bold text-gray-500">Price/Perch</label><input id="rpt_agreed_pp" class="w-full p-2 border rounded bg-gray-100" readonly></div>
-                            </div>
-                            
-                            <div class="space-y-2 mt-4">
-                                <div class="flex items-center gap-2"><span class="text-xs w-24">Title Ins %</span><input type="number" id="rpt_title_ins_pct" class="w-16 p-1 border rounded text-center" oninput="calcReportTotals()"><input id="rpt_title_ins" class="flex-1 p-1 border rounded bg-gray-100 text-right" readonly></div>
-                                <div class="flex items-center gap-2"><span class="text-xs w-24">Stamp Duty %</span><input type="number" id="rpt_stamp_pct" class="w-16 p-1 border rounded text-center" oninput="calcReportTotals()"><input id="rpt_stamp" class="flex-1 p-1 border rounded bg-gray-100 text-right" readonly></div>
-                                <div class="flex items-center gap-2"><span class="text-xs w-24">Legal Fees %</span><input type="number" id="rpt_legal_pct" class="w-16 p-1 border rounded text-center" oninput="calcReportTotals()"><input id="rpt_legal" class="flex-1 p-1 border rounded bg-gray-100 text-right" readonly></div>
-                                <div class="flex items-center gap-2"><span class="text-xs w-24">Valuation %</span><input type="number" id="rpt_val_pct" class="w-16 p-1 border rounded text-center" oninput="calcReportTotals()"><input id="rpt_valuation" class="flex-1 p-1 border rounded bg-gray-100 text-right" readonly></div>
-                                <div class="flex items-center gap-2"><span class="text-xs w-24 font-bold">Title Reports</span><input type="number" id="rpt_title_rep" class="flex-1 p-1 border rounded text-right"></div>
-                                <div class="flex items-center gap-2"><span class="text-xs w-24 font-bold">Intro Comm.</span><input type="number" id="rpt_intro_comm" class="flex-1 p-1 border rounded text-right"></div>
-                            </div>
+            <div class="flex-1 overflow-y-auto p-8 bg-white">
+                <!-- EXCEL LIKE FORM -->
+                <div class="max-w-4xl mx-auto">
+                    
+                    <div class="excel-section-header">Project Overview</div>
+                    <div class="excel-like-row"><div class="excel-like-label">Project Name</div><input id="rpt_name" class="excel-like-input bg-gray-100" readonly></div>
+                    <div class="excel-like-row"><div class="excel-like-label">Owner</div><input id="rpt_owner" class="excel-like-input"></div>
+                    <div class="excel-like-row"><div class="excel-like-label">Location of Land</div><input id="rpt_location" class="excel-like-input bg-gray-100" readonly></div>
+                    <div class="excel-like-row"><div class="excel-like-label">Introducer</div><input id="rpt_introducer" class="excel-like-input"></div>
+                    
+                    <div class="excel-section-header">Land Extent & Allocation</div>
+                    <div class="excel-like-row">
+                        <div class="excel-like-label">Total Extent</div>
+                        <div class="flex gap-2 flex-grow">
+                            <input type="number" id="rpt_acres" placeholder="A" class="excel-like-input text-center" oninput="calcReportTotals()">
+                            <input type="number" id="rpt_roods" placeholder="R" class="excel-like-input text-center" oninput="calcReportTotals()">
+                            <input type="number" id="rpt_perches" placeholder="P" class="excel-like-input text-center" oninput="calcReportTotals()">
                         </div>
                     </div>
+                    <div class="excel-like-row"><div class="excel-like-label">Total Perches</div><input id="rpt_tot_perches" class="excel-like-input bg-gray-100 font-bold text-right" readonly></div>
+                    <div class="excel-like-row"><div class="excel-like-label">Road Allocation (P)</div><input type="number" id="rpt_road_p" class="excel-like-input text-right" oninput="calcReportTotals()"></div>
+                    <div class="excel-like-row"><div class="excel-like-label">Reservation (P)</div><input type="number" id="rpt_res_p" class="excel-like-input text-right" oninput="calcReportTotals()"></div>
+                    <div class="excel-like-row"><div class="excel-like-label text-blue-600">Sellable Area (P)</div><input id="rpt_sell_p" class="excel-like-input bg-blue-50 font-bold text-right" readonly></div>
+                    
+                    <div class="excel-section-header">Cost of Purchase</div>
+                    <div class="excel-like-row"><div class="excel-like-label">Purchase Price</div><input type="number" id="rpt_purchase_price" class="excel-like-input font-bold text-right" oninput="calcReportTotals()"></div>
+                    <div class="excel-like-row excel-sub-row"><div class="excel-like-label">Title Insurance</div><input type="number" id="rpt_title_ins" class="excel-like-input text-right" oninput="calcReportTotals()"></div>
+                    <div class="excel-like-row excel-sub-row"><div class="excel-like-label">Stamp Duty (4%)</div><input type="number" id="rpt_stamp" class="excel-like-input text-right" oninput="calcReportTotals()"></div>
+                    <div class="excel-like-row excel-sub-row"><div class="excel-like-label">Legal Fees</div><input type="number" id="rpt_legal" class="excel-like-input text-right" oninput="calcReportTotals()"></div>
+                    <div class="excel-like-row excel-sub-row"><div class="excel-like-label">Introducer Comm.</div><input type="number" id="rpt_intro_comm" class="excel-like-input text-right" oninput="calcReportTotals()"></div>
+                    <div class="excel-like-row excel-sub-row"><div class="excel-like-label">Valuation</div><input type="number" id="rpt_valuation" class="excel-like-input text-right" oninput="calcReportTotals()"></div>
+                    <div class="excel-like-row"><div class="excel-like-label font-bold">Total Purchase Cost</div><input id="rpt_tot_purchase" class="excel-like-input bg-gray-200 font-bold text-right" readonly></div>
 
-                    <!-- Middle Column: Survey & Dev -->
-                    <div class="space-y-6">
-                         <div class="bg-white p-6 rounded-xl shadow-sm border border-blue-100">
-                            <h3 class="font-bold text-blue-900 border-b pb-2 mb-4 text-sm uppercase tracking-wide">3. Land Allocation</h3>
-                            <div class="flex gap-4">
-                                <div><label class="block text-xs font-bold text-gray-500">Roads %</label><input type="number" id="rpt_road_pct" class="w-full p-2 border rounded" oninput="calcReportTotals()"></div>
-                                <div><label class="block text-xs font-bold text-gray-500">Reservation %</label><input type="number" id="rpt_res_pct" class="w-full p-2 border rounded" oninput="calcReportTotals()"></div>
-                                <div><label class="block text-xs font-bold text-blue-600">Sellable %</label><input id="rpt_sell_pct" class="w-full p-2 border rounded bg-blue-50 font-bold" readonly></div>
-                            </div>
-                            <div class="mt-2"><label class="block text-xs font-bold text-gray-500">Project Period (Months)</label><input type="number" id="rpt_period" class="w-full p-2 border rounded"></div>
-                        </div>
+                    <div class="excel-section-header">Survey Charges</div>
+                    <div id="surveyRowsContainer"></div> 
+                    <div class="excel-like-row"><div class="excel-like-label font-bold">Total Survey Cost</div><input id="rpt_tot_survey" class="excel-like-input bg-gray-200 font-bold text-right" readonly></div>
 
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-blue-100 h-96 overflow-y-auto">
-                            <div class="flex justify-between items-center border-b pb-2 mb-4">
-                                <h3 class="font-bold text-blue-900 text-sm uppercase tracking-wide">4. Survey Costs</h3>
-                                <span class="text-xs font-bold text-slate-500">Total: <span id="rpt_survey_total_disp">0</span></span>
-                            </div>
-                            <div id="surveyRows" class="space-y-3 text-xs"></div>
-                        </div>
+                    <div class="excel-section-header">Development Cost</div>
+                    <div id="devRowsContainer"></div>
+                    <button onclick="addNewDevRow()" class="text-xs text-blue-600 hover:underline mt-1 mb-2 ml-4">+ Add Development Item</button>
+                    <div class="excel-like-row"><div class="excel-like-label font-bold">Total Development</div><input id="rpt_tot_dev" class="excel-like-input bg-gray-200 font-bold text-right" readonly></div>
+
+                    <div class="excel-section-header">Other Expenses</div>
+                    <div class="excel-like-row"><div class="excel-like-label">Advertising</div><input type="number" id="rpt_ad_cost" class="excel-like-input text-right" oninput="calcReportTotals()"></div>
+                    <div class="excel-like-row"><div class="excel-like-label">1% Tax & Approvals</div><input type="number" id="rpt_tax_1pct" class="excel-like-input text-right" oninput="calcReportTotals()"></div>
+                    <div class="excel-like-row"><div class="excel-like-label">Cost of Capital</div><input type="number" id="rpt_cost_capital" class="excel-like-input text-right" oninput="calcReportTotals()"></div>
+                    
+                    <div class="excel-section-header bg-yellow-100 border-yellow-200">VAT Calculation</div>
+                    <div class="excel-like-row"><div class="excel-like-label">Sales Proceeds</div><input type="number" id="rpt_vat_sales" class="excel-like-input font-bold text-right" oninput="calcVAT()"></div>
+                    <div class="excel-like-row excel-sub-row"><div class="excel-like-label">Less: Purchase Cost</div><input id="rpt_vat_less_pur" class="excel-like-input bg-gray-100 text-right text-red-600" readonly></div>
+                    <div class="excel-like-row excel-sub-row"><div class="excel-like-label">Less: Dev Cost</div><input id="rpt_vat_less_dev" class="excel-like-input bg-gray-100 text-right text-red-600" readonly></div>
+                    <div class="excel-like-row"><div class="excel-like-label font-bold">Value Addition</div><input id="rpt_vat_val_add" class="excel-like-input bg-yellow-50 font-bold text-right" readonly></div>
+                    <div class="excel-like-row"><div class="excel-like-label">VAT Rate %</div><input type="number" id="rpt_vat_rate" value="18" class="excel-like-input text-center w-20" oninput="calcVAT()"></div>
+                    <div class="excel-like-row"><div class="excel-like-label font-bold text-red-600">VAT Payable</div><input id="rpt_vat_payable" class="excel-like-input bg-red-50 font-bold text-right text-red-600" readonly></div>
+
+                    <div class="mt-6 p-4 bg-gray-800 text-white rounded text-center">
+                        <h3 class="text-xl font-bold">TOTAL PROJECT COST</h3>
+                        <p class="text-3xl font-bold text-yellow-400" id="rpt_grand_total">Rs. 0</p>
+                    </div>
+                    
+                    <div class="excel-section-header">Signatories</div>
+                    <div class="flex gap-4">
+                        <input type="text" id="rpt_sig_mgr" placeholder="Manager Name" class="excel-like-input">
+                        <input type="text" id="rpt_sig_dir" placeholder="Director Name" class="excel-like-input">
+                        <input type="text" id="rpt_sig_chm" placeholder="Chairman Name" class="excel-like-input">
                     </div>
 
-                    <!-- Right Column: Development & Others -->
-                    <div class="space-y-6">
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-blue-100 h-96 overflow-y-auto">
-                            <div class="flex justify-between items-center border-b pb-2 mb-4">
-                                <h3 class="font-bold text-blue-900 text-sm uppercase tracking-wide">5. Development</h3>
-                                <div class="flex gap-2 items-center">
-                                    <button onclick="addDevCategory()" class="text-xs bg-slate-100 px-2 py-1 rounded hover:bg-slate-200">+ Cat</button>
-                                    <span class="text-xs font-bold text-slate-500">Total: <span id="rpt_dev_total_disp">0</span></span>
-                                </div>
-                            </div>
-                            <div id="devCostContainer" class="space-y-2"></div>
-                        </div>
-
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-blue-100">
-                             <h3 class="font-bold text-blue-900 border-b pb-2 mb-4 text-sm uppercase tracking-wide">Other Costs & Signatures</h3>
-                             <div class="grid grid-cols-2 gap-2 text-xs mb-4">
-                                 <div><label>Tax (PS)</label><input type="number" id="rpt_tax_ps" class="w-full p-1 border rounded"></div>
-                                 <div><label>Tax (Plan)</label><input type="number" id="rpt_tax_plan" class="w-full p-1 border rounded"></div>
-                                 <div><label>Advertising</label><input type="number" id="rpt_ad_cost" class="w-full p-1 border rounded"></div>
-                                 <div><label>Fin. Capital</label><input type="number" id="rpt_fin_cap" class="w-full p-1 border rounded"></div>
-                                 <div><label>Fin. VAT</label><input type="number" id="rpt_fin_vat" class="w-full p-1 border rounded"></div>
-                             </div>
-                             <div class="border-t pt-2">
-                                 <label class="block text-[10px] font-bold text-gray-400 mb-1">Signatories</label>
-                                 <div class="flex gap-2">
-                                     <input type="text" id="rpt_sig_mgr" placeholder="Manager" class="w-1/3 p-1 border rounded text-xs">
-                                     <input type="text" id="rpt_sig_dir" placeholder="Director" class="w-1/3 p-1 border rounded text-xs">
-                                     <input type="text" id="rpt_sig_chm" placeholder="Chairman" class="w-1/3 p-1 border rounded text-xs">
-                                 </div>
-                             </div>
-                        </div>
-                         
-                        <div class="bg-yellow-50 p-4 rounded-xl border border-yellow-100">
-                             <h5 class="font-bold text-xs text-yellow-800 mb-2">System Actuals (Reference)</h5>
-                             <div id="systemActualsList" class="h-24 overflow-y-auto text-[10px] space-y-1 text-gray-600"></div>
-                        </div>
-                    </div>
                 </div>
             </div>
 
             <div class="p-4 border-t bg-slate-50 flex justify-end gap-3 z-10">
                 <button onclick="document.getElementById('newProjectReportDataModal').classList.add('hidden')" class="px-6 py-2 rounded-lg text-slate-600 font-bold hover:bg-slate-200">Close</button>
-                <button onclick="saveReportData()" class="px-8 py-2 rounded-lg bg-blue-600 text-white font-bold shadow hover:bg-blue-700">Save Report Data</button>
+                <button onclick="saveReportData()" class="px-8 py-2 rounded-lg bg-blue-600 text-white font-bold shadow hover:bg-blue-700">Save Data</button>
             </div>
         </div>
     </div>
@@ -820,17 +801,27 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Global Variable for Report
+        // Global Variable for Report - UPDATED TO MATCH EXCEL
         let reportDataCache = {
             surveyRows: [
-                {desc: "Perimeter survey (per acher)", unit: 0, price: 20000},
-                {desc: "Blocking out of plan (per block)", unit: 0, price: 3500},
-                {desc: "Demarcation of boundaries (per block)", unit: 0, price: 5000},
-                {desc: "Roads and Drains demarcation", unit: 0, price: 7500},
-                {desc: "Re demarcation of boundaries (Days)", unit: 0, price: 7500}
+                {desc: "Perimeter survey", amount: 20000},
+                {desc: "Blocking out of plan", amount: 3500},
+                {desc: "Demarcation of boundaries", amount: 5000},
+                {desc: "Roads and Drains demarcation", amount: 7500},
+                {desc: "Re demarcation of boundaries", amount: 7500}
             ],
-            devCategories: ["Fencing", "Site Office", "Clearing", "Road Construction", "Boundaries/Boards", "Drainage", "Culverts", "Site Development", "Water Supply", "Electricity Supply", "Staff Expenses"],
-            devItems: {} 
+            devRows: [
+                {desc: "Fencing", amount: 0},
+                {desc: "Site Office", amount: 0},
+                {desc: "Clearing", amount: 0},
+                {desc: "Road Construction", amount: 0},
+                {desc: "Boundaries/Boards", amount: 0},
+                {desc: "Drainage", amount: 0},
+                {desc: "Culverts", amount: 0},
+                {desc: "Site Development", amount: 0},
+                {desc: "Water Supply", amount: 0},
+                {desc: "Electricity Supply", amount: 0}
+            ]
         };
 
         // --- CORE FUNCTIONS (Defined first and attached to Window) ---
@@ -1256,43 +1247,138 @@
             s('rpt_name', p.name); s('rpt_location', p.area);
             s('rpt_owner', d.owner); s('rpt_introducer', d.introducer);
             s('rpt_acres', d.acres); s('rpt_roods', d.roods); s('rpt_perches', d.perches);
+            s('rpt_road_p', d.road_p); s('rpt_res_p', d.res_p);
             calcReportTotals(); 
-            s('rpt_road_pct', d.road_pct || 10); s('rpt_res_pct', d.res_pct || 10); s('rpt_period', d.period || 9);
-            s('rpt_title_ins_pct', d.title_ins_pct || 0); s('rpt_stamp_pct', d.stamp_pct || 4); s('rpt_legal_pct', d.legal_pct || 0.5); s('rpt_val_pct', d.val_pct || 0); s('rpt_title_rep', d.title_rep || 25000); s('rpt_intro_comm', d.intro_comm || 0);
+            
+            s('rpt_title_ins', d.title_ins); s('rpt_stamp', d.stamp); s('rpt_legal', d.legal); s('rpt_valuation', d.valuation); s('rpt_intro_comm', d.intro_comm);
             if(p.linkedLandId) {
                 const lSnap = await getDoc(doc(db, "company_lands", p.linkedLandId));
                 if(lSnap.exists()) s('rpt_purchase_price', lSnap.data().cost);
             } else { s('rpt_purchase_price', d.purchase_price || 0); }
             
-            // --- FIX: IMPROVED SURVEY ROW LAYOUT TO PREVENT CUT-OFF ---
-            const surveyDiv = document.getElementById('surveyRows'); surveyDiv.innerHTML = "";
-            let sData = d.surveyData || reportDataCache.surveyRows;
-            sData.forEach((row, i) => { 
-                surveyDiv.innerHTML += `
-                <div class="grid grid-cols-12 gap-2 items-center mb-2">
-                    <div class="col-span-4"><input type="text" class="w-full p-1 border text-xs" value="${row.desc}" id="sur_d_${i}"></div>
-                    <div class="col-span-2"><input type="number" class="w-full p-1 border text-xs text-right input-number-clear" value="${row.unit}" placeholder="Unit" id="sur_u_${i}" oninput="calcSurveyRow(${i})"></div>
-                    <div class="col-span-3"><input type="number" class="w-full p-1 border text-xs text-right input-number-clear" value="${row.price}" placeholder="Price" id="sur_p_${i}" oninput="calcSurveyRow(${i})"></div>
-                    <div class="col-span-3"><input type="number" class="w-full p-1 border bg-gray-100 text-xs text-right input-number-clear" value="${row.unit*row.price}" id="sur_c_${i}" readonly></div>
-                </div>`; 
-            }); 
-            calcSurveyTotal();
+            // Render Surveys
+            const surveyContainer = document.getElementById('surveyRowsContainer'); 
+            surveyContainer.innerHTML = "";
+            let sRows = d.surveyRows || reportDataCache.surveyRows;
+            sRows.forEach((row, i) => {
+                surveyContainer.innerHTML += `
+                <div class="excel-like-row excel-sub-row survey-row">
+                    <div class="excel-like-label"><input value="${row.desc}" class="border-none bg-transparent w-full text-xs font-bold text-gray-600 survey-desc"></div>
+                    <input type="number" value="${row.amount}" class="excel-like-input text-right survey-amount" oninput="calcReportTotals()">
+                </div>`;
+            });
+
+            // Render Developments
+            const devContainer = document.getElementById('devRowsContainer');
+            devContainer.innerHTML = "";
+            let dRows = d.devRows || reportDataCache.devRows;
+            dRows.forEach((row, i) => {
+                devContainer.innerHTML += `
+                <div class="excel-like-row excel-sub-row dev-row">
+                    <div class="excel-like-label"><input value="${row.desc}" class="border-none bg-transparent w-full text-xs font-bold text-gray-600 dev-desc"></div>
+                    <input type="number" value="${row.amount}" class="excel-like-input text-right dev-amount" oninput="calcReportTotals()">
+                    <button onclick="this.parentElement.remove();calcReportTotals()" class="ml-2 text-red-500 text-xs">x</button>
+                </div>`;
+            });
+
+            s('rpt_ad_cost', d.ad_cost); s('rpt_tax_1pct', d.tax_1pct); s('rpt_cost_capital', d.cost_capital);
+            s('rpt_sig_mgr', d.sig_mgr); s('rpt_sig_dir', d.sig_dir); s('rpt_sig_chm', d.sig_chm);
+            s('rpt_vat_rate', d.vat_rate || 18);
             
-            const devDiv = document.getElementById('devCostContainer'); devDiv.innerHTML = "";
-            let devCats = d.devCategories || reportDataCache.devCategories; let devItems = d.devItems || {}; 
-            devCats.forEach(cat => { let itemsHtml = ""; const items = devItems[cat] || [{desc: "", price: 0}]; items.forEach(item => { itemsHtml += `<div class="flex gap-2 mb-1 dev-item-row"><input type="text" class="flex-1 p-1 border text-xs w-full" placeholder="Item Desc" value="${item.desc}"><input type="number" class="w-24 p-1 border text-xs dev-item-price" placeholder="Cost" value="${item.price}" oninput="calcDevTotal()"><button onclick="this.parentElement.remove();calcDevTotal()" class="text-red-500">x</button></div>`; }); devDiv.innerHTML += `<div class="border p-2 rounded mb-2 dev-category" data-cat="${cat}"><div class="flex justify-between font-bold text-xs bg-gray-100 p-1 mb-2"><span>${cat}</span><button onclick="addDevItem(this)" class="text-blue-600">+ Item</button></div><div class="dev-items-container">${itemsHtml}</div><div class="text-right text-xs font-bold mt-1">Subtotal: <span class="cat-total">0</span></div></div>`; }); calcDevTotal();
-            const sysList = document.getElementById('systemActualsList'); sysList.innerHTML = "Loading...";
-            const expSnap = await getDocs(collection(db, `projects/${currentProjId}/expenses`)); let sysHtml = ""; expSnap.forEach(doc => { const e = doc.data(); sysHtml += `<div class="flex justify-between border-b border-gray-100"><span>${e.description}</span><span>${e.amount.toLocaleString()}</span></div>`; }); sysList.innerHTML = sysHtml || "No expenses found.";
-            s('rpt_tax_ps', d.tax_ps); s('rpt_tax_plan', d.tax_plan); s('rpt_ad_cost', d.ad_cost); s('rpt_fin_cap', d.fin_cap || 200000); s('rpt_fin_vat', d.fin_vat || 0); s('rpt_sig_mgr', d.sig_mgr); s('rpt_sig_dir', d.sig_dir); s('rpt_sig_chm', d.sig_chm);
+            calcReportTotals(); // Initial calc
         };
 
-        window.calcReportTotals = () => { const getV = (id) => parseFloat(document.getElementById(id).value) || 0; const totPerches = (getV('rpt_acres') * 160) + (getV('rpt_roods') * 40) + getV('rpt_perches'); document.getElementById('rpt_tot_perches').value = totPerches; const purPrice = getV('rpt_purchase_price'); document.getElementById('rpt_agreed_val').value = purPrice; document.getElementById('rpt_agreed_pp').value = totPerches > 0 ? (purPrice / totPerches).toFixed(2) : 0; document.getElementById('rpt_title_ins').value = purPrice * (getV('rpt_title_ins_pct') / 100); document.getElementById('rpt_stamp').value = purPrice * (getV('rpt_stamp_pct') / 100); document.getElementById('rpt_legal').value = purPrice * (getV('rpt_legal_pct') / 100); document.getElementById('rpt_valuation').value = purPrice * (getV('rpt_val_pct') / 100); const sellPct = 100 - (getV('rpt_road_pct') + getV('rpt_res_pct')); document.getElementById('rpt_sell_pct').value = sellPct; };
-        window.calcSurveyRow = (i) => { const u = parseFloat(document.getElementById(`sur_u_${i}`).value) || 0; const p = parseFloat(document.getElementById(`sur_p_${i}`).value) || 0; document.getElementById(`sur_c_${i}`).value = u * p; calcSurveyTotal(); };
-        window.calcSurveyTotal = () => { let tot = 0; const inputs = document.querySelectorAll('[id^="sur_c_"]'); inputs.forEach(inp => tot += parseFloat(inp.value) || 0); document.getElementById('rpt_survey_total_disp').innerText = tot.toLocaleString(); };
-        window.addDevCategory = () => { const name = prompt("Enter Category Name:"); if(name) { const devDiv = document.getElementById('devCostContainer'); devDiv.innerHTML += `<div class="border p-2 rounded mb-2 dev-category" data-cat="${name}"><div class="flex justify-between font-bold text-xs bg-gray-100 p-1 mb-2"><span>${name}</span><button onclick="addDevItem(this)" class="text-blue-600">+ Item</button></div><div class="dev-items-container"></div><div class="text-right text-xs font-bold mt-1">Subtotal: <span class="cat-total">0</span></div></div>`; } };
-        window.addDevItem = (btn) => { const container = btn.parentElement.nextElementSibling; container.innerHTML += `<div class="flex gap-2 mb-1 dev-item-row"><input type="text" class="flex-1 p-1 border text-xs w-full" placeholder="Item Desc"><input type="number" class="w-24 p-1 border text-xs dev-item-price" placeholder="Cost" oninput="calcDevTotal()"><button onclick="this.parentElement.remove();calcDevTotal()" class="text-red-500">x</button></div>`; };
-        window.calcDevTotal = () => { let grandTot = 0; document.querySelectorAll('.dev-category').forEach(cat => { let sub = 0; cat.querySelectorAll('.dev-item-price').forEach(inp => sub += parseFloat(inp.value) || 0); cat.querySelector('.cat-total').innerText = sub.toLocaleString(); grandTot += sub; }); document.getElementById('rpt_dev_total_disp').innerText = grandTot.toLocaleString(); };
-        window.saveReportData = async () => { const getV = (id) => document.getElementById(id).value; let surveyData = []; document.querySelectorAll('[id^="sur_d_"]').forEach((inp, i) => { surveyData.push({ desc: inp.value, unit: document.getElementById(`sur_u_${i}`).value, price: document.getElementById(`sur_p_${i}`).value }); }); let devCats = []; let devItems = {}; document.querySelectorAll('.dev-category').forEach(cat => { const name = cat.dataset.cat; devCats.push(name); devItems[name] = []; cat.querySelectorAll('.dev-item-row').forEach(row => { const inputs = row.querySelectorAll('input'); devItems[name].push({ desc: inputs[0].value, price: inputs[1].value }); }); }); const data = { owner: getV('rpt_owner'), introducer: getV('rpt_introducer'), acres: getV('rpt_acres'), roods: getV('rpt_roods'), perches: getV('rpt_perches'), road_pct: getV('rpt_road_pct'), res_pct: getV('rpt_res_pct'), period: getV('rpt_period'), purchase_price: getV('rpt_purchase_price'), title_ins_pct: getV('rpt_title_ins_pct'), stamp_pct: getV('rpt_stamp_pct'), legal_pct: getV('rpt_legal_pct'), val_pct: getV('rpt_val_pct'), title_rep: getV('rpt_title_rep'), intro_comm: getV('rpt_intro_comm'), surveyData: surveyData, devCategories: devCats, devItems: devItems, tax_ps: getV('rpt_tax_ps'), tax_plan: getV('rpt_tax_plan'), ad_cost: getV('rpt_ad_cost'), fin_cap: getV('rpt_fin_cap'), fin_vat: getV('rpt_fin_vat'), sig_mgr: getV('rpt_sig_mgr'), sig_dir: getV('rpt_sig_dir'), sig_chm: getV('rpt_sig_chm') }; await updateDoc(doc(db, "projects", currentProjId), { reportData: data }); document.getElementById('newProjectReportDataModal').classList.add('hidden'); alert("Full Report Data Saved!"); };
+        window.addNewDevRow = () => {
+            const devContainer = document.getElementById('devRowsContainer');
+            devContainer.innerHTML += `
+            <div class="excel-like-row excel-sub-row dev-row">
+                <div class="excel-like-label"><input placeholder="New Item" class="border-none bg-transparent w-full text-xs font-bold text-gray-600 dev-desc"></div>
+                <input type="number" value="0" class="excel-like-input text-right dev-amount" oninput="calcReportTotals()">
+                <button onclick="this.parentElement.remove();calcReportTotals()" class="ml-2 text-red-500 text-xs">x</button>
+            </div>`;
+        }
+
+        window.calcReportTotals = () => { 
+            const getV = (id) => parseFloat(document.getElementById(id).value) || 0; 
+            
+            // Extent
+            const totPerches = (getV('rpt_acres') * 160) + (getV('rpt_roods') * 40) + getV('rpt_perches'); 
+            document.getElementById('rpt_tot_perches').value = totPerches; 
+            const sellP = totPerches - getV('rpt_road_p') - getV('rpt_res_p');
+            document.getElementById('rpt_sell_p').value = sellP;
+
+            // Purchase Cost
+            const purTotal = getV('rpt_purchase_price') + getV('rpt_title_ins') + getV('rpt_stamp') + getV('rpt_legal') + getV('rpt_intro_comm') + getV('rpt_valuation');
+            document.getElementById('rpt_tot_purchase').value = purTotal;
+
+            // Surveys
+            let surTotal = 0;
+            document.querySelectorAll('.survey-amount').forEach(i => surTotal += parseFloat(i.value)||0);
+            document.getElementById('rpt_tot_survey').value = surTotal;
+
+            // Dev
+            let devTotal = 0;
+            document.querySelectorAll('.dev-amount').forEach(i => devTotal += parseFloat(i.value)||0);
+            document.getElementById('rpt_tot_dev').value = devTotal;
+
+            // Grand Total
+            const grandTotal = purTotal + surTotal + devTotal + getV('rpt_ad_cost') + getV('rpt_tax_1pct') + getV('rpt_cost_capital');
+            document.getElementById('rpt_grand_total').innerText = "Rs. " + grandTotal.toLocaleString();
+            
+            // Calc VAT Context
+            document.getElementById('rpt_vat_less_pur').value = purTotal;
+            document.getElementById('rpt_vat_less_dev').value = devTotal;
+            window.calcVAT();
+        };
+        
+        window.calcVAT = () => {
+            const sales = parseFloat(document.getElementById('rpt_vat_sales').value) || 0;
+            const pur = parseFloat(document.getElementById('rpt_vat_less_pur').value) || 0;
+            const dev = parseFloat(document.getElementById('rpt_vat_less_dev').value) || 0;
+            const rate = parseFloat(document.getElementById('rpt_vat_rate').value) || 0;
+            
+            const valAdd = sales - (pur + dev);
+            document.getElementById('rpt_vat_val_add').value = valAdd > 0 ? valAdd : 0;
+            
+            const vat = valAdd > 0 ? valAdd * (rate/100) : 0;
+            document.getElementById('rpt_vat_payable').value = vat.toFixed(2);
+        };
+
+        window.saveReportData = async () => { 
+            const getV = (id) => document.getElementById(id).value; 
+            const getVN = (id) => parseFloat(document.getElementById(id).value) || 0;
+
+            let surveyRows = []; 
+            document.querySelectorAll('.survey-row').forEach(row => { 
+                surveyRows.push({ desc: row.querySelector('.survey-desc').value, amount: parseFloat(row.querySelector('.survey-amount').value)||0 }); 
+            }); 
+            
+            let devRows = []; 
+            document.querySelectorAll('.dev-row').forEach(row => { 
+                devRows.push({ desc: row.querySelector('.dev-desc').value, amount: parseFloat(row.querySelector('.dev-amount').value)||0 }); 
+            }); 
+
+            const data = { 
+                owner: getV('rpt_owner'), introducer: getV('rpt_introducer'), 
+                acres: getV('rpt_acres'), roods: getV('rpt_roods'), perches: getV('rpt_perches'), 
+                road_p: getVN('rpt_road_p'), res_p: getVN('rpt_res_p'),
+                
+                purchase_price: getVN('rpt_purchase_price'), title_ins: getVN('rpt_title_ins'), 
+                stamp: getVN('rpt_stamp'), legal: getVN('rpt_legal'), valuation: getVN('rpt_valuation'), intro_comm: getVN('rpt_intro_comm'),
+                
+                surveyRows: surveyRows, 
+                devRows: devRows, 
+                
+                ad_cost: getVN('rpt_ad_cost'), tax_1pct: getVN('rpt_tax_1pct'), cost_capital: getVN('rpt_cost_capital'),
+                vat_rate: getVN('rpt_vat_rate'),
+                
+                sig_mgr: getV('rpt_sig_mgr'), sig_dir: getV('rpt_sig_dir'), sig_chm: getV('rpt_sig_chm') 
+            }; 
+            
+            await updateDoc(doc(db, "projects", currentProjId), { reportData: data }); 
+            document.getElementById('newProjectReportDataModal').classList.add('hidden'); 
+            alert("Report Data Saved!"); 
+        };
 
         window.generateProjectMasterReport = async () => { 
             if(!currentProjId) return alert("Open a project first.");
@@ -1300,38 +1386,107 @@
             const p = snap.data();
             const d = p.reportData;
             if(!d) return alert("Please fill Report Data first.");
-            const f = (val) => parseFloat(val) || 0;
+            
+            // Helper
+            const f = (val) => val ? parseFloat(val) : 0;
+            const fmt = (val) => f(val).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+            // Calc Totals Again for PDF
             const totPerches = (f(d.acres)*160) + (f(d.roods)*40) + f(d.perches);
-            const roadArea = (totPerches * f(d.road_pct))/100;
-            const resArea = (totPerches * f(d.res_pct))/100;
-            const sellArea = totPerches - roadArea - resArea;
-            const purPrice = f(d.purchase_price);
-            const titleIns = purPrice * (f(d.title_ins_pct)/100);
-            const stamp = purPrice * (f(d.stamp_pct)/100);
-            const legal = purPrice * (f(d.legal_pct)/100);
-            const valRep = purPrice * (f(d.val_pct)/100);
-            const totPurchase = purPrice + titleIns + stamp + legal + valRep + f(d.title_rep) + f(d.intro_comm);
-            let surHtml = ""; let surTot = 0;
-            d.surveyData.forEach(row => { const cost = f(row.unit) * f(row.price); surTot += cost; surHtml += `<tr><td>${row.desc}</td><td>${row.unit}</td><td style="text-align:right">${f(row.price).toLocaleString()}</td><td style="text-align:right">${cost.toLocaleString()}</td></tr>`; });
-            let devHtml = ""; let devTot = 0;
-            d.devCategories.forEach(cat => { const items = d.devItems[cat] || []; let catSub = 0; items.forEach(item => { catSub += f(item.price); }); devTot += catSub; devHtml += `<tr><td><strong>${cat}</strong></td><td colspan="2"></td><td style="text-align:right"><strong>${catSub.toLocaleString()}</strong></td></tr>`; items.forEach(item => { devHtml += `<tr><td style="padding-left:20px;">${item.desc}</td><td colspan="2"></td><td style="text-align:right">${f(item.price).toLocaleString()}</td></tr>`; }); });
+            const sellP = totPerches - f(d.road_p) - f(d.res_p);
             
-            // REMOVED: Expense Breakdown Table Generation
-            let totalMiscExp = 0; 
-            const expSnap = await getDocs(collection(db, `projects/${currentProjId}/expenses`)); 
-            expSnap.forEach(doc => { 
-                const e = doc.data(); 
-                if(!e.description.toLowerCase().includes('commission') && !e.description.toLowerCase().includes('comm:')) {
-                    totalMiscExp += e.amount; 
-                }
-            });
+            const purTotal = f(d.purchase_price) + f(d.title_ins) + f(d.stamp) + f(d.legal) + f(d.intro_comm) + f(d.valuation);
             
-            const taxes = f(d.tax_ps) + f(d.tax_plan);
-            const finance = f(d.fin_cap) + f(d.fin_vat);
-            const grandTotal = totPurchase + surTot + devTot + taxes + f(d.ad_cost) + finance + totalMiscExp;
-            let salesTotal = 0; const bSnap = await getDocs(collection(db, `projects/${currentProjId}/blocks`)); bSnap.forEach(b => salesTotal += (b.data().soldPrice || b.data().price));
-            const netProfit = salesTotal - grandTotal; const netProfitPct = salesTotal > 0 ? (netProfit/salesTotal)*100 : 0; const roi = grandTotal > 0 ? (netProfit/grandTotal)*100 : 0; const annualizedRoi = (roi / f(d.period)) * 12;
-            const html = `<div style="font-family: 'Times New Roman', serif; padding: 20px;"><div style="text-align:center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;"><h1 style="font-size: 28px; font-weight: bold; margin: 0;">SITHULIYA REAL ESTATE</h1><p style="font-size: 12px; margin: 5px 0;">Kurunegala, Sri Lanka</p><h2 style="font-size: 20px; text-decoration: underline; margin-top: 15px;">PROJECT EVALUATION REPORT</h2></div><h3 style="text-align:center; margin-bottom:20px;">${p.name} - ${p.area}</h3><div class="report-header-bg">1. PROJECT OVERVIEW</div><table class="report-table"><tr><td>Owner: ${d.owner||'-'}</td><td>Introducer: ${d.introducer||'-'}</td></tr><tr><td>Extent: ${d.acres||0}A ${d.roods||0}R ${d.perches||0}P (${totPerches} Perches)</td><td>Agreed Value: Rs. ${purPrice.toLocaleString()}</td></tr></table><div class="report-header-bg">2. LAND ALLOCATION</div><table class="report-table"><tr><td>Roadways: ${d.road_pct}%</td><td>Reservations: ${d.res_pct}%</td><td>Sellable: ${sellArea.toFixed(2)} P (${(sellArea/totPerches*100).toFixed(1)}%)</td></tr></table><div class="report-header-bg">3. COST OF PURCHASE</div><table class="report-table"><tr><td>Purchase Price</td><td style="text-align:right">${purPrice.toLocaleString()}</td></tr><tr><td>Stamp Duty (${d.stamp_pct}%)</td><td style="text-align:right">${stamp.toLocaleString()}</td></tr><tr><td>Legal Fees (${d.legal_pct}%)</td><td style="text-align:right">${legal.toLocaleString()}</td></tr><tr><td>Title Reports</td><td style="text-align:right">${f(d.title_rep).toLocaleString()}</td></tr><tr><td>Introducer Comm. (Cumulative)</td><td style="text-align:right">${f(d.intro_comm).toLocaleString()}</td></tr><tr style="font-weight:bold; background:#eee"><td>TOTAL PURCHASE COST</td><td style="text-align:right">${totPurchase.toLocaleString()}</td></tr></table><div class="report-header-bg">4. SURVEY CHARGES</div><table class="report-table"><tr><th>Description</th><th>Units</th><th>Price</th><th>Cost</th></tr>${surHtml}<tr style="font-weight:bold; background:#eee"><td colspan="3">TOTAL SURVEY</td><td style="text-align:right">${surTot.toLocaleString()}</td></tr></table><div class="report-header-bg">5. DEVELOPMENT COST</div><table class="report-table">${devHtml}<tr style="font-weight:bold; background:#eee"><td colspan="3">TOTAL DEVELOPMENT</td><td style="text-align:right">${devTot.toLocaleString()}</td></tr></table><div class="report-header-bg">6-8. OTHER COSTS</div><table class="report-table"><tr><td>Taxes & Approvals</td><td style="text-align:right">${taxes.toLocaleString()}</td></tr><tr><td>Advertising</td><td style="text-align:right">${f(d.ad_cost).toLocaleString()}</td></tr><tr><td>Financial (Capital + VAT)</td><td style="text-align:right">${finance.toLocaleString()}</td></tr></table><div class="report-header-bg">9. SALES & PROFITABILITY</div><table class="report-table"><tr><td>Total Sales Proceeds</td><td style="text-align:right; font-weight:bold">${salesTotal.toLocaleString()}</td></tr><tr><td>Total Cost of Project (Inc Misc)</td><td style="text-align:right; color:red">(${grandTotal.toLocaleString()})</td></tr><tr style="font-weight:bold; background:#ddd"><td>NET PROFIT</td><td style="text-align:right">${netProfit.toLocaleString()}</td></tr></table><div class="report-header-bg">10. PROFITABILITY RATIOS</div><table class="report-table"><tr><td>Net Profit on Sales Proceeds</td><td style="text-align:right">${netProfitPct.toFixed(1)}%</td></tr><tr><td>ROI (Project Period)</td><td style="text-align:right">${roi.toFixed(1)}%</td></tr><tr><td>ROI (Per Annum)</td><td style="text-align:right">${annualizedRoi.toFixed(1)}%</td></tr></table><div class="report-header-bg">11. SUMMARY OF COST</div><table class="report-table"><tr><td>Land Cost</td><td style="text-align:right">${totPurchase.toLocaleString()}</td></tr><tr><td>Survey</td><td style="text-align:right">${surTot.toLocaleString()}</td></tr><tr><td>Development</td><td style="text-align:right">${devTot.toLocaleString()}</td></tr><tr><td>Other (Tax, Ad, Fin)</td><td style="text-align:right">${(taxes + f(d.ad_cost) + finance).toLocaleString()}</td></tr><tr><td>Misc Expenses</td><td style="text-align:right">${totalMiscExp.toLocaleString()}</td></tr><tr style="font-weight:bold; border-top:2px solid #000"><td>TOTAL PROJECT COST</td><td style="text-align:right">${grandTotal.toLocaleString()}</td></tr></table><div style="margin-top:60px; display:flex; justify-content:space-between; text-align:center; font-size:12px;"><div style="border-top:1px dotted #000; width:30%; padding-top:5px;">${d.sig_mgr || 'Manager'}</div><div style="border-top:1px dotted #000; width:30%; padding-top:5px;">${d.sig_dir || 'Director'}</div><div style="border-top:1px dotted #000; width:30%; padding-top:5px;">${d.sig_chm || 'Chairman'}</div></div><div style="text-align:right; margin-top:20px; font-size:10px;">Date: ${new Date().toLocaleDateString()}</div></div>`;
+            let surHtml = ""; let surTotal = 0;
+            (d.surveyRows || []).forEach(row => { surTotal += f(row.amount); surHtml += `<tr><td>${row.desc}</td><td style="text-align:right">${fmt(row.amount)}</td></tr>`; });
+            
+            let devHtml = ""; let devTotal = 0;
+            (d.devRows || []).forEach(row => { devTotal += f(row.amount); devHtml += `<tr><td>${row.desc}</td><td style="text-align:right">${fmt(row.amount)}</td></tr>`; });
+
+            const grandTotal = purTotal + surTotal + devTotal + f(d.ad_cost) + f(d.tax_1pct) + f(d.cost_capital);
+
+            // VAT Calc for Report
+            // We need Sales Proceeds. In Report Data, we don't save Sales Proceeds usually, but if user entered in modal we could use that.
+            // OR fetch actual sales. Let's use Actual Sales from DB blocks.
+            let salesProceeds = 0;
+            const bSnap = await getDocs(collection(db, `projects/${currentProjId}/blocks`)); 
+            bSnap.forEach(b => salesProceeds += (b.data().soldPrice || b.data().price));
+            
+            const valAdd = salesProceeds - (purTotal + devTotal);
+            const vatPayable = valAdd > 0 ? valAdd * (f(d.vat_rate)/100) : 0;
+
+            const html = `
+            <div style="font-family: 'Times New Roman', serif; padding: 40px; font-size: 14px;">
+                <h1 style="text-align:center; font-weight:bold; font-size:24px; text-decoration:underline; margin-bottom:20px;">PROJECT EVALUATION REPORT</h1>
+                
+                <table style="width:100%; margin-bottom:20px;">
+                    <tr><td style="font-weight:bold; width:150px;">NAME OF THE PROJECT :</td><td>${p.name.toUpperCase()}</td></tr>
+                    <tr><td style="font-weight:bold;">Owner :</td><td>${d.owner}</td></tr>
+                    <tr><td style="font-weight:bold;">Location of Land :</td><td>${d.location || p.area}</td></tr>
+                    <tr><td style="font-weight:bold;">Introducer :</td><td>${d.introducer}</td></tr>
+                </table>
+
+                <div style="margin-bottom:10px; font-weight:bold; text-decoration:underline;">EXTENT</div>
+                <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
+                    <tr><td>Total Extent</td><td style="text-align:right">${d.acres}A ${d.roods}R ${d.perches}P</td><td style="text-align:right; font-weight:bold;">${totPerches} P</td></tr>
+                    <tr><td>Road Allocation</td><td></td><td style="text-align:right">${d.road_p} P</td></tr>
+                    <tr><td>Reservation</td><td></td><td style="text-align:right">${d.res_p} P</td></tr>
+                    <tr style="border-top:1px solid #000; font-weight:bold;"><td>Sellable Area</td><td></td><td style="text-align:right">${sellP} P</td></tr>
+                </table>
+
+                <div style="margin-bottom:10px; font-weight:bold; text-decoration:underline;">COST OF PURCHASE</div>
+                <table style="width:100%; margin-bottom:20px;">
+                    <tr><td>Purchase Price</td><td style="text-align:right">${fmt(d.purchase_price)}</td></tr>
+                    <tr><td>Title Insurance</td><td style="text-align:right">${fmt(d.title_ins)}</td></tr>
+                    <tr><td>Stamp Duty (4%)</td><td style="text-align:right">${fmt(d.stamp)}</td></tr>
+                    <tr><td>Legal Fees</td><td style="text-align:right">${fmt(d.legal)}</td></tr>
+                    <tr><td>Introducer Comm.</td><td style="text-align:right">${fmt(d.intro_comm)}</td></tr>
+                    <tr><td>Valuation</td><td style="text-align:right">${fmt(d.valuation)}</td></tr>
+                    <tr style="border-top:1px solid #000; font-weight:bold;"><td>Total Purchase Cost</td><td style="text-align:right">${fmt(purTotal)}</td></tr>
+                </table>
+
+                <div style="display:flex; justify-content:space-between; gap:20px;">
+                    <div style="width:48%;">
+                        <div style="font-weight:bold; text-decoration:underline;">SURVEY CHARGES</div>
+                        <table style="width:100%;">${surHtml}<tr style="border-top:1px solid #000; font-weight:bold;"><td>Total</td><td style="text-align:right">${fmt(surTotal)}</td></tr></table>
+                    </div>
+                    <div style="width:48%;">
+                        <div style="font-weight:bold; text-decoration:underline;">DEVELOPMENT COST</div>
+                        <table style="width:100%;">${devHtml}<tr style="border-top:1px solid #000; font-weight:bold;"><td>Total</td><td style="text-align:right">${fmt(devTotal)}</td></tr></table>
+                    </div>
+                </div>
+
+                <div style="margin-top:20px;">
+                    <table style="width:100%;">
+                        <tr><td>Advertising</td><td style="text-align:right">${fmt(d.ad_cost)}</td></tr>
+                        <tr><td>1% Tax and other approvals</td><td style="text-align:right">${fmt(d.tax_1pct)}</td></tr>
+                        <tr><td>Cost of the Capital</td><td style="text-align:right">${fmt(d.cost_capital)}</td></tr>
+                        <tr style="border-top:2px solid #000; border-bottom:2px solid #000; font-weight:bold; font-size:16px;">
+                            <td style="padding:5px 0;">TOTAL PROJECT AMOUNT</td><td style="text-align:right; padding:5px 0;">${fmt(grandTotal)}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div style="margin-top:30px; border:1px solid #000; padding:10px;">
+                    <h3 style="margin:0; text-decoration:underline;">VAT CALCULATION</h3>
+                    <table style="width:100%;">
+                        <tr><td>Sales Proceeds</td><td style="text-align:right; font-weight:bold;">${fmt(salesProceeds)}</td></tr>
+                        <tr><td>Less: Purchase Cost</td><td style="text-align:right">(${fmt(purTotal)})</td></tr>
+                        <tr><td>Less: Development Cost</td><td style="text-align:right">(${fmt(devTotal)})</td></tr>
+                        <tr style="font-weight:bold;"><td>Value Addition</td><td style="text-align:right">${fmt(valAdd)}</td></tr>
+                        <tr><td>VAT Rate</td><td style="text-align:right">${d.vat_rate}%</td></tr>
+                        <tr style="font-weight:bold; font-size:15px;"><td>VAT Payable</td><td style="text-align:right">${fmt(vatPayable)}</td></tr>
+                    </table>
+                </div>
+
+                <div style="margin-top:80px; display:flex; justify-content:space-between; text-align:center;">
+                    <div>..........................................<br>${d.sig_mgr || 'Manager'}</div>
+                    <div>..........................................<br>${d.sig_dir || 'Director'}</div>
+                    <div>..........................................<br>${d.sig_chm || 'Chairman'}</div>
+                </div>
+                <div style="text-align:right; margin-top:20px;">Date: ${new Date().toLocaleDateString()}</div>
+            </div>`;
+            
             document.getElementById('printContainer').innerHTML = html;
             document.getElementById('pdfPreviewOverlay').style.display = 'block';
         };
@@ -1821,11 +1976,9 @@
             
             let total = 0, paid = 0; 
             if(isEP) { 
-                // For existing data or new EMI logic, epDetails.totalPayable holds the full amount (Principal + Interest)
-                // If using the new logic, totalPayable is calculated via EMI * months.
                 const loanPayable = data.payment.epDetails.totalPayable; 
                 const dpReq = data.payment.epDetails.downPayment.required; 
-                total = loanPayable + dpReq; // Total Contract Value
+                total = loanPayable + dpReq; 
                 
                 const epPaid = data.payment.epDetails.paidAmount || 0; 
                 const dpPaid = data.payment.epDetails.downPayment.paid || 0; 
@@ -1845,59 +1998,34 @@
                     const bal = dp.required - dp.paid; document.getElementById('epDpDueMsg').innerText = `Finish Down Payment (Due: Rs. ${bal.toLocaleString()})`;
                 } else {
                     preInfo.classList.add('hidden'); instInfo.classList.remove('hidden');
-                    const totalPayable = data.payment.epDetails.totalPayable; 
-                    const paidEp = data.payment.epDetails.paidAmount || 0;
                     
-                    // --- NEW LOGIC: Reducing Balance Calculation ---
-                    // 1. Calculate Full Settlement Balance (Principal Only)
-                    // soldPrice (Cash Price) - Total Paid (DP + EP)
                     const totalPaid = (data.payment.epDetails.paidAmount || 0) + (data.payment.epDetails.downPayment.paid || 0);
                     const settlementBalance = data.soldPrice - totalPaid;
                     document.getElementById('epRealtimeFuture').innerText = "Rs. " + (settlementBalance > 0 ? settlementBalance.toLocaleString() : "0.00");
 
-                    // 2. Calculate Monthly Payable (Reducing Balance Method)
-                    // Assumption: Remaining principal is divided by remaining months, plus interest on outstanding principal.
-                    // We need to estimate remaining months.
+                    // --- ENHANCED EMI BREAKDOWN ---
                     const fullTerm = data.payment.epDetails.months;
-                    // Approximation of installments paid based on history or standard amount
-                    // Better: Calculate reducing balance based on current settlement balance
-                    
-                    // Simple logic for display as requested:
-                    // Monthly Principal Portion = Outstanding Principal / Remaining Months
-                    // We will assume remaining months based on unpaid principal proportion or calendar if available
-                    // Fallback: Use full term - estimated paid months
-                    // Let's use a simpler approach: Just divide current principal balance by remaining term (approx)
-                    // NOTE: Without strict schedule tracking, we estimate remaining months
-                    
-                    // Estimate remaining months:
                     const originalLoan = data.soldPrice - data.payment.epDetails.downPayment.required;
-                    const principalPaid = (data.payment.epDetails.paidAmount || 0); // Assuming paidAmount covers principal roughly
+                    const principalPaid = (data.payment.epDetails.paidAmount || 0); 
                     const pctPaid = principalPaid / originalLoan;
                     let monthsLeft = Math.max(1, Math.round(fullTerm * (1 - pctPaid)));
-                    
                     if (settlementBalance <= 0) monthsLeft = 0;
 
                     let thisMonthPayable = 0;
-                    let nextMonthPayable = 0;
+                    let monthlyPrincipal = 0;
+                    let thisMonthInterest = 0;
 
                     if (monthsLeft > 0) {
-                        const monthlyPrincipal = settlementBalance / monthsLeft;
+                        monthlyPrincipal = settlementBalance / monthsLeft;
                         const annualRate = data.payment.epDetails.rate || 0;
                         const monthlyRate = (annualRate / 12) / 100;
-                        
-                        const thisMonthInterest = settlementBalance * monthlyRate;
+                        thisMonthInterest = settlementBalance * monthlyRate;
                         thisMonthPayable = monthlyPrincipal + thisMonthInterest;
-
-                        // Next Month Projection
-                        const nextBalance = settlementBalance - monthlyPrincipal;
-                        if (nextBalance > 0) {
-                            const nextMonthInterest = nextBalance * monthlyRate;
-                            nextMonthPayable = monthlyPrincipal + nextMonthInterest;
-                        }
                     }
 
+                    document.getElementById('epThisMonthCapital').innerText = "Rs. " + monthlyPrincipal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    document.getElementById('epThisMonthInterest').innerText = "Rs. " + thisMonthInterest.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
                     document.getElementById('epNextDueAmt').innerText = "Rs. " + thisMonthPayable.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-                    document.getElementById('epFutureDueAmt').innerText = "Rs. " + nextMonthPayable.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
                 }
             } else { cycleSec.classList.add('hidden'); document.getElementById('epRealtimeFuture').innerText = "N/A"; }
             
@@ -1951,19 +2079,6 @@
                 daysLabel.innerText = "Penalty in " + Math.max(0, Math.ceil(5 - diffDays)) + " days";
                 if (diffDays >= 5) applyLatePenalty(data);
             }
-
-            // REDUCING BALANCE CALCULATION (EMI) FOR DISPLAY
-            const ep = data.payment.epDetails;
-            let monthly = 0;
-            // Assuming totalPayable includes interest calculated via EMI formula
-            if (ep.months > 0) {
-                monthly = ep.totalPayable / ep.months; 
-            }
-            
-            // Current EMI
-            // document.getElementById('epNextDueAmt').innerText = "Rs. " + monthly.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 0});
-            // Next Month EMI (Same for standard plans unless rescheduled, but requested to show)
-            // document.getElementById('epFutureDueAmt').innerText = "Rs. " + monthly.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 0});
         }
         
         async function applyLatePenalty(data) {
