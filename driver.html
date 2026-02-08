@@ -102,8 +102,8 @@
 
                     <div class="grid grid-cols-2 gap-3 mb-5">
                         <div>
-                            <label class="text-[10px] text-blue-300 uppercase font-bold tracking-wider mb-1 block">Total Hours (Auto)</label>
-                            <input type="number" id="meterHours" placeholder="0.0" class="w-full bg-slate-900 p-3 rounded-lg border border-slate-600 font-bold text-center text-lg text-yellow-400 outline-none" readonly>
+                            <label class="text-[10px] text-blue-300 uppercase font-bold tracking-wider mb-1 block">Total Hours</label>
+                            <input type="number" id="meterHours" step="0.01" placeholder="0.0" class="w-full bg-slate-800 p-3 rounded-lg border border-slate-600 font-bold text-center text-lg text-yellow-400 focus:border-blue-500 outline-none">
                         </div>
                         <div>
                             <label class="text-[10px] text-blue-300 uppercase font-bold tracking-wider mb-1 block">Rate (Rs)</label>
@@ -266,7 +266,6 @@
                 onSnapshot(doc(db, "projects", pid), (docSnap) => {
                     if (docSnap.exists()) {
                         const vehicles = docSnap.data().assignedVehicles || [];
-                        // Save currently selected value to restore after rebuild
                         const currentVal = vehicleSelect.value;
                         vehicleSelect.innerHTML = '<option value="">Select Vehicle...</option>';
                         vehicles.forEach(v => {
@@ -281,9 +280,6 @@
             } catch(e) { console.error("Data Load Error", e); }
         }
 
-        // --- NEW MULTI-VEHICLE LOGIC ---
-        // Store trips as object: { "WP-1234": { start: 12345678, img: "base64..." }, "WP-5678": ... }
-        
         function getTrips() {
             return JSON.parse(localStorage.getItem('site_active_trips') || '{}');
         }
@@ -305,7 +301,6 @@
         let currentStartTime = null;
         let currentEndTime = null;
 
-        // When Vehicle Changes -> Update UI
         vehicleSelect.addEventListener('change', () => {
             updateUIForVehicle();
         });
@@ -319,7 +314,6 @@
             const resetBtn = document.getElementById('resetTripBtn');
             const uploadBtn = document.getElementById('uploadBtn');
             
-            // Reset fields visually first
             document.getElementById('startPreview').classList.add('hidden');
             document.getElementById('startPlaceholder').classList.remove('hidden');
             document.getElementById('startTimeBadge').classList.add('hidden');
@@ -343,11 +337,9 @@
             const tripData = trips[vNo];
 
             if(tripData) {
-                // Trip Active
                 currentStartTime = new Date(tripData.startTime);
                 currentStartImg = tripData.startImg;
                 
-                // Show Start Data
                 document.getElementById('startPreview').src = currentStartImg;
                 document.getElementById('startPreview').classList.remove('hidden');
                 document.getElementById('startPlaceholder').classList.add('hidden');
@@ -355,47 +347,39 @@
                 document.getElementById('startTimeBadge').classList.remove('hidden');
                 startBox.classList.add('border-green-500');
                 
-                // Lock Start, Enable End
                 startInput.disabled = true;
                 endInput.disabled = false;
                 endBox.classList.remove('opacity-50', 'cursor-not-allowed');
                 resetBtn.classList.remove('hidden');
             } else {
-                // No Trip Active -> Ready to Start
                 startInput.disabled = false;
                 endInput.disabled = true;
                 resetBtn.classList.add('hidden');
             }
             
-            // Reset Upload Button
             uploadBtn.disabled = true;
             uploadBtn.classList.replace('bg-blue-600', 'bg-slate-700');
             uploadBtn.classList.replace('text-white', 'text-gray-500');
         }
 
-        // Handle Start Camera
         document.getElementById('startCameraInput').addEventListener('change', async (e) => {
             const vNo = vehicleSelect.value;
             if(!vNo) return;
-            
             if(e.target.files[0]) {
                 const file = e.target.files[0];
                 const b64 = await processImage(file);
                 const time = new Date().getTime();
-                
                 saveTrip(vNo, { startTime: time, startImg: b64 });
-                updateUIForVehicle(); // Refresh UI
+                updateUIForVehicle();
             }
         });
 
-        // Handle End Camera
         document.getElementById('endCameraInput').addEventListener('change', async (e) => {
             if(e.target.files[0]) {
                 const file = e.target.files[0];
                 currentEndImg = await processImage(file);
                 currentEndTime = new Date();
                 
-                // Update UI Manually for End State
                 document.getElementById('endPreview').src = currentEndImg;
                 document.getElementById('endPreview').classList.remove('hidden');
                 document.getElementById('endPlaceholder').classList.add('hidden');
@@ -403,12 +387,10 @@
                 document.getElementById('endTimeBadge').classList.remove('hidden');
                 document.getElementById('endMeterBox').classList.add('border-red-500');
 
-                // Calc Hours
                 const diffMs = currentEndTime - currentStartTime;
                 const hours = diffMs / (1000 * 60 * 60);
                 document.getElementById('meterHours').value = hours.toFixed(2);
 
-                // Enable Upload
                 const btn = document.getElementById('uploadBtn');
                 btn.disabled = false; 
                 btn.classList.replace('bg-slate-700', 'bg-blue-600'); 
@@ -416,7 +398,6 @@
             }
         });
 
-        // Clear Current Vehicle Trip
         window.clearTrip = () => {
             const vNo = vehicleSelect.value;
             if(confirm(`Cancel trip for ${vNo}?`)) {
@@ -425,7 +406,6 @@
             }
         }
 
-        // Upload Logic
         document.getElementById('uploadBtn').addEventListener('click', async () => {
             const btn = document.getElementById('uploadBtn');
             const pid = localStorage.getItem('site_proj_id');
@@ -453,11 +433,9 @@
                     totalCost: parseFloat(hours)*parseFloat(rate)
                 });
                 
-                // Clear Local Storage for this vehicle
                 removeTrip(vNo);
-                
                 alert("Upload Successful!"); 
-                updateUIForVehicle(); // Reset UI
+                updateUIForVehicle();
                 btn.innerHTML = "UPLOAD READING";
             } catch(e) { console.error(e); alert("Error uploading"); btn.disabled = false; btn.innerHTML = "UPLOAD READING"; }
         });
@@ -474,7 +452,6 @@
             });
         }
 
-        // --- TASK LOGIC ---
         function loadTasks(pid) {
             onSnapshot(query(collection(db, `projects/${pid}/tasks`), orderBy("createdAt", "desc")), (snap) => {
                 const list = document.getElementById('taskList'); list.innerHTML = "";
@@ -530,9 +507,7 @@
             if(document.getElementById('taskImg1').dataset.b64) photos.push(document.getElementById('taskImg1').dataset.b64);
             if(document.getElementById('taskImg2').dataset.b64) photos.push(document.getElementById('taskImg2').dataset.b64);
             if(document.getElementById('taskImg3').dataset.b64) photos.push(document.getElementById('taskImg3').dataset.b64);
-            
             if(!cost || photos.length === 0) return alert("Enter cost and at least 1 photo.");
-            
             const btn = document.getElementById('submitTaskBtn');
             btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> SENDING..."; btn.disabled = true;
             try {
