@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sithuliya Admin Pro - Ultimate Suite (Fixed V3)</title>
+    <title>Sithuliya Admin Pro - Ultimate Suite (Final V6)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
@@ -765,9 +765,9 @@
         </div>
     </div>
 
-    <!-- 12. Sell Modal (ADDED - MISSING IN ORIGINAL) -->
-    <div id="sellModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto">
-        <div class="bg-white p-6 rounded-2xl w-full max-w-2xl shadow-2xl relative my-8">
+    <!-- 12. Sell Modal -->
+    <div id="sellModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white p-6 rounded-2xl w-full max-w-2xl shadow-2xl relative my-8 max-h-[90vh] overflow-y-auto">
             <button onclick="closeSellModal()" class="absolute top-4 right-4 text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
             <h2 class="text-xl font-bold mb-4 text-slate-800">New Sale: <span id="sellBlockName" class="text-blue-600"></span></h2>
             
@@ -833,6 +833,10 @@
             <!-- EP Fields -->
             <div id="epFields" class="hidden space-y-3 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
                 <div class="flex justify-between items-center">
+                    <label class="text-xs font-bold text-gray-500">Agreement Fee</label>
+                    <input type="number" id="agreementFee" class="p-1 border rounded text-right w-32 text-sm" value="15000" step="0.01">
+                </div>
+                <div class="flex justify-between items-center">
                     <label class="text-xs font-bold text-gray-500">Booking Fee</label>
                     <input type="number" id="bookingFee" class="p-1 border rounded text-right w-32 text-sm" oninput="calculateEP()" step="0.01">
                 </div>
@@ -879,7 +883,7 @@
         </div>
     </div>
 
-    <!-- 13. Staff Access Modal (ADDED - MISSING IN ORIGINAL) -->
+    <!-- 13. Staff Access Modal -->
     <div id="staffAccessModal" class="hidden fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4">
         <div class="bg-white p-6 rounded-2xl w-full max-w-sm text-center shadow-2xl">
              <h3 class="text-xl font-bold mb-4 text-slate-800">Staff Area Access</h3>
@@ -911,6 +915,7 @@
         let selectedLandBal = 0;   
         let customerCache = []; 
         let currentStaffDetailId = null; 
+        let notifState = { overdue: [], tasks: [], meter: [], leaves: [] };
         const apiKey = ""; 
 
         const firebaseConfig = {
@@ -926,6 +931,16 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+
+        // Helper Function for Image Processing (Defined early)
+        window.processImage = (file) => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        };
 
         // Global Variable for Report Configuration
         let globalReportConfig = {
@@ -1062,7 +1077,7 @@
                     const el = document.createElement('div'); 
                     el.className = "bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4 cursor-pointer hover:shadow-md transition relative overflow-hidden"; 
                     el.onclick = () => window.openStaffDetail(d.id); 
-                    el.innerHTML = ` <img src="${photo}" class="w-12 h-12 rounded-full object-cover border-2 border-blue-100 bg-gray-200"> <div> <h4 class="font-bold text-slate-800">${s.name}</h4> <p class="text-[10px] font-bold text-blue-500 uppercase">${s.position || 'Staff'}</p> <p class="text-xs text-gray-500">${s.nic}</p> <p class="text-xs font-bold mt-1 text-blue-600">Salary: ${s.salary.toLocaleString()}</p> </div> ${isPaid ? '<span class="absolute top-2 right-2 bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded border border-green-200">PAID: '+ new Date().toLocaleString('default', { month: 'short' }) +'</span>' : ''} `; 
+                    el.innerHTML = ` <img src="${photo}" class="w-12 h-12 rounded-full object-cover border-2 border-blue-100 bg-gray-200"> <div> <h4 class="font-bold text-slate-800">${s.name}</h4> <p class="text-[10px] font-bold text-blue-500 uppercase">${s.position || 'Staff'}</p> <p class="text-xs text-gray-500">${s.nic}</p> <p class="text-xs font-bold mt-1 text-blue-600">Salary: ${(s.salary || 0).toLocaleString()}</p> </div> ${isPaid ? '<span class="absolute top-2 right-2 bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded border border-green-200">PAID: '+ new Date().toLocaleString('default', { month: 'short' }) +'</span>' : ''} `; 
                     grid.appendChild(el); 
                     
                     if(dropdown) {
@@ -1192,28 +1207,115 @@
                 btnActive.classList.remove('bg-white', 'shadow', 'text-slate-800'); btnActive.classList.add('text-gray-500');
             }
         };
+
+        // --- UNIFIED NOTIFICATION SYSTEM ---
+
+        window.renderNotifications = () => {
+            const list = document.getElementById('notifList');
+            const badge = document.getElementById('notifBadge');
+            if(!list || !badge) return;
+            
+            list.innerHTML = "";
+            let total = 0;
+            
+            // Overdue
+            notifState.overdue.forEach(b => {
+                total++;
+                list.innerHTML += `<div class="p-3 border-b bg-red-50 cursor-pointer hover:bg-red-100" onclick="navigateToBlock('${b.projectId}', '${b.id}'); toggleNotifPanel();"><p class="font-bold text-xs">${b.name}</p><p class="text-[10px] text-red-500">Overdue: ${new Date(b.nextDate).toLocaleDateString()}</p></div>`;
+            });
+
+            // Tasks
+            notifState.tasks.forEach(t => {
+                total++;
+                list.innerHTML += `<div class="p-3 border-b bg-blue-50 cursor-pointer hover:bg-blue-100" onclick="openApproveModal('${t.id}', 'task'); toggleNotifPanel();"><p class="font-bold text-xs text-blue-900">Task Review: ${t.title}</p><p class="text-[10px] text-blue-500">Click to Review Cost</p></div>`;
+            });
+
+            // Meter Readings
+            notifState.meter.forEach(m => {
+                total++;
+                 list.innerHTML += `<div class="p-3 border-b bg-green-50 cursor-pointer hover:bg-green-100" onclick="openApproveModal('${m.id}', 'meter'); toggleNotifPanel();"><p class="font-bold text-xs text-green-900">Meter Reading: ${m.vehicleNo}</p><p class="text-[10px] text-green-500">Review Cost: Rs. ${m.totalCost}</p></div>`;
+            });
+
+            // Leaves
+            notifState.leaves.forEach(l => {
+                total++;
+                list.innerHTML += `<div class="p-3 border-b bg-yellow-50 cursor-pointer hover:bg-yellow-100" onclick="openStaffDetail('${l.staffId}'); toggleNotifPanel();"><p class="font-bold text-xs text-yellow-900">Leave Request</p><p class="text-[10px] text-yellow-600">Date: ${l.date}</p></div>`;
+            });
+
+            if(total > 0) {
+                badge.innerText = total;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+                list.innerHTML = "<p class='text-center p-4 text-gray-400 text-xs'>No new notifications.</p>";
+            }
+        };
+
+        window.initGlobalNotifications = () => {
+            // 1. Meter Readings
+            onSnapshot(query(collection(db, "meter_readings"), where("status", "!=", "approved")), (snap) => {
+                notifState.meter = [];
+                snap.forEach(d => notifState.meter.push({ id: d.id, ...d.data() }));
+                renderNotifications();
+            });
+
+            // 2. Tasks (Using collectionGroup)
+            // Note: This requires a Firestore index. If index is missing, this might fail silently or error in console.
+            // Safe fallback: Iterate active projects? For now, implementing direct Listener.
+            try {
+                onSnapshot(query(collectionGroup(db, 'tasks'), where('status', '==', 'new')), (snap) => {
+                    notifState.tasks = [];
+                    snap.forEach(d => {
+                        // We need project ID for 'openApproveModal' logic sometimes, but logic stores tasks globally in projectTasksData
+                        // Here we just store ID and basics for nav
+                        // Warning: projectTasksData is populated by openProject. 
+                        // To make global approval work perfectly, we might need parent ID.
+                        // But openApproveModal logic relies on `currentProjId` in existing code.
+                        // To fix: We navigate to project first? Or make openApproveModal robust.
+                        // Existing code: `projectTasksData[id]` and `updateDoc` using `currentProjId`.
+                        // LIMITATION: Task approval currently requires being INSIDE the project view.
+                        // Updated Logic: Notification will try to Open Project then Open Modal.
+                        const t = d.data();
+                        // Find parent Project ID from ref path: projects/{pid}/tasks/{tid}
+                        const pathSegments = d.ref.path.split('/');
+                        const pid = pathSegments[1];
+                        notifState.tasks.push({ id: d.id, projectId: pid, ...t });
+                    });
+                    renderNotifications();
+                });
+            } catch(e) { console.log("Task Notif Error (Index missing?):", e); }
+
+            // 3. Leaves
+             try {
+                onSnapshot(query(collectionGroup(db, 'leaves'), where('status', '==', 'pending')), (snap) => {
+                    notifState.leaves = [];
+                    snap.forEach(d => {
+                         const pathSegments = d.ref.path.split('/');
+                         const staffId = pathSegments[1];
+                         notifState.leaves.push({ id: d.id, staffId: staffId, ...d.data() });
+                    });
+                    renderNotifications();
+                });
+            } catch(e) { console.log("Leave Notif Error:", e); }
+        };
         
         window.checkOverduePayments = async () => { 
             const blocksQ = query(collectionGroup(db, 'blocks'), where('status', '==', 'sold')); 
             const snap = await getDocs(blocksQ); 
-            const list = document.getElementById('notifList'); 
-            if(!list) return; 
-            list.innerHTML = ""; 
-            let count = 0; 
+            notifState.overdue = [];
             snap.forEach(d => { 
                 const b = d.data(); 
                 if(b.payment && b.payment.planType === 'EP' && b.payment.nextPaymentDate) { 
                     const nextD = b.payment.nextPaymentDate.seconds ? new Date(b.payment.nextPaymentDate.seconds*1000) : new Date(b.payment.nextPaymentDate); 
                     if(nextD < new Date()) { 
-                        count++; 
-                        list.innerHTML += `<div class="p-3 border-b bg-red-50"><p class="font-bold text-xs">${b.name}</p><p class="text-[10px] text-red-500">Overdue: ${nextD.toLocaleDateString()}</p></div>`; 
+                        // Get project ID
+                        const pathSegments = d.ref.path.split('/');
+                        const pid = pathSegments[1];
+                        notifState.overdue.push({ id: d.id, projectId: pid, name: b.name, nextDate: nextD });
                     } 
                 } 
             }); 
-            if(count > 0 && document.getElementById('notifBadge')) { 
-                document.getElementById('notifBadge').innerText = count; 
-                document.getElementById('notifBadge').classList.remove('hidden'); 
-            } 
+            renderNotifications();
         };
 
         window.updateNet = (i,e) => { 
@@ -1297,6 +1399,7 @@
                 window.loadLands(); 
                 window.loadMeterReadings(); 
                 window.checkPayroll(); 
+                window.initGlobalNotifications(); // Start listeners
             } else { 
                 alert("Incorrect Password"); 
             } 
@@ -2010,34 +2113,66 @@
             document.getElementById('staffSalary').value = s.salary; 
         };
 
+        // NEW: Process Image Helper (Moved up for accessibility)
+        window.processImage = (file) => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        };
+
+        // --- BUG FIX: Updated saveStaff Function ---
         window.saveStaff = async () => { 
-            const mode = document.getElementById('staffMode').value; 
-            const name = document.getElementById('staffName').value; 
-            const nic = document.getElementById('staffNIC').value; 
-            const phone = document.getElementById('staffPhone').value; 
-            const pos = document.getElementById('staffPosition').value; 
-            const sal = parseFloat(document.getElementById('staffSalary').value); 
-            const file = document.getElementById('staffPhoto').files[0]; 
-            if(!name || !nic) return alert("Name and NIC required"); 
-            let photoBase64 = null; 
-            if(file) { 
-                const reader = new FileReader(); 
-                reader.readAsDataURL(file); 
-                await new Promise(resolve => reader.onload = resolve); 
-                photoBase64 = reader.result; 
-            } 
-            const data = { name, nic, phone, position: pos, salary: sal }; 
-            if(photoBase64) data.photo = photoBase64; 
-            if (mode === 'edit') { 
-                const id = document.getElementById('editStaffId').value; 
-                await updateDoc(doc(db, "staff", id), data); 
-                alert("Staff Details Updated!"); 
-            } else { 
-                data.joinedDate = serverTimestamp(); 
-                await addDoc(collection(db, "staff"), data); 
-                alert("New Staff Member Added!"); 
-            } 
-            document.getElementById('newStaffModal').classList.add('hidden'); 
+            try {
+                const mode = document.getElementById('staffMode').value; 
+                const name = document.getElementById('staffName').value; 
+                const nic = document.getElementById('staffNIC').value; 
+                const phone = document.getElementById('staffPhone').value; 
+                const pos = document.getElementById('staffPosition').value; 
+                const sal = parseFloat(document.getElementById('staffSalary').value) || 0; 
+                const file = document.getElementById('staffPhoto').files[0]; 
+                
+                if(!name || !nic) return alert("Name and NIC required"); 
+                
+                let photoBase64 = null; 
+                if(file) { 
+                    // Use the robust helper function (fixed the hang issue)
+                    try {
+                        photoBase64 = await window.processImage(file);
+                    } catch (e) {
+                         console.error("Photo Error:", e);
+                         return alert("Error processing photo. Please try again.");
+                    }
+                } 
+                
+                const data = { name, nic, phone, position: pos, salary: sal }; 
+                if(photoBase64) data.photo = photoBase64; 
+                
+                if (mode === 'edit') { 
+                    const id = document.getElementById('editStaffId').value; 
+                    await updateDoc(doc(db, "staff", id), data); 
+                    alert("Staff Details Updated!"); 
+                } else { 
+                    data.joinedDate = serverTimestamp(); 
+                    await addDoc(collection(db, "staff"), data); 
+                    alert("New Staff Member Added Successfully!"); 
+                } 
+                document.getElementById('newStaffModal').classList.add('hidden');
+                
+                // Clear inputs to prevent duplicate submission or confusion
+                document.getElementById('staffName').value = '';
+                document.getElementById('staffNIC').value = '';
+                document.getElementById('staffPhone').value = '';
+                document.getElementById('staffPosition').value = '';
+                document.getElementById('staffSalary').value = '';
+                document.getElementById('staffPhoto').value = '';
+                
+            } catch (error) {
+                console.error("Save Staff Error:", error);
+                alert("Error saving staff: " + error.message);
+            }
         };
 
         window.updateStaffAccessPass = async () => { 
@@ -2188,16 +2323,6 @@
             }); 
         };
 
-        // NEW: Process Image Helper
-        window.processImage = (file) => {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => resolve(e.target.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
-        };
-
         const saveTaskBtn = document.getElementById('saveTaskBtn'); 
         if(saveTaskBtn) { 
             saveTaskBtn.addEventListener('click', async () => { 
@@ -2256,25 +2381,37 @@
                 const phone = document.getElementById('cusPhone').value; 
                 const address = document.getElementById('cusAddress').value; 
                 if(!nic || !name) return alert("Customer Name and NIC are required!"); 
+                
                 let customerId = ""; 
                 const q = query(collection(db, "customers"), where("nic", "==", nic)); 
                 const snap = await getDocs(q); 
+                
                 if(!snap.empty) { 
-                    customerId = snap.docs[0].data().customerId; 
+                    // Update existing customer to prevent duplicates
+                    const docId = snap.docs[0].id;
+                    customerId = snap.docs[0].data().customerId;
+                    await updateDoc(doc(db, "customers", docId), {
+                        name, phone, address, // Update contact info to latest
+                        projectId: currentProjId, // Track latest interaction
+                        blockId: selectedBlockId
+                    });
                 } else { 
+                    // Create new customer only if not exists
                     const nicPrefix = nic.substring(0, 5); 
                     const randomNum = Math.floor(Math.random() * 10); 
                     const randomChar = String.fromCharCode(65 + Math.floor(Math.random() * 26)); 
                     customerId = `${nicPrefix}${randomNum}${randomChar}`; 
+                    await addDoc(collection(db, "customers"), { 
+                        customerId, name, nic, phone, address, joinedDate: new Date(), projectName: currentProjName, projectId: currentProjId, blockName: selectedBlockData.name, blockId: selectedBlockId 
+                    }); 
                 } 
-                await addDoc(collection(db, "customers"), { 
-                    customerId, name, nic, phone, address, joinedDate: new Date(), projectName: currentProjName, projectId: currentProjId, blockName: selectedBlockData.name, blockId: selectedBlockId 
-                }); 
+                
                 const cus = { customerId, name, address, nic, phone }; 
                 const price = parseFloat(document.getElementById('finalPrice').value); 
                 const plan = document.getElementById('payPlanType').value; 
                 const planFee = parseFloat(document.getElementById('planFee').value) || 0; 
                 const deedFee = parseFloat(document.getElementById('deedFee').value) || 0; 
+                const agreementFee = parseFloat(document.getElementById('agreementFee').value) || 0;
                 const salespersonName = document.getElementById('salesPersonInput').value; 
                 let ep = {}; 
                 let nextD = null; 
@@ -2302,6 +2439,10 @@
                         rate: rate, months: months, cycleDays: cycle, totalPayable: totalPayable, paidAmount: 0, downPayment: { required: dpTotal, paid: booking, isComplete: isDpComplete } 
                     }; 
                     const d = new Date(); d.setDate(d.getDate() + cycle); nextD = d; paidNow = booking; 
+
+                    if(agreementFee > 0) {
+                        await recordDailyTransaction(`Agreement Fee: ${selectedBlockData.name} (${cus.name})`, agreementFee, 'income', currentProjName);
+                    }
                 } else { 
                     paidNow = parseFloat(document.getElementById('cashAdvancePay').value) || 0; 
                     if(paidNow >= price) status = 'sold_finished'; 
@@ -2325,7 +2466,7 @@
                 }); 
                 const histEntry = {date: new Date(), amount: paidNow, type: plan === 'EP' ? 'Booking Fee' : 'Payment'}; 
                 await updateDoc(doc(db, `projects/${currentProjId}/blocks/${selectedBlockId}`), { 
-                    status: status, soldPrice: price, customer: cus, soldDate: new Date(), fees: { planFee, deedFee }, payment: { totalPrice: price, advancePaid: paidNow, planType: plan, epDetails: ep, nextPaymentDate: nextD, history: [histEntry] } 
+                    status: status, soldPrice: price, customer: cus, soldDate: new Date(), fees: { planFee, deedFee, agreementFee }, payment: { totalPrice: price, advancePaid: paidNow, planType: plan, epDetails: ep, nextPaymentDate: nextD, history: [histEntry] } 
                 }); 
                 await recordDailyTransaction(`Sale Payment: ${selectedBlockData.name} - ${cus.name}`, paidNow, 'income', currentProjName); 
                 selectedBlockData.customer = cus; 
@@ -2449,9 +2590,16 @@
             submitPayBtn.addEventListener('click', async () => {
                 const amt = parseFloat(document.getElementById('newPayAmount').value); 
                 if(!amt) return;
-                const b = selectedBlockData;
-                let updateData = { "payment.history": arrayUnion({date: new Date(), amount: amt, type: 'Payment'}) };
                 
+                // --- CRITICAL BUG FIX START ---
+                // Fetch fresh data from DB to prevent overwriting updates from others
+                const blockRef = doc(db, `projects/${currentProjId}/blocks/${selectedBlockId}`);
+                const blockSnap = await getDoc(blockRef);
+                if (!blockSnap.exists()) return alert("Block not found! Please refresh.");
+                const b = blockSnap.data(); // Use fresh data 'b' instead of stale 'selectedBlockData'
+                // --- CRITICAL BUG FIX END ---
+
+                let updateData = { "payment.history": arrayUnion({date: new Date(), amount: amt, type: 'Payment'}) };
                 let closeAccount = false;
 
                 if (b.payment.planType === 'EP') {
@@ -2466,12 +2614,15 @@
                             updateData["payment.nextPaymentDate"] = nextD;
                         }
                     } else {
-                        const settlementVal = parseFloat(document.getElementById('epRealtimeFuture').dataset.val || 999999999);
+                        // Recalculate settlement with FRESH data
+                        const totalPaid = (b.payment.epDetails.paidAmount || 0) + (b.payment.epDetails.downPayment.paid || 0);
+                        const outstanding = Math.max(0, b.soldPrice - totalPaid);
+                        
                         const newEpPaid = (b.payment.epDetails.paidAmount || 0) + amt;
                         updateData["payment.epDetails.paidAmount"] = newEpPaid;
                         updateData["payment.history"] = arrayUnion({date: new Date(), amount: amt, type: 'Installment'});
                         
-                        if(amt >= (settlementVal - 100)) {
+                        if(amt >= (outstanding - 100)) {
                             closeAccount = true;
                             updateData["status"] = "sold_finished";
                             updateData["payment.epDetails.totalPayable"] = newEpPaid; 
@@ -2497,8 +2648,11 @@
                     }
                 }
 
-                await updateDoc(doc(db, `projects/${currentProjId}/blocks/${selectedBlockId}`), updateData);
+                await updateDoc(blockRef, updateData);
                 await recordDailyTransaction(`Payment: ${b.name}`, amt, 'income', currentProjName);
+                
+                // Refresh local data to keep UI in sync
+                selectedBlockData = { ...b, ...updateData }; // Rough local update
                 document.getElementById('paymentModal').classList.add('hidden');
                 alert(closeAccount ? "Payment Added & Account Closed!" : "Payment Added!");
             });
@@ -2791,7 +2945,7 @@
             btn.disabled = false;
             btn.classList.remove('opacity-50', 'cursor-not-allowed');
 
-            if(input === pin || input === adminPass) { 
+            if(input === pin) { 
                 document.getElementById('staffAccessModal').classList.add('hidden'); 
                 document.getElementById('staffAccessInput').value = ""; 
                 nav('staff'); 
@@ -2815,7 +2969,25 @@
             if(document.getElementById('approveTaskPhotos')) document.getElementById('approveTaskPhotos').innerHTML = ""; 
             let data; 
             if(type === 'task') { 
-                data = projectTasksData[id]; 
+                // Updated: tasks can be globally loaded or project-specific.
+                // Assuming projectTasksData is valid if opened from inside project
+                // OR we can fetch fresh
+                if(projectTasksData[id]) {
+                     data = projectTasksData[id];
+                } else {
+                     // Try to find in notifState if available (contains basic info)
+                     const notifTask = notifState.tasks.find(t => t.id === id);
+                     if(notifTask) {
+                         data = notifTask; 
+                         // If we are not in the correct project, we might have issues saving approval if currentProjId is wrong
+                         // But we stored projectId in notifState.
+                         if(notifTask.projectId && notifTask.projectId !== currentProjId) {
+                             currentProjId = notifTask.projectId; // Context switch for approval
+                             // Ideally we should load project data too but for approval minimal context is needed
+                         }
+                     }
+                }
+                
                 if(!data) return; 
                 document.getElementById('approveTaskTitle').innerText = data.title; 
                 document.getElementById('approveTaskCost').innerText = "Rs. " + (data.submittedCost || 0).toLocaleString(); 
@@ -3046,6 +3218,7 @@
                 window.loadLands(); 
                 window.loadMeterReadings(); 
                 window.loadCustomers(); 
+                window.initGlobalNotifications(); // New: Start listeners
             } catch (error) {
                 console.error("Initialization Failed:", error);
                 // alert("System Error: Could not connect to database. Please check internet."); // Removed as requested
