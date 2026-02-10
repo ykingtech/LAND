@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sithuliya Admin Pro - Ultimate Suite</title>
+    <title>Sithuliya Admin Pro - Ultimate Suite (Fixed V3)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
@@ -44,6 +44,8 @@
         .report-header-bg { background-color: #e0e0e0; font-weight: bold; text-transform: uppercase; padding: 5px; border: 1px solid #000; font-size: 13px; margin-top: 15px; }
         
         .modal-content-scroll { max-height: 85vh; overflow-y: auto; }
+        /* Dropdown Styling */
+        .dropdown { position: relative; display: inline-block; width: 100%; }
         .dropdown-content { display: none; position: absolute; background-color: #fff; min-width: 100%; overflow: auto; border: 1px solid #ddd; z-index: 50; max-height: 150px; border-radius: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
         .dropdown-content div { color: black; padding: 12px 16px; text-decoration: none; display: block; cursor: pointer; }
         .dropdown-content div:hover {background-color: #f3f4f6;}
@@ -61,6 +63,8 @@
         .dyn-row { display: flex; gap: 5px; margin-bottom: 5px; align-items: center; }
         .dyn-del-btn { color: #ef4444; cursor: pointer; padding: 2px 5px; }
         .section-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-bottom: 10px; }
+
+        .report-form-section { margin-bottom: 2rem; border: 1px solid #e2e8f0; padding: 1.5rem; border-radius: 0.75rem; background: white; }
     </style>
 </head>
 <body class="bg-gray-100 h-screen overflow-hidden text-gray-800">
@@ -97,99 +101,12 @@
         <img id="imgModalSrc" class="max-h-[90vh] max-w-full rounded-lg shadow-2xl border border-gray-600">
     </div>
 
-    <!-- Staff Access Modal -->
-    <div id="staffAccessModal" class="hidden fixed inset-0 z-[60] bg-black/80 flex items-center justify-center backdrop-blur-sm">
-        <div class="bg-white p-6 rounded-2xl w-full max-w-sm mx-4 shadow-2xl text-center">
-            <h3 class="text-lg font-bold mb-4 text-slate-800">Staff Access Required</h3>
-            <input type="password" id="staffAccessInput" placeholder="Enter Access Code" class="w-full p-3 border rounded-lg mb-4 text-center bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none">
-            <div class="flex gap-2">
-                <button onclick="document.getElementById('staffAccessModal').classList.add('hidden')" class="flex-1 py-2 bg-gray-200 rounded-lg text-gray-600 font-bold">Cancel</button>
-                <button onclick="verifyStaffAccess()" class="flex-1 py-2 bg-blue-600 text-white rounded-lg font-bold shadow hover:bg-blue-700">Access</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Sell/Booking Modal -->
-    <div id="sellModal" class="hidden fixed inset-0 z-50 bg-black/70 flex items-center justify-center backdrop-blur-sm p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-            <div class="p-4 border-b flex justify-between items-center bg-gray-50">
-                <h3 class="font-bold text-xl text-slate-800">New Booking: <span id="sellBlockName" class="text-blue-600"></span></h3>
-                <button onclick="closeSellModal()" class="text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
-            </div>
-            <div class="p-6 overflow-y-auto flex-1 grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                    <h4 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Customer Details</h4>
-                    <input type="text" id="cusNIC" placeholder="NIC Number" class="w-full p-3 border rounded-lg mb-3 bg-gray-50">
-                    <input type="text" id="cusName" placeholder="Full Name" class="w-full p-3 border rounded-lg mb-3 bg-gray-50">
-                    <input type="text" id="cusPhone" placeholder="Phone Number" class="w-full p-3 border rounded-lg mb-3 bg-gray-50">
-                    <textarea id="cusAddress" placeholder="Address" class="w-full p-3 border rounded-lg mb-3 bg-gray-50" rows="2"></textarea>
-                    
-                    <div class="relative">
-                        <label class="block text-xs font-bold text-gray-500 mb-1">Sales Person (for 0.75% Comm)</label>
-                        <input type="text" placeholder="Select Staff..." id="salesPersonInput" onkeyup="filterSalesFunction()" onclick="toggleSalesDropdown()" class="w-full p-3 border rounded-lg bg-white">
-                        <div id="salesDropdown" class="dropdown-content"></div>
-                    </div>
-                </div>
-                <div class="bg-blue-50 p-6 rounded-xl border border-blue-100">
-                    <h4 class="text-sm font-bold text-blue-800 uppercase tracking-widest mb-4">Payment Structure</h4>
-                    <div class="mb-4">
-                        <label class="block text-xs font-bold text-gray-500 mb-1">Final Agreed Price</label>
-                        <input type="number" id="finalPrice" class="w-full p-3 border-2 border-blue-200 rounded-lg text-lg font-bold text-blue-900" oninput="calculateEP()">
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-xs font-bold text-gray-500 mb-1">Plan Type</label>
-                        <select id="payPlanType" class="w-full p-3 border rounded-lg font-bold" onchange="toggleEPFields()">
-                            <option value="Cash">Cash Sale (Full)</option>
-                            <option value="EP">Easy Payment (Installment)</option>
-                        </select>
-                    </div>
-
-                    <div id="cashFields">
-                        <label class="block text-xs font-bold text-gray-500 mb-1">Advance Payment</label>
-                        <input type="number" id="cashAdvancePay" class="w-full p-3 border rounded-lg font-bold text-green-700">
-                    </div>
-
-                    <div id="epFields" class="hidden space-y-3">
-                        <div class="flex gap-2">
-                            <div class="flex-1"><label class="text-[10px] font-bold text-gray-500 uppercase">Down Payment %</label><input type="number" id="downPayPct" value="40" class="w-full p-2 border rounded text-center" oninput="calculateEP()"></div>
-                            <div class="flex-1"><label class="text-[10px] font-bold text-gray-500 uppercase">Amount</label><input type="number" id="downPayAmount" class="w-full p-2 border rounded bg-gray-200 font-bold" readonly></div>
-                        </div>
-                        <div><label class="text-[10px] font-bold text-gray-500 uppercase">Initial Booking Fee</label><input type="number" id="bookingFee" class="w-full p-2 border rounded font-bold text-blue-700" oninput="calculateEP()"></div>
-                        <div class="text-xs text-red-500 font-bold text-right">Balance DP: <span id="downPayBalanceDisp">0.00</span></div>
-                        
-                        <div class="border-t border-blue-200 my-2 pt-2"></div>
-                        <div class="flex gap-2">
-                            <div class="flex-1"><label class="text-[10px] font-bold text-gray-500 uppercase">Interest Rate %</label><input type="number" id="epRate" value="15" class="w-full p-2 border rounded text-center" oninput="calculateEP()"></div>
-                            <div class="flex-1"><label class="text-[10px] font-bold text-gray-500 uppercase">Months</label><input type="number" id="epMonths" value="60" class="w-full p-2 border rounded text-center" oninput="calculateEP()"></div>
-                            <div class="flex-1"><label class="text-[10px] font-bold text-gray-500 uppercase">Cycle (Days)</label><input type="number" id="epCycle" value="30" class="w-full p-2 border rounded text-center"></div>
-                        </div>
-                        <div class="bg-white p-3 rounded border">
-                            <div class="flex justify-between text-xs mb-1"><span>Loan Amount:</span><input id="loanAmount" class="text-right font-bold w-24 border-none" readonly></div>
-                            <div class="flex justify-between text-xs mb-1"><span>Total Payable (Reducing Bal):</span><span id="epTotalPayable" class="font-bold">0.00</span></div>
-                            <div class="flex justify-between text-sm font-bold text-blue-800 mt-2"><span>Monthly (EMI):</span><span id="epMonthlyInst">0.00</span></div>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-4 grid grid-cols-2 gap-2">
-                        <div><label class="text-[10px] font-bold text-gray-500">Plan Fee</label><input type="number" id="planFee" class="w-full p-2 border rounded text-xs"></div>
-                        <div><label class="text-[10px] font-bold text-gray-500">Deed Fee</label><input type="number" id="deedFee" class="w-full p-2 border rounded text-xs"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="p-4 border-t bg-gray-50 flex justify-end gap-3">
-                <button onclick="processSale(false)" class="px-6 py-3 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-900 shadow">Complete Sale</button>
-                <button onclick="processSale(true)" class="px-6 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 shadow"><i class="fas fa-print mr-2"></i> Save & Print</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Login Screen -->
     <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1600596542815-2a429b08e695?q=80&w=2070&auto=format&fit=crop');">
         <div class="absolute inset-0 bg-blue-900/60"></div>
         <div class="relative z-10 glass-dark p-10 rounded-3xl shadow-2xl w-11/12 max-w-md text-center border border-blue-400/30">
             <div class="mb-8">
                 <div class="flex justify-center mb-4">
-                    <!-- FIXED LOGO -->
                     <img src="ico.jpeg" onerror="this.src='https://placehold.co/150x150/1e3a8a/ffffff?text=Sithuliya'" class="w-32 h-32 rounded-full border-4 border-blue-500 shadow-xl object-cover">
                 </div>
                 <h1 class="text-4xl text-white luxury-font tracking-wide">Sithuliya</h1>
@@ -202,12 +119,12 @@
         </div>
     </div>
 
+    <!-- Main App Container -->
     <div id="mainApp" class="hidden flex h-full">
         <!-- Sidebar -->
         <div id="sidebar" class="w-64 bg-slate-900 text-white shadow-2xl flex flex-col z-40 fixed md:relative h-full transition-transform transform -translate-x-full md:translate-x-0">
             <div class="p-6 border-b border-slate-800 flex flex-col items-center relative">
                 <button onclick="toggleSidebar()" class="absolute top-4 right-4 md:hidden text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
-                <!-- FIXED LOGO SIDEBAR -->
                 <img src="ico.jpeg" onerror="this.src='https://placehold.co/150x150/1e3a8a/ffffff?text=Sithuliya'" class="w-16 h-16 rounded-full border-2 border-blue-500 mb-3 object-cover shadow-lg">
                 <h2 class="text-2xl luxury-font text-blue-400">Sithuliya <span class="text-[10px] font-sans text-slate-500 block tracking-widest mt-1 text-center">ADMIN CONSOLE</span></h2>
             </div>
@@ -336,8 +253,8 @@
                                 <h3 class="font-bold text-sm uppercase text-gray-400 mb-4 flex items-center tracking-wider">Add Land Blocks</h3>
                                 <div class="flex flex-wrap gap-2 mb-2">
                                     <input type="text" id="blockName" placeholder="No (e.g. A1)" class="p-2 border rounded w-20 text-sm focus:ring-blue-500">
-                                    <input type="number" id="blockSize" placeholder="Perches" class="p-2 border rounded w-24 text-sm focus:ring-blue-500" oninput="calcBlockPrice()" onkeyup="calcBlockPrice()">
-                                    <input type="number" id="blockPerchPrice" placeholder="Price/Perch" class="p-2 border rounded w-32 text-sm focus:ring-blue-500" oninput="calcBlockPrice()" onkeyup="calcBlockPrice()">
+                                    <input type="number" id="blockSize" placeholder="Perches" class="p-2 border rounded w-24 text-sm focus:ring-blue-500" oninput="calcBlockPrice()" onkeyup="calcBlockPrice()" step="any">
+                                    <input type="number" id="blockPerchPrice" placeholder="Price/Perch" class="p-2 border rounded w-32 text-sm focus:ring-blue-500" oninput="calcBlockPrice()" onkeyup="calcBlockPrice()" step="0.01">
                                     <input type="number" id="blockPrice" placeholder="Total Price" class="p-2 border rounded flex-1 bg-gray-50 font-bold text-slate-700 text-sm" readonly>
                                     <button id="addBlockBtn" class="bg-blue-600 text-white px-4 rounded hover:bg-blue-700 shadow"><i class="fas fa-plus"></i></button>
                                 </div>
@@ -414,7 +331,7 @@
                                 <div class="space-y-4">
                                     <div class="flex gap-4"><div class="flex-1"><label class="block text-xs font-bold text-gray-500 mb-1">Date</label><input type="date" id="txDate" class="w-full p-2 border rounded bg-gray-50 focus:ring-blue-500"></div><div class="flex-1"><label class="block text-xs font-bold text-gray-500 mb-1">Voucher No</label><input type="text" id="txVno" class="w-full p-2 border rounded bg-gray-50 focus:ring-blue-500"></div></div>
                                     <div><label class="block text-xs font-bold text-gray-500 mb-1">Description</label><input type="text" id="txDesc" class="w-full p-2 border rounded bg-gray-50 focus:ring-blue-500"></div>
-                                    <div class="flex gap-4"><div class="flex-1"><label class="block text-xs font-bold text-gray-500 mb-1">Type</label><select id="txType" class="w-full p-2 border rounded bg-gray-50 focus:ring-blue-500"><option value="Expense">Expense</option><option value="Income">Income</option></select></div><div class="flex-1"><label class="block text-xs font-bold text-gray-500 mb-1">Amount</label><input type="number" id="txAmount" class="w-full p-2 border rounded bg-gray-50 font-bold focus:ring-blue-500"></div></div>
+                                    <div class="flex gap-4"><div class="flex-1"><label class="block text-xs font-bold text-gray-500 mb-1">Type</label><select id="txType" class="w-full p-2 border rounded bg-gray-50 focus:ring-blue-500"><option value="Expense">Expense</option><option value="Income">Income</option></select></div><div class="flex-1"><label class="block text-xs font-bold text-gray-500 mb-1">Amount</label><input type="number" id="txAmount" class="w-full p-2 border rounded bg-gray-50 font-bold focus:ring-blue-500" step="0.01"></div></div>
                                     <div><label class="block text-xs font-bold text-gray-500 mb-1">Category</label><select id="txCategory" class="w-full p-2 border rounded bg-gray-50 focus:ring-blue-500"><optgroup label="Income"><option value="Sales">Revenue</option><option value="Other Income">Other</option></optgroup><optgroup label="Expenses"><option value="Admin Expense">Admin</option><option value="Petty Cash">Petty Cash</option></optgroup></select></div>
                                     <div class="flex items-center gap-2 pt-2"><input type="checkbox" id="txIsPetty" class="w-4 h-4 text-blue-500 rounded"><label for="txIsPetty" class="text-sm font-bold text-slate-700">Petty Cash Record</label></div>
                                     <button onclick="saveTransaction()" class="w-full bg-slate-900 text-white font-bold py-3 rounded-xl hover:bg-slate-800 mt-4 shadow-lg">SAVE TRANSACTION</button>
@@ -426,7 +343,7 @@
                                     <div><label class="block text-xs font-bold text-gray-500 mb-1">Date</label><input type="date" id="bsDate" class="w-full p-2 border rounded bg-gray-50 focus:ring-blue-500"></div>
                                     <div><label class="block text-xs font-bold text-gray-500 mb-1">Account</label><input type="text" id="bsName" class="w-full p-2 border rounded bg-gray-50 focus:ring-blue-500"></div>
                                     <div><label class="block text-xs font-bold text-gray-500 mb-1">Type</label><select id="bsType" class="w-full p-2 border rounded bg-gray-50 focus:ring-blue-500"><option value="Non-Current Asset">Asset (Fixed)</option><option value="Current Asset">Asset (Current)</option><option value="Equity">Equity</option><option value="Current Liability">Liability</option></select></div>
-                                    <div><label class="block text-xs font-bold text-gray-500 mb-1">Value</label><input type="number" id="bsAmount" class="w-full p-2 border rounded bg-gray-50 font-bold focus:ring-blue-500"></div>
+                                    <div><label class="block text-xs font-bold text-gray-500 mb-1">Value</label><input type="number" id="bsAmount" class="w-full p-2 border rounded bg-gray-50 font-bold focus:ring-blue-500" step="0.01"></div>
                                     <button onclick="saveBSItem()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 mt-4 shadow-lg">SAVE ITEM</button>
                                 </div>
                             </div>
@@ -460,7 +377,9 @@
         </div>
     </div>
 
-    <!-- RE-INSERTED MISSING MODALS -->
+    <!-- MODALS SECTION - All Modals Placed Here for Safety -->
+
+    <!-- 1. New Project Modal -->
     <div id="newProjectModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm">
         <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md mx-4">
             <h2 class="text-xl font-bold mb-6 text-slate-800">Create New Project</h2>
@@ -475,6 +394,7 @@
         </div>
     </div>
 
+    <!-- 2. New Land Modal -->
     <div id="newLandModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm">
         <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md mx-4">
             <h2 class="text-xl font-bold mb-6 text-slate-800">Acquire Land</h2>
@@ -490,7 +410,7 @@
         </div>
     </div>
 
-    <!-- STAFF MODAL -->
+    <!-- 3. New Staff Modal -->
     <div id="newStaffModal" class="hidden fixed inset-0 bg-black/50 z-[60] flex items-center justify-center backdrop-blur-sm">
         <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md mx-4 relative">
             <button onclick="document.getElementById('newStaffModal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500"><i class="fas fa-times"></i></button>
@@ -512,7 +432,7 @@
         </div>
     </div>
 
-    <!-- NEW: STAFF PASSWORD CHANGE MODAL -->
+    <!-- 4. Staff Password Change Modal -->
     <div id="staffPassChangeModal" class="hidden fixed inset-0 bg-black/50 z-[60] flex items-center justify-center backdrop-blur-sm">
         <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm mx-4 relative">
             <button onclick="document.getElementById('staffPassChangeModal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500"><i class="fas fa-times"></i></button>
@@ -525,9 +445,9 @@
         </div>
     </div>
 
-    <!-- NEW: STAFF DETAIL MODAL -->
+    <!-- 5. Staff Detail Modal -->
     <div id="staffDetailModal" class="hidden fixed inset-0 bg-black/50 z-[60] flex items-center justify-center backdrop-blur-sm p-4 overflow-y-auto">
-        <div class="bg-white p-6 rounded-2xl w-full max-w-2xl mx-4 relative shadow-2xl my-8">
+        <div class="bg-white p-6 rounded-2xl w-full max-w-3xl mx-4 relative shadow-2xl my-8">
             <button onclick="document.getElementById('staffDetailModal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500"><i class="fas fa-times"></i></button>
             <div class="flex flex-col md:flex-row gap-6">
                 <div class="w-full md:w-1/3 text-center">
@@ -543,6 +463,31 @@
                         <div class="flex justify-between"><span class="text-gray-500">Salary</span><span id="sdSalary" class="font-bold text-green-600"></span></div>
                         <div class="flex justify-between"><span class="text-gray-500">Joined</span><span id="sdJoined" class="font-bold"></span></div>
                     </div>
+
+                    <!-- ATTENDANCE SECTION -->
+                    <div id="sdLocationSection" class="bg-blue-50 p-4 rounded-xl border border-blue-200 mb-4 hidden">
+                         <h4 class="font-bold text-sm text-blue-900 mb-2 flex justify-between">
+                            <span>Pending Work Location</span>
+                            <button onclick="approveStaffLocation()" class="bg-green-600 text-white px-2 py-1 rounded text-xs">Approve</button>
+                         </h4>
+                         <p class="text-xs text-gray-600 mb-2">Staff has requested a new work location.</p>
+                         <a id="sdMapLink" href="#" target="_blank" class="text-blue-600 underline text-xs font-bold">View on Google Maps</a>
+                    </div>
+                    
+                    <!-- NEW: LEAVE REQUESTS SECTION -->
+                    <div id="sdLeaveSection" class="bg-yellow-50 p-4 rounded-xl border border-yellow-200 mb-4 hidden">
+                        <h4 class="font-bold text-sm text-yellow-900 mb-2">Pending Leave Requests</h4>
+                        <div id="sdLeaveList" class="space-y-2"></div>
+                    </div>
+                    
+                    <h4 class="font-bold text-sm text-slate-700 mb-2 mt-4">Attendance History</h4>
+                    <div class="h-40 overflow-y-auto border rounded-lg p-2 bg-slate-50 text-xs mb-4">
+                         <table class="w-full text-left">
+                             <thead class="bg-gray-200"><tr class="font-bold"><th>Time</th><th>Type</th><th>Photo</th><th>Action</th></tr></thead>
+                             <tbody id="sdAttendanceList"></tbody>
+                         </table>
+                    </div>
+
                     <h4 class="font-bold text-sm text-slate-700 mb-2">Earnings History</h4>
                     <div class="h-48 overflow-y-auto border rounded-lg p-2 bg-slate-50 text-xs">
                         <table class="w-full text-left">
@@ -554,7 +499,11 @@
             </div>
         </div>
     </div>
+    
+    <!-- 6. Task Approve Modal -->
+    <div id="taskApproveModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"><div class="bg-white rounded-2xl w-full max-w-4xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"><div class="p-6 border-b flex justify-between items-center bg-gray-50"><h2 class="text-xl font-bold text-slate-800" id="taskModalHeader">Review</h2><button onclick="document.getElementById('taskApproveModal').classList.add('hidden')" class="text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button></div><div class="p-6 overflow-y-auto flex-1"><h3 id="approveTaskTitle" class="text-2xl font-bold text-slate-800 mb-2"></h3><p class="text-lg mb-4">Cost: <span id="approveTaskCost" class="font-bold text-green-600 text-2xl"></span></p><p class="text-sm mb-4 bg-yellow-50 p-2 rounded border border-yellow-200" id="approveTaskTimeInfo"></p><div id="approveTaskPhotos" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div></div><div class="p-6 border-t bg-gray-50 flex justify-end"><button id="confirmApproveTaskBtn" class="px-8 py-3 bg-green-600 text-white rounded-lg font-bold shadow hover:bg-green-700">APPROVE</button></div></div></div>
 
+    <!-- 7. New Task Modal -->
     <div id="newTaskModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm">
         <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md mx-4">
             <h3 class="font-bold text-lg mb-4">Assign Site Task</h3>
@@ -568,6 +517,7 @@
         </div>
     </div>
 
+    <!-- 8. Expense Modal -->
     <div id="expenseModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm">
         <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-sm mx-4">
             <h3 class="font-bold text-lg mb-4 text-red-600">Add Miscellaneous Expense</h3>
@@ -580,6 +530,7 @@
         </div>
     </div>
 
+    <!-- 9. Land Payment Modal -->
     <div id="landPaymentModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm">
         <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-sm mx-4">
             <h3 class="font-bold text-lg mb-2">Land Payment</h3>
@@ -591,6 +542,7 @@
         </div>
     </div>
     
+    <!-- 10. Payment Modal -->
     <div id="paymentModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center overflow-y-auto">
         <div class="bg-white p-6 rounded-2xl w-full max-w-2xl mx-4 my-10 shadow-2xl relative modal-content-scroll">
             <button onclick="document.getElementById('paymentModal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
@@ -632,8 +584,8 @@
 
                 <div id="epInstallmentInfo" class="hidden mt-4">
                      <div class="flex gap-2">
-                         <div class="bg-blue-50 px-2 py-1 rounded border border-blue-100"><span class="text-[9px] font-bold text-blue-400 uppercase block">Current Rate</span><span id="dispRate" class="text-xs font-bold text-blue-700"></span></div>
-                         <div class="bg-blue-50 px-2 py-1 rounded border border-blue-100"><span class="text-[9px] font-bold text-blue-400 uppercase block">Plan Period</span><span id="dispMonths" class="text-xs font-bold text-blue-700"></span></div>
+                         <div class="bg-blue-50 px-2 py-1 rounded border border-blue-100"><span class="text-[9px] font-bold text-blue-400 uppercase">Current Rate</span><span id="dispRate" class="text-xs font-bold text-blue-700 ml-1"></span></div>
+                         <div class="bg-blue-50 px-2 py-1 rounded border border-blue-100"><span class="text-[9px] font-bold text-blue-400 uppercase">Plan Period</span><span id="dispMonths" class="text-xs font-bold text-blue-700 ml-1"></span></div>
                     </div>
                     <div class="mt-3 grid grid-cols-2 gap-4">
                         <div class="bg-indigo-50 p-2 rounded-lg border border-indigo-100">
@@ -681,134 +633,127 @@
             <div class="overflow-y-auto max-h-40 border rounded-lg"><table class="w-full text-xs text-left"><tbody id="paymentHistoryList" class="divide-y"></tbody></table></div>
         </div>
     </div>
-    
-    <div id="taskApproveModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"><div class="bg-white rounded-2xl w-full max-w-4xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"><div class="p-6 border-b flex justify-between items-center bg-gray-50"><h2 class="text-xl font-bold text-slate-800" id="taskModalHeader">Review</h2><button onclick="document.getElementById('taskApproveModal').classList.add('hidden')" class="text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button></div><div class="p-6 overflow-y-auto flex-1"><h3 id="approveTaskTitle" class="text-2xl font-bold text-slate-800 mb-2"></h3><p class="text-lg mb-4">Cost: <span id="approveTaskCost" class="font-bold text-green-600 text-2xl"></span></p><p class="text-sm mb-4 bg-yellow-50 p-2 rounded border border-yellow-200" id="approveTaskTimeInfo"></p><div id="approveTaskPhotos" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div></div><div class="p-6 border-t bg-gray-50 flex justify-end"><button id="confirmApproveTaskBtn" class="px-8 py-3 bg-green-600 text-white rounded-lg font-bold shadow hover:bg-green-700">APPROVE</button></div></div></div>
 
+    <!-- 11. New Project Report Data Modal -->
     <div id="newProjectReportDataModal" class="hidden fixed inset-0 bg-black/90 z-[70] flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl w-full max-w-6xl h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+        <div class="bg-white rounded-2xl w-full max-w-4xl h-[90vh] flex flex-col shadow-2xl overflow-hidden">
             <div class="p-4 border-b flex justify-between items-center bg-slate-50">
                 <h2 class="text-xl font-bold text-slate-800"><i class="fas fa-file-contract mr-2 text-blue-600"></i>Project Report Data Configuration</h2>
                 <button onclick="document.getElementById('newProjectReportDataModal').classList.add('hidden')" class="text-gray-400 hover:text-red-500 transition"><i class="fas fa-times text-2xl"></i></button>
             </div>
             
             <div class="flex-1 overflow-y-auto p-8 bg-gray-50/50">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <!-- Left Column: Basic Info & Purchase -->
-                    <div class="space-y-6">
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-blue-100">
-                            <div class="section-header">
-                                <h3 class="font-bold text-blue-900 text-sm uppercase tracking-wide">1. Basic Information</h3>
-                                <button onclick="addCustomField('basic')" class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200"><i class="fas fa-plus"></i></button>
-                            </div>
-                            <div class="grid grid-cols-2 gap-4 mb-4">
-                                <div><label class="block text-xs font-bold text-gray-500">Project Name</label><input id="rpt_name" class="w-full p-2 border rounded bg-gray-100 font-bold" readonly></div>
-                                <div><label class="block text-xs font-bold text-gray-500">Location</label><input id="rpt_location" class="w-full p-2 border rounded bg-gray-100" readonly></div>
-                            </div>
-                            <div class="mb-4"><label class="block text-xs font-bold text-gray-500">Land Owner</label><input id="rpt_owner" class="w-full p-2 border rounded focus:ring-blue-500"></div>
-                            <div class="mb-4"><label class="block text-xs font-bold text-gray-500">Introducer</label><input id="rpt_introducer" class="w-full p-2 border rounded focus:ring-blue-500"></div>
-                            
-                            <h4 class="font-bold text-xs text-slate-700 mt-4 mb-2">Land Extent</h4>
-                            <div class="flex gap-2">
-                                <input type="number" id="rpt_acres" placeholder="A" class="w-full p-2 border rounded text-center" oninput="calcReportTotals()">
-                                <input type="number" id="rpt_roods" placeholder="R" class="w-full p-2 border rounded text-center" oninput="calcReportTotals()">
-                                <input type="number" id="rpt_perches" placeholder="P" class="w-full p-2 border rounded text-center" oninput="calcReportTotals()">
-                            </div>
-                            <div class="mt-2 text-right text-xs font-bold text-blue-600">Total: <input id="rpt_tot_perches" class="w-20 text-right bg-transparent border-none font-bold" readonly> P</div>
-                            <div id="custom_basic_container" class="mt-4 space-y-2"></div>
+                <div class="flex flex-col gap-6">
+                    
+                    <!-- Section 1 -->
+                    <div class="report-form-section">
+                        <div class="section-header">
+                            <h3 class="font-bold text-blue-900 text-sm uppercase tracking-wide">1. Basic Information</h3>
+                            <button onclick="addCustomField('basic')" class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200"><i class="fas fa-plus"></i></button>
                         </div>
-
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-blue-100">
-                            <div class="section-header">
-                                <h3 class="font-bold text-blue-900 text-sm uppercase tracking-wide">2. Purchase Cost</h3>
-                                <button onclick="addCustomField('purchase')" class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200"><i class="fas fa-plus"></i></button>
-                            </div>
-                            <div class="mb-2"><label class="block text-xs font-bold text-gray-500">Purchase Price</label><input type="number" id="rpt_purchase_price" class="w-full p-2 border rounded font-bold text-slate-800" oninput="calcReportTotals()"></div>
-                            <div class="grid grid-cols-2 gap-4 mb-2">
-                                <div><label class="block text-xs font-bold text-gray-500">Agreed Value</label><input id="rpt_agreed_val" class="w-full p-2 border rounded bg-gray-100" readonly></div>
-                                <div><label class="block text-xs font-bold text-gray-500">Price/Perch</label><input id="rpt_agreed_pp" class="w-full p-2 border rounded bg-gray-100" readonly></div>
-                            </div>
-                            
-                            <div class="space-y-2 mt-4">
-                                <div class="flex items-center gap-2"><span class="text-xs w-24">Title Ins %</span><input type="number" id="rpt_title_ins_pct" class="w-16 p-1 border rounded text-center" oninput="calcReportTotals()"><input id="rpt_title_ins" class="flex-1 p-1 border rounded bg-gray-100 text-right" readonly></div>
-                                <div class="flex items-center gap-2"><span class="text-xs w-24">Stamp Duty %</span><input type="number" id="rpt_stamp_pct" class="w-16 p-1 border rounded text-center" oninput="calcReportTotals()"><input id="rpt_stamp" class="flex-1 p-1 border rounded bg-gray-100 text-right" readonly></div>
-                                <div class="flex items-center gap-2"><span class="text-xs w-24">Legal Fees %</span><input type="number" id="rpt_legal_pct" class="w-16 p-1 border rounded text-center" oninput="calcReportTotals()"><input id="rpt_legal" class="flex-1 p-1 border rounded bg-gray-100 text-right" readonly></div>
-                                <div class="flex items-center gap-2"><span class="text-xs w-24">Valuation %</span><input type="number" id="rpt_val_pct" class="w-16 p-1 border rounded text-center" oninput="calcReportTotals()"><input id="rpt_valuation" class="flex-1 p-1 border rounded bg-gray-100 text-right" readonly></div>
-                                <div class="flex items-center gap-2"><span class="text-xs w-24 font-bold">Title Reports</span><input type="number" id="rpt_title_rep" class="flex-1 p-1 border rounded text-right"></div>
-                                <div class="flex items-center gap-2"><span class="text-xs w-24 font-bold">Intro Comm.</span><input type="number" id="rpt_intro_comm" class="flex-1 p-1 border rounded text-right"></div>
-                            </div>
-                            <div id="custom_purchase_container" class="mt-4 space-y-2"></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div><label class="block text-xs font-bold text-gray-500">Project Name</label><input id="rpt_name" class="w-full p-2 border rounded bg-gray-100 font-bold" readonly></div>
+                            <div><label class="block text-xs font-bold text-gray-500">Location</label><input id="rpt_location" class="w-full p-2 border rounded bg-gray-100" readonly></div>
                         </div>
+                        <div class="mb-4"><label class="block text-xs font-bold text-gray-500">Land Owner</label><input id="rpt_owner" class="w-full p-2 border rounded focus:ring-blue-500"></div>
+                        <div class="mb-4"><label class="block text-xs font-bold text-gray-500">Introducer</label><input id="rpt_introducer" class="w-full p-2 border rounded focus:ring-blue-500"></div>
+                        <h4 class="font-bold text-xs text-slate-700 mt-4 mb-2">Land Extent</h4>
+                        <div class="flex gap-2">
+                            <input type="number" id="rpt_acres" placeholder="A" class="w-full p-2 border rounded text-center" oninput="calcReportTotals()">
+                            <input type="number" id="rpt_roods" placeholder="R" class="w-full p-2 border rounded text-center" oninput="calcReportTotals()">
+                            <input type="number" id="rpt_perches" placeholder="P" class="w-full p-2 border rounded text-center" oninput="calcReportTotals()">
+                        </div>
+                        <div class="mt-2 text-right text-xs font-bold text-blue-600">Total: <input id="rpt_tot_perches" class="w-20 text-right bg-transparent border-none font-bold" readonly> P</div>
+                        <div id="custom_basic_container" class="mt-4 space-y-2"></div>
                     </div>
 
-                    <!-- Middle Column: Survey & Dev -->
-                    <div class="space-y-6">
-                         <div class="bg-white p-6 rounded-xl shadow-sm border border-blue-100">
-                            <h3 class="font-bold text-blue-900 border-b pb-2 mb-4 text-sm uppercase tracking-wide">3. Land Allocation</h3>
-                            <div class="flex gap-4">
-                                <div><label class="block text-xs font-bold text-gray-500">Roads %</label><input type="number" id="rpt_road_pct" class="w-full p-2 border rounded" oninput="calcReportTotals()"></div>
-                                <div><label class="block text-xs font-bold text-gray-500">Reservation %</label><input type="number" id="rpt_res_pct" class="w-full p-2 border rounded" oninput="calcReportTotals()"></div>
-                                <div><label class="block text-xs font-bold text-blue-600">Sellable %</label><input id="rpt_sell_pct" class="w-full p-2 border rounded bg-blue-50 font-bold" readonly></div>
-                            </div>
-                            <div class="mt-2"><label class="block text-xs font-bold text-gray-500">Project Period (Months)</label><input type="number" id="rpt_period" class="w-full p-2 border rounded"></div>
+                    <!-- Section 2 -->
+                    <div class="report-form-section">
+                        <div class="section-header">
+                            <h3 class="font-bold text-blue-900 text-sm uppercase tracking-wide">2. Purchase Cost</h3>
+                            <button onclick="addCustomField('purchase')" class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200"><i class="fas fa-plus"></i></button>
                         </div>
-
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-blue-100 h-96 overflow-y-auto">
-                            <div class="flex justify-between items-center border-b pb-2 mb-4">
-                                <h3 class="font-bold text-blue-900 text-sm uppercase tracking-wide">4. Survey Costs</h3>
-                                <span class="text-xs font-bold text-slate-500">Total: <span id="rpt_survey_total_disp">0</span></span>
-                            </div>
-                            <div id="surveyRows" class="space-y-3 text-xs"></div>
+                        <div class="mb-2"><label class="block text-xs font-bold text-gray-500">Purchase Price</label><input type="number" id="rpt_purchase_price" class="w-full p-2 border rounded font-bold text-slate-800" oninput="calcReportTotals()"></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
+                            <div><label class="block text-xs font-bold text-gray-500">Agreed Value</label><input id="rpt_agreed_val" class="w-full p-2 border rounded bg-gray-100" readonly></div>
+                            <div><label class="block text-xs font-bold text-gray-500">Price/Perch</label><input id="rpt_agreed_pp" class="w-full p-2 border rounded bg-gray-100" readonly></div>
                         </div>
-                        
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-blue-100">
-                             <div class="section-header">
-                                 <h3 class="font-bold text-blue-900 text-sm uppercase tracking-wide">6-7. Cost of Sales & Ads</h3>
-                                 <button onclick="addCustomField('ads')" class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200"><i class="fas fa-plus"></i></button>
-                             </div>
-                             <div class="mb-2 text-right text-xs font-bold">Total: <span id="rpt_ads_total_disp">0</span></div>
-                             <div id="custom_ads_container" class="space-y-2"></div>
+                        <div class="space-y-2 mt-4">
+                            <div class="flex items-center gap-2"><span class="text-xs w-24">Title Ins %</span><input type="number" id="rpt_title_ins_pct" class="w-16 p-1 border rounded text-center" oninput="calcReportTotals()"><input id="rpt_title_ins" class="flex-1 p-1 border rounded bg-gray-100 text-right" readonly></div>
+                            <div class="flex items-center gap-2"><span class="text-xs w-24">Stamp Duty %</span><input type="number" id="rpt_stamp_pct" class="w-16 p-1 border rounded text-center" oninput="calcReportTotals()"><input id="rpt_stamp" class="flex-1 p-1 border rounded bg-gray-100 text-right" readonly></div>
+                            <div class="flex items-center gap-2"><span class="text-xs w-24">Legal Fees %</span><input type="number" id="rpt_legal_pct" class="w-16 p-1 border rounded text-center" oninput="calcReportTotals()"><input id="rpt_legal" class="flex-1 p-1 border rounded bg-gray-100 text-right" readonly></div>
+                            <div class="flex items-center gap-2"><span class="text-xs w-24">Valuation %</span><input type="number" id="rpt_val_pct" class="w-16 p-1 border rounded text-center" oninput="calcReportTotals()"><input id="rpt_valuation" class="flex-1 p-1 border rounded bg-gray-100 text-right" readonly></div>
+                            <div class="flex items-center gap-2"><span class="text-xs w-24 font-bold">Title Reports</span><input type="number" id="rpt_title_rep" class="flex-1 p-1 border rounded text-right"></div>
+                            <div class="flex items-center gap-2"><span class="text-xs w-24 font-bold">Intro Comm.</span><input type="number" id="rpt_intro_comm" class="flex-1 p-1 border rounded text-right"></div>
                         </div>
+                        <div id="custom_purchase_container" class="mt-4 space-y-2"></div>
                     </div>
 
-                    <!-- Right Column: Development & Others -->
-                    <div class="space-y-6">
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-blue-100 h-96 overflow-y-auto">
-                            <div class="section-header">
-                                <h3 class="font-bold text-blue-900 text-sm uppercase tracking-wide">5. Development</h3>
-                                <div class="flex gap-2 items-center">
-                                    <button onclick="addDevCategory()" class="text-xs bg-slate-100 px-2 py-1 rounded hover:bg-slate-200">+ Cat</button>
-                                    <span class="text-xs font-bold text-slate-500">Total: <span id="rpt_dev_total_disp">0</span></span>
-                                </div>
-                            </div>
-                            <div id="devCostContainer" class="space-y-2"></div>
+                    <!-- Section 3 -->
+                    <div class="report-form-section">
+                        <h3 class="font-bold text-blue-900 border-b pb-2 mb-4 text-sm uppercase tracking-wide">3. Land Allocation</h3>
+                        <div class="flex gap-4">
+                            <div><label class="block text-xs font-bold text-gray-500">Roads %</label><input type="number" id="rpt_road_pct" class="w-full p-2 border rounded" oninput="calcReportTotals()"></div>
+                            <div><label class="block text-xs font-bold text-gray-500">Reservation %</label><input type="number" id="rpt_res_pct" class="w-full p-2 border rounded" oninput="calcReportTotals()"></div>
+                            <div><label class="block text-xs font-bold text-blue-600">Sellable %</label><input id="rpt_sell_pct" class="w-full p-2 border rounded bg-blue-50 font-bold" readonly></div>
                         </div>
+                        <div class="mt-2"><label class="block text-xs font-bold text-gray-500">Project Period (Months)</label><input type="number" id="rpt_period" class="w-full p-2 border rounded"></div>
+                    </div>
 
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-blue-100">
-                             <div class="section-header">
-                                 <h3 class="font-bold text-blue-900 text-sm uppercase tracking-wide">Taxes & Approvals</h3>
-                                 <button onclick="addCustomField('taxes')" class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200"><i class="fas fa-plus"></i></button>
-                             </div>
-                             <div class="grid grid-cols-2 gap-2 text-xs mb-4">
-                                 <div class="col-span-2 text-right font-bold">Total: <span id="rpt_taxes_total_disp">0</span></div>
-                                 <div class="col-span-2" id="custom_taxes_container"></div>
-                                 
-                                 <div><label>Fin. Capital</label><input type="number" id="rpt_fin_cap" class="w-full p-1 border rounded"></div>
-                                 <div><label>Fin. VAT</label><input type="number" id="rpt_fin_vat" class="w-full p-1 border rounded"></div>
-                             </div>
-                             <div class="border-t pt-2">
-                                 <label class="block text-[10px] font-bold text-gray-400 mb-1">Signatories</label>
-                                 <div class="flex gap-2">
-                                     <input type="text" id="rpt_sig_mgr" placeholder="Manager" class="w-1/3 p-1 border rounded text-xs">
-                                     <input type="text" id="rpt_sig_dir" placeholder="Director" class="w-1/3 p-1 border rounded text-xs">
-                                     <input type="text" id="rpt_sig_chm" placeholder="Chairman" class="w-1/3 p-1 border rounded text-xs">
-                                 </div>
-                             </div>
+                    <!-- Section 4 -->
+                    <div class="report-form-section">
+                        <div class="flex justify-between items-center border-b pb-2 mb-4">
+                            <h3 class="font-bold text-blue-900 text-sm uppercase tracking-wide">4. Survey Costs</h3>
+                            <span class="text-xs font-bold text-slate-500">Total: <span id="rpt_survey_total_disp">0</span></span>
                         </div>
-                         
-                        <div class="bg-yellow-50 p-4 rounded-xl border border-yellow-100">
-                             <h5 class="font-bold text-xs text-yellow-800 mb-2">System Actuals (Reference)</h5>
-                             <div id="systemActualsList" class="h-24 overflow-y-auto text-[10px] space-y-1 text-gray-600"></div>
+                        <div id="surveyRows" class="space-y-3 text-xs"></div>
+                    </div>
+
+                    <!-- Section 5 - Development -->
+                    <div class="report-form-section">
+                        <div class="section-header">
+                            <h3 class="font-bold text-blue-900 text-sm uppercase tracking-wide">5. Development</h3>
+                            <div class="flex gap-2 items-center">
+                                <button onclick="addDevCategory()" class="text-xs bg-slate-100 px-2 py-1 rounded hover:bg-slate-200">+ Cat</button>
+                                <span class="text-xs font-bold text-slate-500">Total: <span id="rpt_dev_total_disp">0</span></span>
+                            </div>
                         </div>
+                        <div id="devCostContainer" class="space-y-2"></div>
+                    </div>
+
+                    <!-- Section 6 & 7 -->
+                    <div class="report-form-section">
+                         <div class="section-header">
+                             <h3 class="font-bold text-blue-900 text-sm uppercase tracking-wide">6-7. Cost of Sales & Ads</h3>
+                             <button onclick="addCustomField('ads')" class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200"><i class="fas fa-plus"></i></button>
+                         </div>
+                         <div class="mb-2 text-right text-xs font-bold">Total: <span id="rpt_ads_total_disp">0</span></div>
+                         <div id="custom_ads_container" class="space-y-2"></div>
+                    </div>
+
+                    <!-- Taxes & Approvals -->
+                    <div class="report-form-section">
+                         <div class="section-header">
+                             <h3 class="font-bold text-blue-900 text-sm uppercase tracking-wide">Taxes & Approvals</h3>
+                             <button onclick="addCustomField('taxes')" class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200"><i class="fas fa-plus"></i></button>
+                         </div>
+                         <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs mb-4">
+                             <div class="col-span-1 md:col-span-2 text-right font-bold">Total: <span id="rpt_taxes_total_disp">0</span></div>
+                             <div class="col-span-1 md:col-span-2" id="custom_taxes_container"></div>
+                             <div><label>PS Tax</label><input type="number" id="rpt_tax_ps" class="w-full p-1 border rounded" oninput="calcReportTotals()"></div>
+                             <div><label>Plan Tax</label><input type="number" id="rpt_tax_plan" class="w-full p-1 border rounded" oninput="calcReportTotals()"></div>
+                             <div><label>Ad Cost</label><input type="number" id="rpt_ad_cost" class="w-full p-1 border rounded" oninput="calcReportTotals()"></div>
+                             <div><label>Fin. Capital</label><input type="number" id="rpt_fin_cap" class="w-full p-1 border rounded" oninput="calcReportTotals()"></div>
+                             <div><label>Fin. VAT</label><input type="number" id="rpt_fin_vat" class="w-full p-1 border rounded" oninput="calcReportTotals()"></div>
+                         </div>
+                         <div class="border-t pt-2">
+                             <label class="block text-[10px] font-bold text-gray-400 mb-1">Signatories</label>
+                             <div class="flex gap-2">
+                                 <input type="text" id="rpt_sig_mgr" placeholder="Manager" class="w-1/3 p-1 border rounded text-xs">
+                                 <input type="text" id="rpt_sig_dir" placeholder="Director" class="w-1/3 p-1 border rounded text-xs">
+                                 <input type="text" id="rpt_sig_chm" placeholder="Chairman" class="w-1/3 p-1 border rounded text-xs">
+                             </div>
+                         </div>
                     </div>
                 </div>
             </div>
@@ -820,9 +765,142 @@
         </div>
     </div>
 
+    <!-- 12. Sell Modal -->
+    <div id="sellModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm overflow-y-auto">
+        <div class="bg-white p-6 rounded-2xl w-full max-w-2xl shadow-2xl relative my-8">
+            <button onclick="closeSellModal()" class="absolute top-4 right-4 text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
+            <h2 class="text-xl font-bold mb-4 text-slate-800">New Sale: <span id="sellBlockName" class="text-blue-600"></span></h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-1">Customer Name</label>
+                    <input type="text" id="cusName" class="w-full p-2 border rounded" placeholder="Full Name">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-1">NIC Number</label>
+                    <input type="text" id="cusNIC" class="w-full p-2 border rounded" placeholder="National ID">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-1">Phone Number</label>
+                    <input type="text" id="cusPhone" class="w-full p-2 border rounded" placeholder="Contact">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-1">Address</label>
+                    <input type="text" id="cusAddress" class="w-full p-2 border rounded" placeholder="Current Address">
+                </div>
+            </div>
+
+            <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 mb-4">
+                <div class="flex justify-between items-center mb-2">
+                    <label class="text-sm font-bold text-blue-900">Final Selling Price</label>
+                    <input type="number" id="finalPrice" class="p-2 border rounded font-bold text-right text-blue-700 w-40" oninput="calculateEP()" step="0.01">
+                </div>
+                
+                <div class="flex justify-between items-center mb-2">
+                     <label class="text-xs font-bold text-gray-500">Sales Person</label>
+                     <div class="dropdown w-48 relative">
+                         <input type="text" id="salesPersonInput" class="w-full p-2 border rounded text-xs" placeholder="Search..." onkeyup="filterSalesFunction()" onclick="toggleSalesDropdown()">
+                         <div id="salesDropdown" class="dropdown-content"></div>
+                     </div>
+                </div>
+
+                <div class="flex justify-between items-center mb-2">
+                    <label class="text-xs font-bold text-gray-500">Payment Plan</label>
+                    <select id="payPlanType" class="p-2 border rounded text-sm w-40" onchange="toggleEPFields()">
+                        <option value="Cash">Cash Sale</option>
+                        <option value="EP">Easy Payment (EP)</option>
+                    </select>
+                </div>
+                
+                <div class="flex justify-between items-center mb-2">
+                    <label class="text-xs font-bold text-gray-500">Plan Fee (Doc/Legal)</label>
+                    <input type="number" id="planFee" class="p-2 border rounded text-sm text-right w-40" value="0" step="0.01">
+                </div>
+                 <div class="flex justify-between items-center mb-2">
+                    <label class="text-xs font-bold text-gray-500">Deed/Transfer Fee</label>
+                    <input type="number" id="deedFee" class="p-2 border rounded text-sm text-right w-40" value="0" step="0.01">
+                </div>
+            </div>
+
+            <!-- Cash Fields -->
+            <div id="cashFields">
+                <div class="flex justify-between items-center mb-2">
+                    <label class="text-sm font-bold text-gray-700">Initial Payment</label>
+                    <input type="number" id="cashAdvancePay" class="p-2 border rounded font-bold text-right w-40" placeholder="Amount" step="0.01">
+                </div>
+            </div>
+
+            <!-- EP Fields -->
+            <div id="epFields" class="hidden space-y-3 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                <div class="flex justify-between items-center">
+                    <label class="text-xs font-bold text-gray-500">Agreement Fee</label>
+                    <input type="number" id="agreementFee" class="p-1 border rounded text-right w-32 text-sm" value="15000" step="0.01">
+                </div>
+                <div class="flex justify-between items-center">
+                    <label class="text-xs font-bold text-gray-500">Booking Fee</label>
+                    <input type="number" id="bookingFee" class="p-1 border rounded text-right w-32 text-sm" oninput="calculateEP()" step="0.01">
+                </div>
+                <div class="flex justify-between items-center">
+                    <label class="text-xs font-bold text-gray-500">Down Payment %</label>
+                    <input type="number" id="downPayPct" class="p-1 border rounded text-right w-32 text-sm" value="40" oninput="calculateEP()">
+                </div>
+                <div class="flex justify-between items-center">
+                    <label class="text-xs font-bold text-gray-500">Down Payment Amount</label>
+                    <input type="number" id="downPayAmount" class="p-1 border rounded text-right w-32 text-sm bg-gray-100" readonly>
+                </div>
+                <div class="flex justify-between items-center">
+                     <label class="text-xs font-bold text-red-500">Balance for Down Payment</label>
+                     <span id="downPayBalanceDisp" class="font-bold text-red-600">0.00</span>
+                </div>
+                <hr class="border-yellow-200">
+                <div class="flex justify-between items-center">
+                    <label class="text-xs font-bold text-gray-500">Loan Amount</label>
+                    <input type="text" id="loanAmount" class="p-1 border rounded text-right w-32 text-sm bg-gray-100" readonly>
+                </div>
+                <div class="flex justify-between items-center">
+                    <label class="text-xs font-bold text-gray-500">Interest Rate (%)</label>
+                    <input type="number" id="epRate" class="p-1 border rounded text-right w-32 text-sm" value="18" oninput="calculateEP()">
+                </div>
+                <div class="flex justify-between items-center">
+                    <label class="text-xs font-bold text-gray-500">Period (Months)</label>
+                    <input type="number" id="epMonths" class="p-1 border rounded text-right w-32 text-sm" value="24" oninput="calculateEP()">
+                </div>
+                <div class="flex justify-between items-center">
+                    <label class="text-xs font-bold text-gray-500">Payment Cycle (Days)</label>
+                    <input type="number" id="epCycle" class="p-1 border rounded text-right w-32 text-sm" value="30">
+                </div>
+                <div class="bg-white p-2 rounded border mt-2 text-center">
+                    <p class="text-xs font-bold text-gray-500">Monthly Installment</p>
+                    <p id="epMonthlyInst" class="text-lg font-bold text-blue-600">0.00</p>
+                    <p class="text-[10px] text-gray-400">Total Payable: <span id="epTotalPayable">0.00</span></p>
+                </div>
+            </div>
+
+            <div class="flex gap-2 mt-6">
+                <button onclick="processSale(false)" class="flex-1 bg-slate-800 text-white font-bold py-3 rounded-lg hover:bg-slate-900">CONFIRM SALE</button>
+                <button onclick="processSale(true)" class="flex-1 bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700"><i class="fas fa-print mr-2"></i> SALE & RECEIPT</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 13. Staff Access Modal -->
+    <div id="staffAccessModal" class="hidden fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4">
+        <div class="bg-white p-6 rounded-2xl w-full max-w-sm text-center shadow-2xl">
+             <h3 class="text-xl font-bold mb-4 text-slate-800">Staff Area Access</h3>
+             <p class="text-sm text-gray-500 mb-4">Enter Access PIN to continue</p>
+             <!-- Removed maxlength="4" to allow any length PIN -->
+             <input type="password" id="staffAccessInput" class="w-full text-center text-2xl tracking-widest p-2 border rounded-lg mb-4 font-bold">
+             <div class="flex gap-2">
+                 <button onclick="document.getElementById('staffAccessModal').classList.add('hidden')" class="flex-1 py-2 text-gray-500 font-bold border rounded">Cancel</button>
+                 <button onclick="verifyStaffAccess()" class="flex-1 py-2 bg-blue-600 text-white font-bold rounded shadow">Verify</button>
+             </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, collectionGroup, addDoc, deleteDoc, onSnapshot, query, where, orderBy, doc, updateDoc, arrayUnion, getDoc, getDocs, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, collectionGroup, addDoc, deleteDoc, onSnapshot, query, where, orderBy, doc, updateDoc, arrayUnion, getDoc, getDocs, serverTimestamp, setDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         // Constants and Globals
         let cInc = 0, cExp = 0;
@@ -836,6 +914,8 @@
         let selectedLandId = null; 
         let selectedLandBal = 0;   
         let customerCache = []; 
+        let currentStaffDetailId = null; 
+        let notifState = { overdue: [], tasks: [], meter: [], leaves: [] };
         const apiKey = ""; 
 
         const firebaseConfig = {
@@ -849,6 +929,7 @@
         };
 
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         const db = getFirestore(app);
 
         // Global Variable for Report Configuration
@@ -864,7 +945,7 @@
             ]
         };
 
-        // --- CORE FUNCTIONS (Attaching to Window) ---
+        // --- CORE FUNCTIONS ---
 
         window.toggleSidebar = () => {
             const sidebar = document.getElementById('sidebar');
@@ -905,27 +986,34 @@
             document.getElementById('st-' + tabId).classList.add('text-slate-800', 'border-b-2', 'border-blue-800');
         };
 
-        window.toggleNotifPanel = () => {
-             const p = document.getElementById('notifPanel');
-             p.classList.toggle('hidden');
+        window.toggleNotifPanel = () => { 
+            const p = document.getElementById('notifPanel');
+            if (p) p.classList.toggle('hidden'); 
         };
+        window.closeImgModal = () => document.getElementById('imgModal').classList.add('hidden');
         
-        window.openNewProjectModal = async () => {
-             document.getElementById('newProjectModal').classList.remove('hidden');
-             const landSelect = document.getElementById('landLinkSelect');
-             landSelect.innerHTML = '<option value="">Select Land...</option>';
-             const snap = await getDocs(collection(db, "company_lands"));
-             snap.forEach(d => {
-                 const l = d.data();
-                 if (!l.linkedProjectId) {
-                     landSelect.innerHTML += `<option value="${d.id}">${l.name}</option>`;
-                 }
-             });
+        window.openExpenseModal = () => {
+            const modal = document.getElementById('expenseModal');
+            if (modal) modal.classList.remove('hidden');
         };
 
-        window.closeImgModal = () => document.getElementById('imgModal').classList.add('hidden');
-        window.openExpenseModal = () => document.getElementById('expenseModal').classList.remove('hidden');
         window.closeSellModal = () => document.getElementById('sellModal').classList.add('hidden');
+        
+        window.openNewProjectModal = async () => {
+             const modal = document.getElementById('newProjectModal');
+             if(modal) modal.classList.remove('hidden');
+             const landSelect = document.getElementById('landLinkSelect');
+             if(landSelect) {
+                 landSelect.innerHTML = '<option value="">Select Land...</option>';
+                 const snap = await getDocs(collection(db, "company_lands"));
+                 snap.forEach(d => {
+                     const l = d.data();
+                     if (!l.linkedProjectId) {
+                         landSelect.innerHTML += `<option value="${d.id}">${l.name}</option>`;
+                     }
+                 });
+             }
+        };
 
         window.switchFinTab = (tab) => {
             document.getElementById('fin-view-entry').classList.add('hidden');
@@ -956,10 +1044,11 @@
         window.loadStaff = async () => { 
             const grid = document.getElementById('staffGrid'); 
             const dropdown = document.getElementById('salesDropdown'); 
-            if(!grid || !dropdown) return; 
+            if(!grid) return; 
             
             onSnapshot(collection(db, "staff"), (snap) => { 
-                grid.innerHTML = ""; dropdown.innerHTML = ""; 
+                grid.innerHTML = ""; 
+                if(dropdown) dropdown.innerHTML = ""; 
                 staffListCache = []; 
                 const today = new Date(); 
                 const curMonthKey = `${today.getFullYear()}_${today.getMonth() + 1}`; 
@@ -981,15 +1070,17 @@
                     el.innerHTML = ` <img src="${photo}" class="w-12 h-12 rounded-full object-cover border-2 border-blue-100 bg-gray-200"> <div> <h4 class="font-bold text-slate-800">${s.name}</h4> <p class="text-[10px] font-bold text-blue-500 uppercase">${s.position || 'Staff'}</p> <p class="text-xs text-gray-500">${s.nic}</p> <p class="text-xs font-bold mt-1 text-blue-600">Salary: ${s.salary.toLocaleString()}</p> </div> ${isPaid ? '<span class="absolute top-2 right-2 bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded border border-green-200">PAID: '+ new Date().toLocaleString('default', { month: 'short' }) +'</span>' : ''} `; 
                     grid.appendChild(el); 
                     
-                    const div = document.createElement('div'); 
-                    div.innerHTML = `<span class="font-bold">${s.name}</span> <span class="text-xs text-gray-500">(${s.position || 'Staff'})</span>`; 
-                    div.onclick = () => { 
-                        document.getElementById("salesPersonInput").value = s.name; 
-                        document.getElementById("salesDropdown").classList.remove("show"); 
-                    }; 
-                    dropdown.appendChild(div); 
+                    if(dropdown) {
+                        const div = document.createElement('div'); 
+                        div.innerHTML = `<span class="font-bold">${s.name}</span> <span class="text-xs text-gray-500">(${s.position || 'Staff'})</span>`; 
+                        div.onclick = () => { 
+                            document.getElementById("salesPersonInput").value = s.name; 
+                            document.getElementById("salesDropdown").classList.remove("show"); 
+                        }; 
+                        dropdown.appendChild(div); 
+                    }
                 }); 
-            }); 
+            }, (error) => console.error("Staff load error:", error)); 
             window.loadStaffPool(); 
         };
 
@@ -1016,7 +1107,7 @@
                         closedList.appendChild(el); 
                     } 
                 }); 
-            }); 
+            }, (error) => console.error("Projects load error:", error)); 
         };
 
         window.createProject = async () => { 
@@ -1048,7 +1139,7 @@
                     const isPaid = bal <= 0; 
                     grid.innerHTML += ` <div class="bg-white p-6 rounded-xl border border-blue-100 shadow-sm relative overflow-hidden"> <div class="absolute top-0 left-0 w-2 h-full ${isPaid ? 'bg-green-500' : 'bg-red-500'}"></div> <h3 class="font-bold text-lg ml-3">${l.name}</h3> <p class="text-sm text-gray-500 ml-3 mb-2">Seller: ${l.seller}</p> ${l.linkedProjectId ? '<span class="ml-3 bg-purple-100 text-purple-700 text-[10px] font-bold px-2 py-1 rounded">LINKED TO PROJECT</span>' : '<span class="ml-3 bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded">AVAILABLE</span>'} <div class="ml-3 grid grid-cols-2 gap-4 text-sm mt-4"> <div><p class="text-xs text-gray-400 font-bold uppercase">Cost</p><p class="font-bold">Rs. ${l.cost.toLocaleString()}</p></div> <div><p class="text-xs text-gray-400 font-bold uppercase">Paid</p><p class="font-bold text-green-600">Rs. ${paid.toLocaleString()}</p></div> <div class="col-span-2 border-t pt-2 flex justify-between items-center"> <span class="text-xs font-bold ${isPaid?'text-green-500':'text-red-500'} uppercase">${isPaid?'Fully Paid':'Balance: Rs. '+bal.toLocaleString()}</span> ${!isPaid ? `<button onclick="openLandPaymentModal('${d.id}', '${l.name}', ${bal})" class="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200 font-bold border border-blue-200">Add Payment</button>` : ''} </div> </div> </div> `; 
                 }); 
-            }); 
+            }, (error) => console.error("Lands load error:", error)); 
         };
 
         window.saveLand = async () => { 
@@ -1069,8 +1160,8 @@
         window.openLandPaymentModal = (id, name, bal) => {
             selectedLandId = id;
             selectedLandBal = bal;
-            document.getElementById('landPayInfo').innerText = `${name} - Balance Due: Rs. ${bal.toLocaleString()}`;
-            document.getElementById('landPaymentModal').classList.remove('hidden');
+            if(document.getElementById('landPayInfo')) document.getElementById('landPayInfo').innerText = `${name} - Balance Due: Rs. ${bal.toLocaleString()}`;
+            if(document.getElementById('landPaymentModal')) document.getElementById('landPaymentModal').classList.remove('hidden');
         };
 
         window.submitLandPayment = async () => {
@@ -1106,28 +1197,115 @@
                 btnActive.classList.remove('bg-white', 'shadow', 'text-slate-800'); btnActive.classList.add('text-gray-500');
             }
         };
+
+        // --- UNIFIED NOTIFICATION SYSTEM ---
+
+        window.renderNotifications = () => {
+            const list = document.getElementById('notifList');
+            const badge = document.getElementById('notifBadge');
+            if(!list || !badge) return;
+            
+            list.innerHTML = "";
+            let total = 0;
+            
+            // Overdue
+            notifState.overdue.forEach(b => {
+                total++;
+                list.innerHTML += `<div class="p-3 border-b bg-red-50 cursor-pointer hover:bg-red-100" onclick="navigateToBlock('${b.projectId}', '${b.id}'); toggleNotifPanel();"><p class="font-bold text-xs">${b.name}</p><p class="text-[10px] text-red-500">Overdue: ${new Date(b.nextDate).toLocaleDateString()}</p></div>`;
+            });
+
+            // Tasks
+            notifState.tasks.forEach(t => {
+                total++;
+                list.innerHTML += `<div class="p-3 border-b bg-blue-50 cursor-pointer hover:bg-blue-100" onclick="openApproveModal('${t.id}', 'task'); toggleNotifPanel();"><p class="font-bold text-xs text-blue-900">Task Review: ${t.title}</p><p class="text-[10px] text-blue-500">Click to Review Cost</p></div>`;
+            });
+
+            // Meter Readings
+            notifState.meter.forEach(m => {
+                total++;
+                 list.innerHTML += `<div class="p-3 border-b bg-green-50 cursor-pointer hover:bg-green-100" onclick="openApproveModal('${m.id}', 'meter'); toggleNotifPanel();"><p class="font-bold text-xs text-green-900">Meter Reading: ${m.vehicleNo}</p><p class="text-[10px] text-green-500">Review Cost: Rs. ${m.totalCost}</p></div>`;
+            });
+
+            // Leaves
+            notifState.leaves.forEach(l => {
+                total++;
+                list.innerHTML += `<div class="p-3 border-b bg-yellow-50 cursor-pointer hover:bg-yellow-100" onclick="openStaffDetail('${l.staffId}'); toggleNotifPanel();"><p class="font-bold text-xs text-yellow-900">Leave Request</p><p class="text-[10px] text-yellow-600">Date: ${l.date}</p></div>`;
+            });
+
+            if(total > 0) {
+                badge.innerText = total;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+                list.innerHTML = "<p class='text-center p-4 text-gray-400 text-xs'>No new notifications.</p>";
+            }
+        };
+
+        window.initGlobalNotifications = () => {
+            // 1. Meter Readings
+            onSnapshot(query(collection(db, "meter_readings"), where("status", "!=", "approved")), (snap) => {
+                notifState.meter = [];
+                snap.forEach(d => notifState.meter.push({ id: d.id, ...d.data() }));
+                renderNotifications();
+            });
+
+            // 2. Tasks (Using collectionGroup)
+            // Note: This requires a Firestore index. If index is missing, this might fail silently or error in console.
+            // Safe fallback: Iterate active projects? For now, implementing direct Listener.
+            try {
+                onSnapshot(query(collectionGroup(db, 'tasks'), where('status', '==', 'new')), (snap) => {
+                    notifState.tasks = [];
+                    snap.forEach(d => {
+                        // We need project ID for 'openApproveModal' logic sometimes, but logic stores tasks globally in projectTasksData
+                        // Here we just store ID and basics for nav
+                        // Warning: projectTasksData is populated by openProject. 
+                        // To make global approval work perfectly, we might need parent ID.
+                        // But openApproveModal logic relies on `currentProjId` in existing code.
+                        // To fix: We navigate to project first? Or make openApproveModal robust.
+                        // Existing code: `projectTasksData[id]` and `updateDoc` using `currentProjId`.
+                        // LIMITATION: Task approval currently requires being INSIDE the project view.
+                        // Updated Logic: Notification will try to Open Project then Open Modal.
+                        const t = d.data();
+                        // Find parent Project ID from ref path: projects/{pid}/tasks/{tid}
+                        const pathSegments = d.ref.path.split('/');
+                        const pid = pathSegments[1];
+                        notifState.tasks.push({ id: d.id, projectId: pid, ...t });
+                    });
+                    renderNotifications();
+                });
+            } catch(e) { console.log("Task Notif Error (Index missing?):", e); }
+
+            // 3. Leaves
+             try {
+                onSnapshot(query(collectionGroup(db, 'leaves'), where('status', '==', 'pending')), (snap) => {
+                    notifState.leaves = [];
+                    snap.forEach(d => {
+                         const pathSegments = d.ref.path.split('/');
+                         const staffId = pathSegments[1];
+                         notifState.leaves.push({ id: d.id, staffId: staffId, ...d.data() });
+                    });
+                    renderNotifications();
+                });
+            } catch(e) { console.log("Leave Notif Error:", e); }
+        };
         
         window.checkOverduePayments = async () => { 
             const blocksQ = query(collectionGroup(db, 'blocks'), where('status', '==', 'sold')); 
             const snap = await getDocs(blocksQ); 
-            const list = document.getElementById('notifList'); 
-            if(!list) return; 
-            list.innerHTML = ""; 
-            let count = 0; 
+            notifState.overdue = [];
             snap.forEach(d => { 
                 const b = d.data(); 
                 if(b.payment && b.payment.planType === 'EP' && b.payment.nextPaymentDate) { 
                     const nextD = b.payment.nextPaymentDate.seconds ? new Date(b.payment.nextPaymentDate.seconds*1000) : new Date(b.payment.nextPaymentDate); 
                     if(nextD < new Date()) { 
-                        count++; 
-                        list.innerHTML += `<div class="p-3 border-b bg-red-50"><p class="font-bold text-xs">${b.name}</p><p class="text-[10px] text-red-500">Overdue: ${nextD.toLocaleDateString()}</p></div>`; 
+                        // Get project ID
+                        const pathSegments = d.ref.path.split('/');
+                        const pid = pathSegments[1];
+                        notifState.overdue.push({ id: d.id, projectId: pid, name: b.name, nextDate: nextD });
                     } 
                 } 
             }); 
-            if(count > 0 && document.getElementById('notifBadge')) { 
-                document.getElementById('notifBadge').innerText = count; 
-                document.getElementById('notifBadge').classList.remove('hidden'); 
-            } 
+            renderNotifications();
         };
 
         window.updateNet = (i,e) => { 
@@ -1211,6 +1389,7 @@
                 window.loadLands(); 
                 window.loadMeterReadings(); 
                 window.checkPayroll(); 
+                window.initGlobalNotifications(); // Start listeners
             } else { 
                 alert("Incorrect Password"); 
             } 
@@ -1218,7 +1397,6 @@
 
         // --- UPDATED REPORT DATA FUNCTIONS ---
 
-        // Helper to add custom field to UI
         window.addCustomFieldUI = (section, label = "", value = "") => {
             const container = document.getElementById(`custom_${section}_container`);
             if(!container) return;
@@ -1240,7 +1418,6 @@
              if(!currentProjId) return;
             document.getElementById('newProjectReportDataModal').classList.remove('hidden');
             
-            // Load Global Config first
             try {
                 const confSnap = await getDoc(doc(db, "settings", "report_config"));
                 if(confSnap.exists()) {
@@ -1266,18 +1443,15 @@
             } else { s('rpt_purchase_price', d.purchase_price || 0); }
             
             // Clear Custom Containers
-            ['basic', 'purchase', 'taxes', 'ads'].forEach(sec => document.getElementById(`custom_${sec}_container`).innerHTML = "");
+            ['basic', 'purchase', 'taxes', 'ads'].forEach(sec => {
+                if(document.getElementById(`custom_${sec}_container`))
+                    document.getElementById(`custom_${sec}_container`).innerHTML = "";
+            });
 
-            // Populate Custom Fields (Merge Global + Local)
             const populateCustom = (section) => {
                 const local = d.customValues && d.customValues[section] ? d.customValues[section] : [];
-                // Load global templates (labels only) if not present in local
                 const globalLabels = globalReportConfig.customFields[section] || [];
-                
-                // First render saved local values
                 local.forEach(item => addCustomFieldUI(section, item.label, item.value));
-                
-                // Then render any global fields that aren't in local (empty value)
                 globalLabels.forEach(label => {
                     if(!local.some(l => l.label === label)) {
                         addCustomFieldUI(section, label, "");
@@ -1303,21 +1477,17 @@
             }); 
             calcSurveyTotal();
             
-            // Development Section with Edit/Delete Category
             const devDiv = document.getElementById('devCostContainer'); devDiv.innerHTML = "";
-            // Use saved categories or global defaults
             let devCats = d.devCategories || globalReportConfig.devCategories; 
             let devItems = d.devItems || {}; 
             
             devCats.forEach(cat => { renderDevCategory(cat, devItems[cat] || []); }); 
             calcDevTotal();
             
-            // New sections manual fields if not custom
             s('rpt_tax_ps', d.tax_ps); s('rpt_tax_plan', d.tax_plan); s('rpt_ad_cost', d.ad_cost); 
             s('rpt_fin_cap', d.fin_cap || 200000); s('rpt_fin_vat', d.fin_vat || 0); 
             s('rpt_sig_mgr', d.sig_mgr); s('rpt_sig_dir', d.sig_dir); s('rpt_sig_chm', d.sig_chm);
             
-            // Update Totals
             calcReportTotals();
         };
 
@@ -1370,10 +1540,11 @@
             const sellPct = 100 - (getV('rpt_road_pct') + getV('rpt_res_pct')); 
             document.getElementById('rpt_sell_pct').value = sellPct;
             
-            // Calc New Sections
             const calcSection = (sec) => {
                 let t = 0;
-                document.getElementById(`custom_${sec}_container`).querySelectorAll('.input-val').forEach(i => t += parseFloat(i.value) || 0);
+                if(document.getElementById(`custom_${sec}_container`)){
+                    document.getElementById(`custom_${sec}_container`).querySelectorAll('.input-val').forEach(i => t += parseFloat(i.value) || 0);
+                }
                 return t;
             }
             const adTot = calcSection('ads');
@@ -1435,7 +1606,6 @@
                 }); 
             }); 
             
-            // Gather Custom Fields
             let customValues = { basic: [], purchase: [], taxes: [], ads: [] };
             let globalUpdate = { customFields: { ...globalReportConfig.customFields } };
             let hasGlobalChanges = false;
@@ -1451,7 +1621,6 @@
                         labels.push(label);
                     }
                 });
-                // Check if we need to update global template with new labels
                 labels.forEach(l => {
                     if(!globalUpdate.customFields[sec].includes(l)) {
                         globalUpdate.customFields[sec].push(l);
@@ -1460,7 +1629,6 @@
                 });
             });
             
-            // Also update Dev Categories in Global
             if(devCats.length > 0) {
                 globalUpdate.devCategories = devCats;
                 hasGlobalChanges = true;
@@ -1475,7 +1643,7 @@
                 title_rep: getV('rpt_title_rep'), intro_comm: getV('rpt_intro_comm'), 
                 surveyData: surveyData, 
                 devCategories: devCats, devItems: devItems, 
-                customValues: customValues, // New Custom Data
+                customValues: customValues, 
                 tax_ps: getV('rpt_tax_ps'), tax_plan: getV('rpt_tax_plan'), ad_cost: getV('rpt_ad_cost'), 
                 fin_cap: getV('rpt_fin_cap'), fin_vat: getV('rpt_fin_vat'), 
                 sig_mgr: getV('rpt_sig_mgr'), sig_dir: getV('rpt_sig_dir'), sig_chm: getV('rpt_sig_chm') 
@@ -1483,10 +1651,9 @@
             
             await updateDoc(doc(db, "projects", currentProjId), { reportData: data }); 
             
-            // Save Global Template if changed
             if(hasGlobalChanges) {
                 await setDoc(doc(db, "settings", "report_config"), globalUpdate, { merge: true });
-                globalReportConfig = globalUpdate; // Update local cache
+                globalReportConfig = globalUpdate; 
             }
 
             document.getElementById('newProjectReportDataModal').classList.add('hidden'); 
@@ -1507,7 +1674,6 @@
             const sellArea = totPerches - roadArea - resArea;
             const purPrice = f(d.purchase_price);
             
-            // Calculate Custom Purchase Costs
             let cusPurchase = 0;
             let cusPurchaseHtml = "";
             (d.customValues?.purchase || []).forEach(i => {
@@ -1526,7 +1692,6 @@
             d.surveyData.forEach(row => { const cost = f(row.unit) * f(row.price); surTot += cost; surHtml += `<tr><td>${row.desc}</td><td>${row.unit}</td><td style="text-align:right">${f(row.price).toLocaleString()}</td><td style="text-align:right">${cost.toLocaleString()}</td></tr>`; });
             
             let devHtml = ""; let devTot = 0;
-            // Use saved categories
             (d.devCategories || []).forEach(cat => { 
                 const items = d.devItems[cat] || []; 
                 let catSub = 0; 
@@ -1540,7 +1705,6 @@
                 devHtml += `<tr><td><strong>${cat}</strong></td><td colspan="2"></td><td style="text-align:right"><strong>${catSub.toLocaleString()}</strong></td></tr>${itemsHtml}`; 
             });
             
-            // Taxes
             let taxes = f(d.tax_ps) + f(d.tax_plan);
             let taxHtml = "";
             (d.customValues?.taxes || []).forEach(i => {
@@ -1548,7 +1712,6 @@
                 taxHtml += `<tr><td>${i.label}</td><td style="text-align:right">${v.toLocaleString()}</td></tr>`;
             });
 
-            // Ads & Sales Cost
             let ads = f(d.ad_cost);
             let adsHtml = "";
             (d.customValues?.ads || []).forEach(i => {
@@ -1653,14 +1816,10 @@
 
         window.downloadPDFActual = async () => {
              const element = document.getElementById('printContainer');
-             
-             // Check if content exists
              if (!element.innerHTML.trim()) {
                  alert("No report content to download. Please generate a report first.");
                  return;
              }
-
-             // Fix PDF rendering issues
              const opt = { 
                  margin: [5, 5, 5, 5],
                  filename: `Report_${currentProjName || 'Sithuliya'}.pdf`, 
@@ -1668,7 +1827,6 @@
                  html2canvas: { scale: 2, useCORS: true, logging: true, scrollY: 0 }, 
                  jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
              };
-             
              try {
                 await html2pdf().set(opt).from(element).save();
                 document.getElementById('pdfPreviewOverlay').style.display = 'none';
@@ -1710,6 +1868,7 @@
             const input = document.getElementById("salesPersonInput"); 
             const filter = input.value.toUpperCase(); 
             const div = document.getElementById("salesDropdown"); 
+            if(!div) return;
             const a = div.getElementsByTagName("div"); 
             for (let i = 0; i < a.length; i++) { 
                 const txtValue = a[i].textContent || a[i].innerText; 
@@ -1775,8 +1934,10 @@
         };
 
         window.openStaffDetail = async (id) => { 
+            currentStaffDetailId = id;
             const s = staffListCache.find(x => x.id === id); 
             if(!s) return; 
+            
             document.getElementById('sdPhoto').src = s.photo || 'https://via.placeholder.com/150'; 
             document.getElementById('sdName').innerText = s.name; 
             document.getElementById('sdPosition').innerText = s.position || 'Staff Member'; 
@@ -1784,8 +1945,79 @@
             document.getElementById('sdPhone').innerText = s.phone || '-'; 
             document.getElementById('sdSalary').innerText = "Rs. " + (s.salary ? s.salary.toLocaleString() : '0'); 
             document.getElementById('sdJoined').innerText = s.joinedDate ? new Date(s.joinedDate.seconds*1000).toLocaleDateString() : '-'; 
+            
+            const locSection = document.getElementById('sdLocationSection');
+            if (s.pendingLocation) {
+                locSection.classList.remove('hidden');
+                const link = `https://www.google.com/maps?q=${s.pendingLocation.lat},${s.pendingLocation.lng}`;
+                document.getElementById('sdMapLink').href = link;
+            } else {
+                locSection.classList.add('hidden');
+            }
+
             const btnContainer = document.getElementById('sdActionBtns'); 
             btnContainer.innerHTML = ` <button onclick="editStaff('${id}')" class="w-full py-2 border border-gray-300 rounded-lg font-bold text-gray-600 hover:bg-gray-50 text-xs">Edit Details</button> <button onclick="deleteStaff('${id}')" class="w-full py-2 bg-red-600 text-white rounded-lg font-bold shadow hover:bg-red-700 text-xs">Remove Member</button> `; 
+            
+            const attList = document.getElementById('sdAttendanceList');
+            attList.innerHTML = "Loading...";
+            try {
+                const attSnap = await getDocs(query(collection(db, `staff/${id}/attendance`), orderBy("timestamp", "desc")));
+                let attHtml = "";
+                attSnap.forEach(d => {
+                    const a = d.data();
+                    const date = a.timestamp.seconds ? new Date(a.timestamp.seconds * 1000) : new Date();
+                    const photoHtml = a.photo ? `<img src="${a.photo}" class="w-8 h-8 rounded-full border border-gray-300 cursor-pointer" onclick="document.getElementById('imgModalSrc').src='${a.photo}';document.getElementById('imgModal').classList.remove('hidden')">` : '-';
+                    
+                    let typeColor = 'text-gray-600';
+                    let typeText = a.type;
+                    let actionHtml = '';
+
+                    if(a.type === 'IN') typeColor = 'text-green-600';
+                    else if(a.type === 'Late IN') { typeColor = 'text-orange-600'; typeText = "Late IN"; }
+                    else if(a.type === 'OUT') typeColor = 'text-red-600';
+                    else if(a.type.includes('Short Leave Request')) {
+                        typeColor = 'text-purple-600 font-bold';
+                        typeText = "Short Leave Request";
+                        // Add Approve Button
+                        actionHtml = `<button onclick="approveShortLeave('${id}', '${d.id}')" class="bg-blue-600 text-white px-2 py-1 rounded text-[10px] font-bold">APPROVE</button>`;
+                    }
+                    else if(a.type.includes('Short Leave Approved')) {
+                         typeColor = 'text-green-600 font-bold';
+                         typeText = "Short Leave (Approved)";
+                    }
+
+                    attHtml += `<tr class="border-b border-gray-100"><td class="p-1">${date.toLocaleString()}</td><td class="p-1 font-bold ${typeColor}">${typeText}</td><td class="p-1">${photoHtml}</td><td class="p-1">${actionHtml}</td></tr>`;
+                });
+                attList.innerHTML = attHtml || "<tr><td colspan='4' class='text-center text-gray-400 p-2'>No attendance records found.</td></tr>";
+            } catch(e) { console.error(e); attList.innerHTML = "Error loading attendance."; }
+
+            // Leave Requests
+            const leaveSection = document.getElementById('sdLeaveSection');
+            const leaveList = document.getElementById('sdLeaveList');
+            leaveList.innerHTML = "Loading...";
+            try {
+                const leaveSnap = await getDocs(query(collection(db, `staff/${id}/leaves`), where("status", "==", "pending")));
+                if (!leaveSnap.empty) {
+                    leaveSection.classList.remove('hidden');
+                    let leaveHtml = "";
+                    leaveSnap.forEach(d => {
+                        const l = d.data();
+                        leaveHtml += `
+                        <div class="flex justify-between items-center bg-white p-2 rounded shadow-sm">
+                            <span class="text-xs font-bold text-slate-700">Request for: ${l.date}</span>
+                            <div class="flex gap-2">
+                                <button onclick="approveLeave('${id}', '${d.id}')" class="bg-green-500 text-white px-2 py-1 rounded text-xs font-bold">Approve</button>
+                                <button onclick="rejectLeave('${id}', '${d.id}')" class="bg-red-500 text-white px-2 py-1 rounded text-xs font-bold">Reject</button>
+                            </div>
+                        </div>`;
+                    });
+                    leaveList.innerHTML = leaveHtml;
+                } else {
+                    leaveSection.classList.add('hidden');
+                }
+            } catch(e) { console.error(e); leaveSection.classList.add('hidden'); }
+
+
             const earnList = document.getElementById('sdEarningsList'); 
             earnList.innerHTML = "Loading..."; 
             let totalEarn = 0; 
@@ -1807,6 +2039,46 @@
                 earnList.innerHTML = "Error loading earnings."; 
             } 
             document.getElementById('staffDetailModal').classList.remove('hidden'); 
+        };
+        
+        window.approveShortLeave = async (staffId, attId) => {
+            if(confirm("Approve Short Leave Request?")) {
+                await updateDoc(doc(db, `staff/${staffId}/attendance/${attId}`), { type: 'Short Leave Approved' });
+                alert("Short Leave Approved!");
+                window.openStaffDetail(staffId);
+            }
+        };
+
+        window.approveLeave = async (staffId, leaveId) => {
+            if(confirm("Approve Leave?")) {
+                await updateDoc(doc(db, `staff/${staffId}/leaves/${leaveId}`), { status: 'approved' });
+                alert("Leave Approved!");
+                window.openStaffDetail(staffId); // Refresh
+            }
+        };
+
+        window.rejectLeave = async (staffId, leaveId) => {
+            if(confirm("Reject Leave?")) {
+                await updateDoc(doc(db, `staff/${staffId}/leaves/${leaveId}`), { status: 'rejected' });
+                alert("Leave Rejected!");
+                window.openStaffDetail(staffId); // Refresh
+            }
+        };
+
+        // NEW FUNCTION: Approve Staff Location
+        window.approveStaffLocation = async () => {
+            if (!currentStaffDetailId) return;
+            const staff = staffListCache.find(s => s.id === currentStaffDetailId);
+            if (!staff || !staff.pendingLocation) return;
+            
+            if (confirm("Confirm that this is the valid work location for " + staff.name + "?")) {
+                await updateDoc(doc(db, "staff", currentStaffDetailId), {
+                    workLocation: staff.pendingLocation,
+                    pendingLocation: null // Clear pending
+                });
+                alert("Location Approved! Staff can now mark attendance.");
+                document.getElementById('sdLocationSection').classList.add('hidden');
+            }
         };
 
         window.deleteStaff = async (id) => { 
@@ -2050,7 +2322,10 @@
                     } 
                     let readings = []; 
                     snap.forEach(d => readings.push({id: d.id, ...d.data()})); 
-                    readings.sort((a,b) => (b.date > a.date) ? 1 : -1); 
+                    
+                    // FIXED SORTING: Descending (Latest First)
+                    readings.sort((a,b) => new Date(b.date) - new Date(a.date));
+
                     readings.forEach(r => { 
                         const el = document.createElement('div'); 
                         el.className = "bg-white p-4 rounded-xl shadow-sm border border-blue-100 flex gap-4"; 
@@ -2093,13 +2368,14 @@
                 const plan = document.getElementById('payPlanType').value; 
                 const planFee = parseFloat(document.getElementById('planFee').value) || 0; 
                 const deedFee = parseFloat(document.getElementById('deedFee').value) || 0; 
+                const agreementFee = parseFloat(document.getElementById('agreementFee').value) || 0;
                 const salespersonName = document.getElementById('salesPersonInput').value; 
                 let ep = {}; 
                 let nextD = null; 
                 let status = 'sold'; 
                 let paidNow = 0; 
                 if(plan === 'EP') { 
-                    const cycle = parseInt(document.getElementById('epCycle').value); 
+                    const cycle = parseInt(document.getElementById('epCycle').value) || 30; 
                     const rate = parseFloat(document.getElementById('epRate').value); 
                     const months = parseFloat(document.getElementById('epMonths').value); 
                     const booking = parseFloat(document.getElementById('bookingFee').value) || 0; 
@@ -2114,10 +2390,16 @@
                         const emi = (loanAmt * r * Math.pow(1 + r, months)) / (Math.pow(1 + r, months) - 1); 
                         totalPayable = emi * months; 
                     } 
+                    // FIXED: Correctly set initial down payment completion status
+                    const isDpComplete = booking >= (dpTotal - 100);
                     ep = { 
-                        rate: rate, months: months, cycleDays: cycle, totalPayable: totalPayable, paidAmount: 0, downPayment: { required: dpTotal, paid: booking, isComplete: false } 
+                        rate: rate, months: months, cycleDays: cycle, totalPayable: totalPayable, paidAmount: 0, downPayment: { required: dpTotal, paid: booking, isComplete: isDpComplete } 
                     }; 
-                    const d = new Date(); d.setDate(d.getDate() + 30); nextD = d; paidNow = booking; 
+                    const d = new Date(); d.setDate(d.getDate() + cycle); nextD = d; paidNow = booking; 
+
+                    if(agreementFee > 0) {
+                        await recordDailyTransaction(`Agreement Fee: ${selectedBlockData.name} (${cus.name})`, agreementFee, 'income', currentProjName);
+                    }
                 } else { 
                     paidNow = parseFloat(document.getElementById('cashAdvancePay').value) || 0; 
                     if(paidNow >= price) status = 'sold_finished'; 
@@ -2141,7 +2423,7 @@
                 }); 
                 const histEntry = {date: new Date(), amount: paidNow, type: plan === 'EP' ? 'Booking Fee' : 'Payment'}; 
                 await updateDoc(doc(db, `projects/${currentProjId}/blocks/${selectedBlockId}`), { 
-                    status: status, soldPrice: price, customer: cus, soldDate: new Date(), fees: { planFee, deedFee }, payment: { totalPrice: price, advancePaid: paidNow, planType: plan, epDetails: ep, nextPaymentDate: nextD, history: [histEntry] } 
+                    status: status, soldPrice: price, customer: cus, soldDate: new Date(), fees: { planFee, deedFee, agreementFee }, payment: { totalPrice: price, advancePaid: paidNow, planType: plan, epDetails: ep, nextPaymentDate: nextD, history: [histEntry] } 
                 }); 
                 await recordDailyTransaction(`Sale Payment: ${selectedBlockData.name} - ${cus.name}`, paidNow, 'income', currentProjName); 
                 selectedBlockData.customer = cus; 
@@ -2164,18 +2446,18 @@
 
         window.openPaymentModal = async (data) => {
             selectedBlockData = data; 
-            document.getElementById('paymentModal').classList.remove('hidden');
+            if(document.getElementById('paymentModal')) document.getElementById('paymentModal').classList.remove('hidden');
             const isFin = data.status === 'sold_finished'; 
-            const isEP = data.payment.planType === 'EP';
-            document.getElementById('addPaymentSection').style.display = isFin ? 'none' : 'block'; 
-            document.getElementById('editPlanBtn').style.display = (isFin || !isEP) ? 'none' : 'block'; 
-            document.getElementById('resellBtn').classList.toggle('hidden', isFin); 
-            document.getElementById('paymentCompleteMsg').classList.toggle('hidden', !isFin);
-            document.getElementById('payBlockInfo').innerText = `${data.name} - ${data.customer.name}`; 
-            document.getElementById('viewCusId').innerText = data.customer.customerId || "N/A"; 
-            document.getElementById('viewCusNIC').innerText = data.customer.nic || "N/A"; 
-            document.getElementById('viewCusPhone').innerText = data.customer.phone || "N/A"; 
-            document.getElementById('viewCusAddr').innerText = data.customer.address || "N/A";
+            const isEP = data.payment && data.payment.planType === 'EP';
+            if(document.getElementById('addPaymentSection')) document.getElementById('addPaymentSection').style.display = isFin ? 'none' : 'block'; 
+            if(document.getElementById('editPlanBtn')) document.getElementById('editPlanBtn').style.display = (isFin || !isEP) ? 'none' : 'block'; 
+            if(document.getElementById('resellBtn')) document.getElementById('resellBtn').classList.toggle('hidden', isFin); 
+            if(document.getElementById('paymentCompleteMsg')) document.getElementById('paymentCompleteMsg').classList.toggle('hidden', !isFin);
+            if(document.getElementById('payBlockInfo')) document.getElementById('payBlockInfo').innerText = `${data.name} - ${data.customer.name}`; 
+            if(document.getElementById('viewCusId')) document.getElementById('viewCusId').innerText = data.customer.customerId || "N/A"; 
+            if(document.getElementById('viewCusNIC')) document.getElementById('viewCusNIC').innerText = data.customer.nic || "N/A"; 
+            if(document.getElementById('viewCusPhone')) document.getElementById('viewCusPhone').innerText = data.customer.phone || "N/A"; 
+            if(document.getElementById('viewCusAddr')) document.getElementById('viewCusAddr').innerText = data.customer.address || "N/A";
             
             let total = 0, paid = 0; 
             if(isEP) { 
@@ -2186,20 +2468,20 @@
                 const epPaid = data.payment.epDetails.paidAmount || 0; 
                 const dpPaid = data.payment.epDetails.downPayment.paid || 0; 
                 paid = epPaid + dpPaid;
-            } else { 
+            } else if (data.payment) { 
                 total = data.soldPrice; 
                 paid = (data.payment.history || []).reduce((sum, h) => sum + (h.amount || 0), 0); 
             }
             
-            document.getElementById('pmTotal').innerText = total.toLocaleString(); 
-            document.getElementById('pmPaid').innerText = paid.toLocaleString(); 
-            document.getElementById('pmBalance').innerText = (total-paid).toLocaleString();
+            if(document.getElementById('pmTotal')) document.getElementById('pmTotal').innerText = total.toLocaleString(); 
+            if(document.getElementById('pmPaid')) document.getElementById('pmPaid').innerText = paid.toLocaleString(); 
+            if(document.getElementById('pmBalance')) document.getElementById('pmBalance').innerText = (total-paid).toLocaleString();
             
             const cycleSec = document.getElementById('epCycleSection'); 
             const preInfo = document.getElementById('epPreStageInfo'); 
             const instInfo = document.getElementById('epInstallmentInfo');
             
-            if(isEP) {
+            if(isEP && cycleSec) {
                 cycleSec.classList.remove('hidden');
                 const dp = data.payment.epDetails.downPayment;
                 const dpDone = dp.paid >= (dp.required - 100); 
@@ -2243,18 +2525,20 @@
                     document.getElementById('epNextDueAmt').innerHTML = `<div class="flex justify-between text-[10px] text-slate-500 font-normal"><span>Capital</span><span>${monthlyPrincipal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></div><div class="flex justify-between text-[10px] text-slate-500 font-normal"><span>Interest</span><span>${thisMonthInterest.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></div><div class="border-t border-indigo-200 mt-1 pt-1 text-lg">Rs. ${thisMonthPayable.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>`;
                     document.getElementById('epFutureDueAmt').innerText = "Rs. " + nextMonthPayable.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
                 }
-            } else { 
+            } else if (cycleSec) { 
                 cycleSec.classList.add('hidden'); 
-                document.getElementById('epRealtimeFuture').innerText = "N/A"; 
+                if(document.getElementById('epRealtimeFuture')) document.getElementById('epRealtimeFuture').innerText = "N/A"; 
             }
             
             const tbody = document.getElementById('paymentHistoryList'); 
-            tbody.innerHTML = ""; 
-            (data.payment.history||[]).forEach(h => { 
-                const d = h.date.seconds ? new Date(h.date.seconds*1000) : new Date(h.date); 
-                tbody.innerHTML += `<tr><td class="py-2">${d.toLocaleDateString()}</td><td class="font-bold">Rs.${(h.amount||0).toLocaleString()}</td><td class="text-gray-500">${h.type}</td></tr>`; 
-            }); 
-            document.getElementById('newPayDate').valueAsDate = new Date(); 
+            if(tbody) {
+                tbody.innerHTML = ""; 
+                (data.payment.history||[]).forEach(h => { 
+                    const d = h.date.seconds ? new Date(h.date.seconds*1000) : new Date(h.date); 
+                    tbody.innerHTML += `<tr><td class="py-2">${d.toLocaleDateString()}</td><td class="font-bold">Rs.${(h.amount||0).toLocaleString()}</td><td class="text-gray-500">${h.type}</td></tr>`; 
+                }); 
+            }
+            if(document.getElementById('newPayDate')) document.getElementById('newPayDate').valueAsDate = new Date(); 
             if(isEP) updateCycleUI(data); 
         };
 
@@ -2339,7 +2623,7 @@
 
         function updateCycleUI(data) { 
             const container = document.getElementById('epCycleSection'); 
-            if (data.payment.planType !== 'EP') { container.classList.add('hidden'); return; } 
+            if (data.payment.planType !== 'EP') { if(container) container.classList.add('hidden'); return; } 
             const dp = data.payment.epDetails.downPayment; 
             if(dp.paid < (dp.required - 100)) return; 
             const fill = document.getElementById('cycleProgressBar'); 
@@ -2398,17 +2682,26 @@
         }
 
         window.processResell = async () => { 
-            if(!confirm("Cancel sale?")) return; 
+            if(!confirm("Cancel sale and make available again?")) return; 
             const b = selectedBlockData; 
             const paid = b.payment.epDetails ? b.payment.epDetails.paidAmount : b.soldPrice; 
+            
             await addDoc(collection(db, `projects/${currentProjId}/expenses`), { 
                 description: `REFUND: ${b.name}`, amount: paid, date: new Date().toLocaleDateString('en-CA'), createdAt: serverTimestamp() 
             }); 
             await recordDailyTransaction(`REFUND: ${b.name}`, paid, 'expense', currentProjName); 
-            await updateDoc(doc(db, `projects/${currentProjId}/blocks/${selectedBlockId}`), { 
-                status: 'available', customer: null, payment: null, soldPrice: null, soldDate: null 
+            
+            const blockRef = doc(db, `projects/${currentProjId}/blocks/${selectedBlockId}`);
+            await updateDoc(blockRef, { 
+                status: 'available', 
+                customer: deleteField(), 
+                payment: deleteField(), 
+                soldPrice: deleteField(), 
+                soldDate: deleteField(),
+                fees: deleteField()
             }); 
-            alert("Cancelled!"); 
+            
+            alert("Sale Cancelled & Block made Available!"); 
             document.getElementById('paymentModal').classList.add('hidden'); 
         };
 
@@ -2469,6 +2762,7 @@
         };
 
         function loadBlocks(pid, isDevMode) { 
+            if(!pid) return; // Prevent Firestore error
             const container = document.getElementById('blocksContainer'); 
             if(!container) return; 
             onSnapshot(collection(db, `projects/${pid}/blocks`), (snap) => { 
@@ -2519,6 +2813,7 @@
         }
 
         function loadExpensesAndProfit(pid) { 
+            if(!pid) return; // Prevent Firestore error
             onSnapshot(collection(db, `projects/${pid}/expenses`), (snap) => { 
                 const list = document.getElementById('expenseList'); 
                 if(!list) return; 
@@ -2565,22 +2860,43 @@
 
         window.verifyStaffAccess = async () => { 
             const input = document.getElementById('staffAccessInput').value; 
+            const btn = document.querySelector('#staffAccessModal button.bg-blue-600');
+            const originalText = btn.innerText;
+            
+            // Visual Feedback
+            btn.innerText = "Verifying...";
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+
             let pin = "1234"; 
             let adminPass = "Sandeep@1116"; 
+            
             try { 
                 const s = await getDoc(doc(db, "settings", "staff_config")); 
-                if(s.exists()) { 
-                    if(s.data().accessPassword) pin = s.data().accessPassword; 
-                } 
-                const c = await getDoc(doc()); 
-                if(c.exists() && c.data().adminPassword) adminPass = c.data().adminPassword; 
-            } catch(e) {} 
+                if(s.exists() && s.data().accessPassword) {
+                    pin = s.data().accessPassword; 
+                }
+                const c = await getDoc(doc(db, "settings", "config")); 
+                if(c.exists() && c.data().adminPassword) {
+                    adminPass = c.data().adminPassword; 
+                }
+            } catch(e) {
+                console.error("Auth Check Failed:", e);
+            } 
+            
+            // Restore UI
+            btn.innerText = originalText;
+            btn.disabled = false;
+            btn.classList.remove('opacity-50', 'cursor-not-allowed');
+
             if(input === pin || input === adminPass) { 
                 document.getElementById('staffAccessModal').classList.add('hidden'); 
                 document.getElementById('staffAccessInput').value = ""; 
                 nav('staff'); 
             } else { 
-                alert("Incorrect PIN!"); 
+                alert("Incorrect Access PIN!"); 
+                document.getElementById('staffAccessInput').value = "";
+                document.getElementById('staffAccessInput').focus();
             } 
         };
 
@@ -2590,15 +2906,32 @@
         window.openApproveModal = async (id, type) => { 
             selectedApproveId = id; 
             selectedApproveType = type; 
-            const modal = document.getElementById('taskApproveModal'); 
-            modal.classList.remove('hidden'); 
-            document.getElementById('taskModalHeader').innerText = type === 'task' ? 'Review Site Task' : 'Review Meter Reading'; 
-            document.getElementById('approveTaskTitle').innerText = "Loading..."; 
-            document.getElementById('approveTaskCost').innerText = "..."; 
-            document.getElementById('approveTaskPhotos').innerHTML = ""; 
+            if(document.getElementById('taskApproveModal')) document.getElementById('taskApproveModal').classList.remove('hidden'); 
+            if(document.getElementById('taskModalHeader')) document.getElementById('taskModalHeader').innerText = type === 'task' ? 'Review Site Task' : 'Review Meter Reading'; 
+            if(document.getElementById('approveTaskTitle')) document.getElementById('approveTaskTitle').innerText = "Loading..."; 
+            if(document.getElementById('approveTaskCost')) document.getElementById('approveTaskCost').innerText = "..."; 
+            if(document.getElementById('approveTaskPhotos')) document.getElementById('approveTaskPhotos').innerHTML = ""; 
             let data; 
             if(type === 'task') { 
-                data = projectTasksData[id]; 
+                // Updated: tasks can be globally loaded or project-specific.
+                // Assuming projectTasksData is valid if opened from inside project
+                // OR we can fetch fresh
+                if(projectTasksData[id]) {
+                     data = projectTasksData[id];
+                } else {
+                     // Try to find in notifState if available (contains basic info)
+                     const notifTask = notifState.tasks.find(t => t.id === id);
+                     if(notifTask) {
+                         data = notifTask; 
+                         // If we are not in the correct project, we might have issues saving approval if currentProjId is wrong
+                         // But we stored projectId in notifState.
+                         if(notifTask.projectId && notifTask.projectId !== currentProjId) {
+                             currentProjId = notifTask.projectId; // Context switch for approval
+                             // Ideally we should load project data too but for approval minimal context is needed
+                         }
+                     }
+                }
+                
                 if(!data) return; 
                 document.getElementById('approveTaskTitle').innerText = data.title; 
                 document.getElementById('approveTaskCost').innerText = "Rs. " + (data.submittedCost || 0).toLocaleString(); 
@@ -2637,9 +2970,9 @@
                 } 
             } 
             const btn = document.getElementById('confirmApproveTaskBtn'); 
-            if(data && (data.status === 'completed' || data.status === 'approved')) { 
+            if(btn && data && (data.status === 'completed' || data.status === 'approved')) { 
                 btn.classList.add('hidden'); 
-            } else { 
+            } else if(btn) { 
                 btn.classList.remove('hidden'); 
                 btn.onclick = () => window.confirmApprove(); 
             } 
@@ -2816,14 +3149,24 @@
             } 
         };
 
-        function initApp() { 
+        async function initApp() { 
             console.log("App Initializing...");
-            window.loadProjects(); 
-            window.checkOverduePayments(); 
-            window.loadStaff(); 
-            window.loadLands(); 
-            window.loadMeterReadings(); 
-            window.loadCustomers(); 
+            try {
+                // IMPORTANT: Authenticate anonymously to access Firestore securely
+                await signInAnonymously(auth);
+                console.log("Authenticated anonymously");
+                
+                window.loadProjects(); 
+                window.checkOverduePayments(); 
+                window.loadStaff(); 
+                window.loadLands(); 
+                window.loadMeterReadings(); 
+                window.loadCustomers(); 
+                window.initGlobalNotifications(); // New: Start listeners
+            } catch (error) {
+                console.error("Initialization Failed:", error);
+                // alert("System Error: Could not connect to database. Please check internet."); // Removed as requested
+            }
         }
         window.initApp = initApp;
 
