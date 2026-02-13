@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sithuliya Admin Pro - Ultimate Suite (Fixed V4)</title>
+    <title>Sithuliya Admin Pro - Ultimate Suite (V5 Allowances)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
@@ -438,6 +438,8 @@
                 <input type="text" id="staffPhone" placeholder="Phone Number" class="w-full p-3 border rounded-lg">
                 <input type="text" id="staffPosition" placeholder="Position (e.g. Sales Agent)" class="w-full p-3 border rounded-lg">
                 <input type="number" id="staffSalary" placeholder="Basic Salary" class="w-full p-3 border rounded-lg">
+                <input type="number" id="staffFuel" placeholder="Fuel Allowance" class="w-full p-3 border rounded-lg">
+                <input type="number" id="staffVehicle" placeholder="Vehicle Allowance" class="w-full p-3 border rounded-lg">
                 <div>
                     <label class="block text-xs font-bold text-gray-500 mb-1">Profile Photo</label>
                     <input type="file" id="staffPhoto" class="w-full text-sm">
@@ -476,6 +478,8 @@
                         <div class="flex justify-between"><span class="text-gray-500">NIC</span><span id="sdNIC" class="font-bold"></span></div>
                         <div class="flex justify-between"><span class="text-gray-500">Phone</span><span id="sdPhone" class="font-bold"></span></div>
                         <div class="flex justify-between"><span class="text-gray-500">Salary</span><span id="sdSalary" class="font-bold text-green-600"></span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Fuel Allow.</span><span id="sdFuel" class="font-bold text-slate-800"></span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Vehicle Allow.</span><span id="sdVehicle" class="font-bold text-slate-800"></span></div>
                         <div class="flex justify-between"><span class="text-gray-500">Joined</span><span id="sdJoined" class="font-bold"></span></div>
                     </div>
 
@@ -1278,9 +1282,32 @@
                 Object.values(dailyAttendance).forEach(item => {
                     const s = item.staff;
                     // Find IN, OUT, Leaves
-                    const inLog = item.logs.find(l => l.type === 'IN' || l.type === 'Late IN');
-                    const outLog = item.logs.find(l => l.type === 'OUT');
-                    const leaveLog = item.logs.find(l => l.type.includes('Leave'));
+                    // MODIFIED: Detect Late IN
+                    let inLog = item.logs.find(l => l.type === 'IN' || l.type === 'Late IN');
+                    let inText = "IN";
+                    let inColor = "text-green-600";
+                    
+                    // Logic to visually mark Late IN if time > 8:30 AM
+                    if (inLog) {
+                        const inTimeObj = new Date(inLog.timestamp.seconds * 1000);
+                        // Check if hours > 8 or (hours == 8 AND minutes > 30)
+                        if (inTimeObj.getHours() > 8 || (inTimeObj.getHours() === 8 && inTimeObj.getMinutes() > 30)) {
+                            inText = "Late IN";
+                            inColor = "text-red-600 font-bold";
+                        }
+                    }
+
+                    // MODIFIED: Check for Short Leave Approved acting as OUT
+                    let outLog = item.logs.find(l => l.type === 'OUT');
+                    const shortLeaveLog = item.logs.find(l => l.type === 'Short Leave Approved');
+                    let outTypeTag = "Clock Out";
+                    
+                    if (!outLog && shortLeaveLog) {
+                        outLog = shortLeaveLog;
+                        outTypeTag = "Short Leave (OUT)";
+                    }
+
+                    const leaveLog = item.logs.find(l => l.type.includes('Leave') && !l.type.includes('Approved')); // exclude approved from pending list display if needed, but handled below
 
                     let inTime = inLog ? new Date(inLog.timestamp.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--';
                     let outTime = outLog ? new Date(outLog.timestamp.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--';
@@ -1290,13 +1317,20 @@
                         locHtml = `<a href="https://maps.google.com/?q=${inLog.lat},${inLog.lng}" target="_blank" class="text-blue-600 underline text-xs">Map (IN)</a>`;
                     }
                     
+                    // NEW: OUT Location Display
+                    let outLocHtml = "";
+                    if(outLog && outLog.lat && outLog.lng) {
+                         outLocHtml = `<div class="mt-1"><a href="https://maps.google.com/?q=${outLog.lat},${outLog.lng}" target="_blank" class="text-red-600 underline text-xs">Map (OUT)</a></div>`;
+                    }
+                    
                     let leaveHtml = "";
                     if(leaveLog) {
                          if(leaveLog.type.includes('Short Leave Request')) {
                              leaveHtml = `<div class="mt-2 bg-purple-50 p-2 rounded border border-purple-200 flex justify-between items-center"><span class="text-xs font-bold text-purple-700">Short Leave Req</span><button onclick="approveShortLeave('${item.logs[0].staffId}', '${leaveLog.id}')" class="bg-purple-600 text-white px-2 py-1 rounded text-[10px] font-bold">Approve</button></div>`;
-                         } else if (leaveLog.type.includes('Approved')) {
-                             leaveHtml = `<div class="mt-2 text-xs font-bold text-green-600 bg-green-50 p-1 rounded text-center">Short Leave Approved</div>`;
-                         }
+                         } 
+                    }
+                    if (shortLeaveLog) {
+                        leaveHtml += `<div class="mt-2 text-xs font-bold text-green-600 bg-green-50 p-1 rounded text-center">Short Leave Approved (Auto OUT)</div>`;
                     }
 
                     html += `
@@ -1310,13 +1344,14 @@
                         </div>
                         <div class="grid grid-cols-2 gap-2 text-center text-sm mb-2">
                              <div class="bg-green-50 p-2 rounded border border-green-100">
-                                <span class="block text-[10px] font-bold text-green-500 uppercase">Clock In</span>
+                                <span class="block text-[10px] font-bold ${inColor} uppercase">${inText}</span>
                                 <span class="font-bold text-slate-700">${inTime}</span>
                                 <div class="mt-1">${locHtml}</div>
                              </div>
                              <div class="bg-red-50 p-2 rounded border border-red-100">
-                                <span class="block text-[10px] font-bold text-red-500 uppercase">Clock Out</span>
+                                <span class="block text-[10px] font-bold text-red-500 uppercase">${outTypeTag}</span>
                                 <span class="font-bold text-slate-700">${outTime}</span>
+                                ${outLocHtml}
                              </div>
                         </div>
                         ${leaveHtml}
@@ -2053,6 +2088,7 @@
                 snapshot.forEach(async (docSnap) => { 
                     const s = docSnap.data(); 
                     if (s.lastPaidMonth !== currentMonthKey) { 
+                        // Salary Transaction
                         await addDoc(collection(db, "transactions"), { 
                             date: today.toLocaleDateString('en-CA'), 
                             description: `Monthly Salary: ${s.name}`, 
@@ -2061,11 +2097,36 @@
                             category: 'Staff Salary', 
                             timestamp: serverTimestamp() 
                         }); 
+                        
+                        // Fuel Allowance Transaction
+                        if(s.fuelAllowance > 0) {
+                            await addDoc(collection(db, "transactions"), { 
+                                date: today.toLocaleDateString('en-CA'), 
+                                description: `Fuel Allowance: ${s.name}`, 
+                                amount: s.fuelAllowance || 0, 
+                                type: 'Expense', 
+                                category: 'Staff Salary', 
+                                timestamp: serverTimestamp() 
+                            });
+                        }
+
+                        // Vehicle Allowance Transaction
+                        if(s.vehicleAllowance > 0) {
+                             await addDoc(collection(db, "transactions"), { 
+                                date: today.toLocaleDateString('en-CA'), 
+                                description: `Vehicle Allowance: ${s.name}`, 
+                                amount: s.vehicleAllowance || 0, 
+                                type: 'Expense', 
+                                category: 'Staff Salary', 
+                                timestamp: serverTimestamp() 
+                            });
+                        }
+
                         await addDoc(collection(db, `staff/${docSnap.id}/earnings`), { 
                             date: today, 
-                            amount: s.salary || 0, 
+                            amount: (s.salary || 0) + (s.fuelAllowance || 0) + (s.vehicleAllowance || 0), 
                             type: 'Salary', 
-                            description: `Salary for ${new Date().toLocaleString('default', { month: 'long' })}` 
+                            description: `Salary & Allowances for ${new Date().toLocaleString('default', { month: 'long' })}` 
                         }); 
                         await updateDoc(doc(db, "staff", docSnap.id), { lastPaidMonth: currentMonthKey }); 
                         console.log(`Auto-Paid Salary for ${s.name}`); 
@@ -2085,6 +2146,8 @@
             document.getElementById('sdNIC').innerText = s.nic || '-'; 
             document.getElementById('sdPhone').innerText = s.phone || '-'; 
             document.getElementById('sdSalary').innerText = "Rs. " + (s.salary ? s.salary.toLocaleString() : '0'); 
+            document.getElementById('sdFuel').innerText = "Rs. " + (s.fuelAllowance ? s.fuelAllowance.toLocaleString() : '0'); 
+            document.getElementById('sdVehicle').innerText = "Rs. " + (s.vehicleAllowance ? s.vehicleAllowance.toLocaleString() : '0'); 
             document.getElementById('sdJoined').innerText = s.joinedDate ? new Date(s.joinedDate.seconds*1000).toLocaleDateString() : '-'; 
             
             const locSection = document.getElementById('sdLocationSection');
@@ -2185,8 +2248,10 @@
         };
         
         window.approveShortLeave = async (staffId, attId) => {
-            if(confirm("Approve Short Leave Request?")) {
+            if(confirm("Approve Short Leave Request? (This will mark as Clock OUT)")) {
+                // Update the Short Leave Request to Approved
                 await updateDoc(doc(db, `staff/${staffId}/attendance/${attId}`), { type: 'Short Leave Approved' });
+                
                 alert("Short Leave Approved!");
                 window.openStaffDetail(staffId);
                 window.loadGlobalAttendance();
@@ -2245,6 +2310,8 @@
             document.getElementById('staffPhone').value = s.phone; 
             document.getElementById('staffPosition').value = s.position; 
             document.getElementById('staffSalary').value = s.salary; 
+            document.getElementById('staffFuel').value = s.fuelAllowance || ""; 
+            document.getElementById('staffVehicle').value = s.vehicleAllowance || ""; 
         };
 
         window.saveStaff = async () => { 
@@ -2254,6 +2321,8 @@
             const phone = document.getElementById('staffPhone').value; 
             const pos = document.getElementById('staffPosition').value; 
             const sal = parseFloat(document.getElementById('staffSalary').value); 
+            const fuel = parseFloat(document.getElementById('staffFuel').value) || 0;
+            const vehicle = parseFloat(document.getElementById('staffVehicle').value) || 0;
             const file = document.getElementById('staffPhoto').files[0]; 
             if(!name || !nic) return alert("Name and NIC required"); 
             let photoBase64 = null; 
@@ -2263,7 +2332,7 @@
                 await new Promise(resolve => reader.onload = resolve); 
                 photoBase64 = reader.result; 
             } 
-            const data = { name, nic, phone, position: pos, salary: sal }; 
+            const data = { name, nic, phone, position: pos, salary: sal, fuelAllowance: fuel, vehicleAllowance: vehicle }; 
             if(photoBase64) data.photo = photoBase64; 
             if (mode === 'edit') { 
                 const id = document.getElementById('editStaffId').value; 
