@@ -1249,14 +1249,26 @@
             grid.innerHTML = "<p class='text-gray-500 p-4 col-span-full font-medium animate-pulse'>Loading location and attendance data...</p>";
             
             try {
-                // Fetch all attendance records from collection group
-                const q = query(collectionGroup(db, 'attendance'));
-                const snap = await getDocs(q);
+                // 1. Fetch Attendance Logs
+                const attQuery = query(collectionGroup(db, 'attendance'));
+                const attSnap = await getDocs(attQuery);
                 let records = [];
-                snap.forEach(d => {
+                attSnap.forEach(d => {
                     const data = d.data();
                     const staffId = d.ref.parent.parent.id;
                     records.push({ id: d.id, staffId, ...data });
+                });
+
+                // 2. Fetch Pending Leave Requests
+                const leaveQuery = query(collectionGroup(db, 'leaves'), where('status', '==', 'pending'));
+                const leaveSnap = await getDocs(leaveQuery);
+                let pendingLeaves = {};
+                leaveSnap.forEach(d => {
+                    const l = d.data();
+                    const staffId = d.ref.parent.parent.id;
+                    // Store leave request for staffId
+                    if(!pendingLeaves[staffId]) pendingLeaves[staffId] = [];
+                    pendingLeaves[staffId].push({ id: d.id, ...l });
                 });
                 
                 const filterDateStr = new Date(dateVal).toLocaleDateString('en-CA');
@@ -1264,6 +1276,7 @@
                 // Group by Staff ID
                 const dailyAttendance = {};
 
+                // Process Attendance Records first
                 records.forEach(a => {
                     const dateObj = a.timestamp?.seconds ? new Date(a.timestamp.seconds * 1000) : new Date();
                     const recDateStr = dateObj.toLocaleDateString('en-CA');
@@ -1272,32 +1285,41 @@
                     if (!dailyAttendance[a.staffId]) {
                         dailyAttendance[a.staffId] = {
                             staff: staffListCache.find(s => s.id === a.staffId) || { name: 'Unknown Staff', photo: '' },
-                            logs: []
+                            logs: [],
+                            leaves: []
                         };
                     }
                     dailyAttendance[a.staffId].logs.push(a);
                 });
 
+                // Merge Pending Leaves into the view (even if no attendance record today)
+                Object.keys(pendingLeaves).forEach(sId => {
+                    if (!dailyAttendance[sId]) {
+                         dailyAttendance[sId] = {
+                            staff: staffListCache.find(s => s.id === sId) || { name: 'Unknown Staff', photo: '' },
+                            logs: [],
+                            leaves: []
+                        };
+                    }
+                    dailyAttendance[sId].leaves = pendingLeaves[sId];
+                });
+
                 let html = "";
                 Object.values(dailyAttendance).forEach(item => {
                     const s = item.staff;
-                    // Find IN, OUT, Leaves
-                    // MODIFIED: Detect Late IN
+                    // Find IN, OUT, Logs
                     let inLog = item.logs.find(l => l.type === 'IN' || l.type === 'Late IN');
                     let inText = "IN";
                     let inColor = "text-green-600";
                     
-                    // Logic to visually mark Late IN if time > 8:30 AM
                     if (inLog) {
                         const inTimeObj = new Date(inLog.timestamp.seconds * 1000);
-                        // Check if hours > 8 or (hours == 8 AND minutes > 30)
                         if (inTimeObj.getHours() > 8 || (inTimeObj.getHours() === 8 && inTimeObj.getMinutes() > 30)) {
                             inText = "Late IN";
                             inColor = "text-red-600 font-bold";
                         }
                     }
 
-                    // MODIFIED: Check for Short Leave Approved acting as OUT
                     let outLog = item.logs.find(l => l.type === 'OUT');
                     const shortLeaveLog = item.logs.find(l => l.type === 'Short Leave Approved');
                     let outTypeTag = "Clock Out";
@@ -1307,8 +1329,6 @@
                         outTypeTag = "Short Leave (OUT)";
                     }
 
-                    const leaveLog = item.logs.find(l => l.type.includes('Leave') && !l.type.includes('Approved')); // exclude approved from pending list display if needed, but handled below
-
                     let inTime = inLog ? new Date(inLog.timestamp.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--';
                     let outTime = outLog ? new Date(outLog.timestamp.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--';
                     
@@ -1317,20 +1337,36 @@
                         locHtml = `<a href="https://maps.google.com/?q=${inLog.lat},${inLog.lng}" target="_blank" class="text-blue-600 underline text-xs">Map (IN)</a>`;
                     }
                     
-                    // NEW: OUT Location Display
                     let outLocHtml = "";
                     if(outLog && outLog.lat && outLog.lng) {
                          outLocHtml = `<div class="mt-1"><a href="https://maps.google.com/?q=${outLog.lat},${outLog.lng}" target="_blank" class="text-red-600 underline text-xs">Map (OUT)</a></div>`;
                     }
                     
+                    // Build Leave Requests HTML
                     let leaveHtml = "";
-                    if(leaveLog) {
-                         if(leaveLog.type.includes('Short Leave Request')) {
-                             leaveHtml = `<div class="mt-2 bg-purple-50 p-2 rounded border border-purple-200 flex justify-between items-center"><span class="text-xs font-bold text-purple-700">Short Leave Req</span><button onclick="approveShortLeave('${item.logs[0].staffId}', '${leaveLog.id}')" class="bg-purple-600 text-white px-2 py-1 rounded text-[10px] font-bold">Approve</button></div>`;
-                         } 
-                    }
+                    
+                    // Short Leave Requests (from Logs)
+                    const shortReqLog = item.logs.find(l => l.type.includes('Short Leave Request'));
+                    if(shortReqLog) {
+                         leaveHtml += `<div class="mt-2 bg-purple-50 p-2 rounded border border-purple-200 flex justify-between items-center"><span class="text-xs font-bold text-purple-700">Short Leave Req</span><button onclick="approveShortLeave('${item.staff.id}', '${shortReqLog.id}')" class="bg-purple-600 text-white px-2 py-1 rounded text-[10px] font-bold">Approve</button></div>`;
+                    } 
                     if (shortLeaveLog) {
                         leaveHtml += `<div class="mt-2 text-xs font-bold text-green-600 bg-green-50 p-1 rounded text-center">Short Leave Approved (Auto OUT)</div>`;
+                    }
+
+                    // Standard Leave Requests (Pending)
+                    if (item.leaves && item.leaves.length > 0) {
+                        item.leaves.forEach(l => {
+                            leaveHtml += `
+                            <div class="mt-2 bg-yellow-50 p-2 rounded border border-yellow-200">
+                                <p class="text-[10px] font-bold text-yellow-800 uppercase mb-1">Leave Request: ${l.date}</p>
+                                <p class="text-[10px] text-gray-600 italic mb-1">${l.reason || 'No reason'}</p>
+                                <div class="flex gap-2">
+                                    <button onclick="approveLeave('${item.staff.id}', '${l.id}')" class="bg-green-500 text-white px-3 py-1 rounded text-[10px] font-bold flex-1">Approve</button>
+                                    <button onclick="rejectLeave('${item.staff.id}', '${l.id}')" class="bg-red-500 text-white px-3 py-1 rounded text-[10px] font-bold flex-1">Reject</button>
+                                </div>
+                            </div>`;
+                        });
                     }
 
                     html += `
@@ -2152,6 +2188,7 @@
             
             const locSection = document.getElementById('sdLocationSection');
             if (s.pendingLocation) {
+                // Fixed: Explicitly removed 'hidden' and set display style
                 locSection.classList.remove('hidden');
                 locSection.style.display = "block";
                 const link = `https://www.google.com/maps?q=${s.pendingLocation.lat},${s.pendingLocation.lng}`;
@@ -2202,14 +2239,16 @@
             const leaveList = document.getElementById('sdLeaveList');
             leaveList.innerHTML = "Loading...";
             try {
+                // Fixed: Query Pending leaves regardless of date
                 const leaveSnap = await getDocs(query(collection(db, `staff/${id}/leaves`), where("status", "==", "pending")));
                 if (!leaveSnap.empty) {
                     leaveSection.classList.remove('hidden');
+                    leaveSection.style.display = "block"; // Force display
                     let leaveHtml = "";
                     leaveSnap.forEach(d => {
                         const l = d.data();
                         leaveHtml += `
-                        <div class="flex justify-between items-center bg-white p-2 rounded shadow-sm">
+                        <div class="flex justify-between items-center bg-white p-2 rounded shadow-sm border border-yellow-100">
                             <span class="text-xs font-bold text-slate-700">Request for: ${l.date}</span>
                             <div class="flex gap-2">
                                 <button onclick="approveLeave('${id}', '${d.id}')" class="bg-green-500 text-white px-2 py-1 rounded text-xs font-bold">Approve</button>
@@ -2220,6 +2259,7 @@
                     leaveList.innerHTML = leaveHtml;
                 } else {
                     leaveSection.classList.add('hidden');
+                    leaveSection.style.display = "none";
                 }
             } catch(e) { console.error(e); leaveSection.classList.add('hidden'); }
 
@@ -2275,18 +2315,32 @@
         };
 
         window.approveStaffLocation = async () => {
-            if (!currentStaffDetailId) return;
-            const staff = staffListCache.find(s => s.id === currentStaffDetailId);
-            if (!staff || !staff.pendingLocation) return;
+            if (!currentStaffDetailId) return alert("System Error: Staff ID missing.");
+            
+            // Re-fetch to be safe
+            const staffRef = doc(db, "staff", currentStaffDetailId);
+            const staffSnap = await getDoc(staffRef);
+            
+            if (!staffSnap.exists()) return alert("Staff member not found.");
+            const staff = staffSnap.data();
+
+            if (!staff.pendingLocation) return alert("No pending location found to approve.");
             
             if (confirm("Confirm that this is the valid work location for " + staff.name + "?")) {
-                await updateDoc(doc(db, "staff", currentStaffDetailId), {
+                await updateDoc(staffRef, {
                     workLocation: staff.pendingLocation,
-                    pendingLocation: null 
+                    pendingLocation: deleteField() 
                 });
                 alert("Location Approved! Staff can now mark attendance.");
-                document.getElementById('sdLocationSection').classList.add('hidden');
-                document.getElementById('sdLocationSection').style.display = "none";
+                // Update UI
+                const sec = document.getElementById('sdLocationSection');
+                if(sec) {
+                    sec.classList.add('hidden');
+                    sec.style.display = "none";
+                }
+                // Refresh local cache/view
+                window.loadStaff();
+                window.openStaffDetail(currentStaffDetailId);
             }
         };
 
@@ -2473,7 +2527,7 @@
                 projectTasksData = {}; 
                 snap.forEach(d => { 
                     const t = d.data(); 
-                    projectTasksData[d.id] = t; 
+                    projectTasksData[d.id] = { ...t, projectId: pid }; // Store Project ID
                     let statusBadge = ""; 
                     let actionBtn = ""; 
                     
@@ -3168,8 +3222,18 @@
         // Approval logic for meters/tasks
         window.openApproveModal = async (id, type) => {
             if(type === 'task') {
-                const t = projectTasksData[id];
-                if(!t) return;
+                let t = projectTasksData[id];
+
+                // If task not found in cache (e.g. from notification directly), find it in notifState
+                if (!t) {
+                     const notifTask = notifState.tasks.find(x => x.id === id);
+                     if (notifTask) {
+                         t = notifTask;
+                     }
+                }
+                
+                if(!t) return alert("Task details not available. Please open the project first.");
+                
                 document.getElementById('taskApproveModal').classList.remove('hidden');
                 document.getElementById('taskModalHeader').innerText = "Review Site Task";
                 document.getElementById('approveTaskTitle').innerText = t.title;
@@ -3190,11 +3254,14 @@
                 const adminBtn = document.getElementById('confirmApproveTaskBtn');
                 manBtn.classList.add('hidden');
                 adminBtn.classList.add('hidden');
+                
+                // Show buttons based on status. Default to 'new' if status is missing.
+                const status = t.status || 'new';
 
-                if (t.status === 'new') {
+                if (status === 'new') {
                     manBtn.classList.remove('hidden');
                     manBtn.onclick = () => window.managerApproveTask(id);
-                } else if (t.status === 'manager_approved') {
+                } else if (status === 'manager_approved') {
                     adminBtn.classList.remove('hidden');
                     adminBtn.onclick = () => window.adminApproveTask(id);
                 }
@@ -3231,7 +3298,7 @@
 
         window.managerApproveTask = async (id) => {
             if(!confirm("Manager Approve this task?")) return;
-            const t = notifState.tasks.find(x => x.id === id);
+            const t = notifState.tasks.find(x => x.id === id) || projectTasksData[id];
             const pid = t ? t.projectId : currentProjId;
             if(!pid) return alert("Project ID not found.");
             
@@ -3243,8 +3310,8 @@
         window.adminApproveTask = async (id) => {
             if(!confirm("Admin Final Approve and Add to Expenses?")) return;
             const t = notifState.tasks.find(x => x.id === id) || projectTasksData[id];
-            const pid = t.projectId || currentProjId;
-            if(!pid) return;
+            const pid = t ? t.projectId : currentProjId;
+            if(!pid) return alert("Project ID not found.");
 
             const cost = parseFloat(prompt("Confirm Final Cost to add to expenses:", t.submittedCost || 0));
             if(isNaN(cost)) return;
