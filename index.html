@@ -583,7 +583,13 @@
         <div class="bg-white p-6 rounded-2xl w-full max-w-2xl mx-4 my-10 shadow-2xl relative modal-content-scroll">
             <button onclick="document.getElementById('paymentModal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
             <div class="flex justify-between items-start mb-4 border-b pb-4">
-                <div><h2 class="text-2xl font-bold text-slate-800">Payment Record</h2><p id="payBlockInfo" class="text-blue-700 font-bold text-sm"></p></div>
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-800">Payment Record</h2>
+                    <p class="text-blue-700 font-bold text-sm flex items-center">
+                        <span id="payBlockInfo"></span>
+                        <button onclick="openEditBlockModal()" class="ml-2 text-gray-400 hover:text-blue-600"><i class="fas fa-pencil-alt"></i></button>
+                    </p>
+                </div>
                 <div class="flex flex-col items-end gap-1"><button id="editPlanBtn" class="text-xs text-blue-600 underline font-bold" onclick="toggleEditPlan()">Edit Interest/Plan</button><button id="resellBtn" class="hidden text-xs bg-red-100 text-red-600 px-3 py-1 rounded font-bold hover:bg-red-200" onclick="processResell()">CANCEL & RESELL</button></div>
             </div>
             
@@ -804,7 +810,10 @@
     <div id="sellModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white p-6 rounded-2xl w-full max-w-2xl shadow-2xl relative my-8 max-h-[90vh] overflow-y-auto">
             <button onclick="closeSellModal()" class="absolute top-4 right-4 text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
-            <h2 class="text-xl font-bold mb-4 text-slate-800">New Sale: <span id="sellBlockName" class="text-blue-600"></span></h2>
+            <h2 class="text-xl font-bold mb-4 text-slate-800">
+                New Sale: <span id="sellBlockName" class="text-blue-600"></span>
+                <button onclick="openEditBlockModal()" class="ml-2 text-gray-400 hover:text-blue-600"><i class="fas fa-pencil-alt"></i></button>
+            </h2>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
@@ -929,6 +938,23 @@
                  <button onclick="document.getElementById('staffAccessModal').classList.add('hidden')" class="flex-1 py-2 text-gray-500 font-bold border rounded">Cancel</button>
                  <button onclick="verifyStaffAccess()" class="flex-1 py-2 bg-blue-600 text-white font-bold rounded shadow">Verify</button>
              </div>
+        </div>
+    </div>
+
+    <!-- 14. Edit Block Modal -->
+    <div id="editBlockModal" class="hidden fixed inset-0 bg-black/50 z-[80] flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white p-6 rounded-2xl w-full max-w-sm mx-4 shadow-2xl">
+            <h3 class="font-bold text-lg mb-4 text-slate-800">Edit Block Details</h3>
+            <input type="hidden" id="editBlockId">
+            <div class="space-y-3">
+                <div><label class="text-xs font-bold text-gray-500">Block Name</label><input type="text" id="editBName" class="w-full p-2 border rounded"></div>
+                <div><label class="text-xs font-bold text-gray-500">Size (Perches)</label><input type="number" id="editBSize" class="w-full p-2 border rounded" step="0.01"></div>
+                <div><label class="text-xs font-bold text-gray-500">Base Price</label><input type="number" id="editBPrice" class="w-full p-2 border rounded" step="0.01"></div>
+            </div>
+            <div class="flex justify-end gap-2 mt-6">
+                <button onclick="document.getElementById('editBlockModal').classList.add('hidden')" class="px-4 py-2 text-gray-500 font-bold">Cancel</button>
+                <button onclick="saveBlockChanges()" class="px-6 py-2 bg-blue-600 text-white rounded font-bold shadow hover:bg-blue-700">Save Changes</button>
+            </div>
         </div>
     </div>
 
@@ -1103,7 +1129,7 @@
                     const s = d.data(); 
                     s.id = d.id; 
                     staffListCache.push(s); 
-                    const photo = s.photo || 'https://via.placeholder.com/150'; 
+                    const photo = s.photo || `https://ui-avatars.com/api/?name=${s.name}&background=eff6ff&color=1e3a8a&rounded=true&bold=true`;
                     const isPaid = s.lastPaidMonth === curMonthKey; 
                     const el = document.createElement('div'); 
                     el.className = "bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4 cursor-pointer hover:shadow-md transition relative overflow-hidden"; 
@@ -1372,7 +1398,7 @@
                     html += `
                     <div class="bg-white p-5 rounded-2xl shadow-sm border border-blue-100 hover:shadow-md transition relative overflow-hidden flex flex-col justify-between">
                         <div class="flex items-center gap-4 mb-4">
-                            <img src="${s.photo || 'https://placehold.co/150x150/1e3a8a/ffffff?text=User'}" class="w-14 h-14 rounded-full object-cover border-2 border-gray-200 cursor-pointer shadow-sm" onclick="document.getElementById('imgModalSrc').src='${s.photo || 'https://placehold.co/150'}';document.getElementById('imgModal').classList.remove('hidden')">
+                            <img src="${s.photo || `https://ui-avatars.com/api/?name=${s.name}&background=eff6ff&color=1e3a8a&rounded=true&bold=true`}" class="w-14 h-14 rounded-full object-cover border-2 border-gray-200 cursor-pointer shadow-sm" onclick="document.getElementById('imgModalSrc').src='${s.photo || `https://ui-avatars.com/api/?name=${s.name}&background=eff6ff&color=1e3a8a&rounded=true&bold=true`}';document.getElementById('imgModal').classList.remove('hidden')">
                             <div>
                                 <h4 class="font-bold text-slate-800 text-lg">${s.name}</h4>
                                 <p class="text-xs text-gray-500 font-medium">${s.position || 'Staff'}</p>
@@ -2118,13 +2144,61 @@
 
         window.checkPayroll = async () => { 
             const today = new Date(); 
-            if (today.getDate() >= 25) { 
-                const currentMonthKey = `${today.getFullYear()}_${today.getMonth() + 1}`; 
-                const snapshot = await getDocs(collection(db, "staff")); 
-                snapshot.forEach(async (docSnap) => { 
-                    const s = docSnap.data(); 
-                    if (s.lastPaidMonth !== currentMonthKey) { 
-                        // Salary Transaction
+            const currentMonthKey = `${today.getFullYear()}_${today.getMonth() + 1}`; 
+            const snapshot = await getDocs(collection(db, "staff")); 
+            
+            snapshot.forEach(async (docSnap) => { 
+                const s = docSnap.data(); 
+                let isUpdated = false;
+                let updates = {};
+
+                // 1. Allowances (10 වෙනිදා හෝ ඊට පසුව ගෙවීම)
+                if (today.getDate() >= 10 && s.lastPaidAllowanceMonth !== currentMonthKey) { 
+                    let totalAllowance = 0;
+
+                    // Fuel Allowance Transaction
+                    if(s.fuelAllowance > 0) {
+                        await addDoc(collection(db, "transactions"), { 
+                            date: today.toLocaleDateString('en-CA'), 
+                            description: `Fuel Allowance: ${s.name}`, 
+                            amount: s.fuelAllowance || 0, 
+                            type: 'Expense', 
+                            category: 'Staff Salary', 
+                            timestamp: serverTimestamp() 
+                        });
+                        totalAllowance += (s.fuelAllowance || 0);
+                    }
+
+                    // Vehicle Allowance Transaction
+                    if(s.vehicleAllowance > 0) {
+                         await addDoc(collection(db, "transactions"), { 
+                            date: today.toLocaleDateString('en-CA'), 
+                            description: `Vehicle Allowance: ${s.name}`, 
+                            amount: s.vehicleAllowance || 0, 
+                            type: 'Expense', 
+                            category: 'Staff Salary', 
+                            timestamp: serverTimestamp() 
+                        });
+                        totalAllowance += (s.vehicleAllowance || 0);
+                    }
+
+                    if (totalAllowance > 0) {
+                        await addDoc(collection(db, `staff/${docSnap.id}/earnings`), { 
+                            date: today, 
+                            amount: totalAllowance, 
+                            type: 'Allowance', 
+                            description: `Allowances for ${new Date().toLocaleString('default', { month: 'long' })}` 
+                        }); 
+                    }
+
+                    updates.lastPaidAllowanceMonth = currentMonthKey;
+                    isUpdated = true;
+                    console.log(`Auto-Paid Allowances for ${s.name}`); 
+                } 
+
+                // 2. Basic Salary (25 වෙනිදා හෝ ඊට පසුව ගෙවීම)
+                if (today.getDate() >= 25 && s.lastPaidSalaryMonth !== currentMonthKey) {
+                    if (s.salary > 0) {
                         await addDoc(collection(db, "transactions"), { 
                             date: today.toLocaleDateString('en-CA'), 
                             description: `Monthly Salary: ${s.name}`, 
@@ -2133,42 +2207,27 @@
                             category: 'Staff Salary', 
                             timestamp: serverTimestamp() 
                         }); 
-                        
-                        // Fuel Allowance Transaction
-                        if(s.fuelAllowance > 0) {
-                            await addDoc(collection(db, "transactions"), { 
-                                date: today.toLocaleDateString('en-CA'), 
-                                description: `Fuel Allowance: ${s.name}`, 
-                                amount: s.fuelAllowance || 0, 
-                                type: 'Expense', 
-                                category: 'Staff Salary', 
-                                timestamp: serverTimestamp() 
-                            });
-                        }
-
-                        // Vehicle Allowance Transaction
-                        if(s.vehicleAllowance > 0) {
-                             await addDoc(collection(db, "transactions"), { 
-                                date: today.toLocaleDateString('en-CA'), 
-                                description: `Vehicle Allowance: ${s.name}`, 
-                                amount: s.vehicleAllowance || 0, 
-                                type: 'Expense', 
-                                category: 'Staff Salary', 
-                                timestamp: serverTimestamp() 
-                            });
-                        }
 
                         await addDoc(collection(db, `staff/${docSnap.id}/earnings`), { 
                             date: today, 
-                            amount: (s.salary || 0) + (s.fuelAllowance || 0) + (s.vehicleAllowance || 0), 
+                            amount: (s.salary || 0), 
                             type: 'Salary', 
-                            description: `Salary & Allowances for ${new Date().toLocaleString('default', { month: 'long' })}` 
-                        }); 
-                        await updateDoc(doc(db, "staff", docSnap.id), { lastPaidMonth: currentMonthKey }); 
-                        console.log(`Auto-Paid Salary for ${s.name}`); 
-                    } 
-                }); 
-            } 
+                            description: `Basic Salary for ${new Date().toLocaleString('default', { month: 'long' })}` 
+                        });
+                    }
+
+                    updates.lastPaidSalaryMonth = currentMonthKey;
+                    // UI එකේ "PAID" badge එක පෙන්වන්න පරණ variable එකත් අප්ඩේට් කරනවා
+                    updates.lastPaidMonth = currentMonthKey; 
+                    isUpdated = true;
+                    console.log(`Auto-Paid Salary for ${s.name}`);
+                }
+
+                // Database එක Update කිරීම
+                if (isUpdated) {
+                    await updateDoc(doc(db, "staff", docSnap.id), updates); 
+                }
+            }); 
         };
 
         window.openStaffDetail = async (id) => { 
@@ -2176,7 +2235,7 @@
             const s = staffListCache.find(x => x.id === id); 
             if(!s) return; 
             
-            document.getElementById('sdPhoto').src = s.photo || 'https://via.placeholder.com/150'; 
+            document.getElementById('sdPhoto').src = s.photo || `https://ui-avatars.com/api/?name=${s.name}&background=eff6ff&color=1e3a8a&rounded=true&bold=true`;
             document.getElementById('sdName').innerText = s.name; 
             document.getElementById('sdPosition').innerText = s.position || 'Staff Member'; 
             document.getElementById('sdNIC').innerText = s.nic || '-'; 
@@ -3224,15 +3283,26 @@
             if(type === 'task') {
                 let t = projectTasksData[id];
 
-                // If task not found in cache (e.g. from notification directly), find it in notifState
+                // FIX: If task not found in local cache (direct access), try notification state or fetch
                 if (!t) {
                      const notifTask = notifState.tasks.find(x => x.id === id);
-                     if (notifTask) {
-                         t = notifTask;
-                     }
+                     if (notifTask) t = notifTask;
                 }
                 
-                if(!t) return alert("Task details not available. Please open the project first.");
+                // Fallback: Fetch directly if still missing
+                if(!t) {
+                    try {
+                        // We need project ID. If opened from notification, we might not know PID easily unless stored.
+                        // Assuming currentProjId is set or iterating projects (expensive)
+                        // Best effort: if currentProjId exists
+                        if(currentProjId) {
+                            const snap = await getDoc(doc(db, `projects/${currentProjId}/tasks/${id}`));
+                            if(snap.exists()) t = { ...snap.data(), projectId: currentProjId };
+                        }
+                    } catch(e) { console.error("Fetch task error", e); }
+                }
+
+                if(!t) return alert("Task details loading... Please try again or open Project first.");
                 
                 document.getElementById('taskApproveModal').classList.remove('hidden');
                 document.getElementById('taskModalHeader').innerText = "Review Site Task";
@@ -3254,17 +3324,17 @@
                 const adminBtn = document.getElementById('confirmApproveTaskBtn');
                 manBtn.classList.add('hidden');
                 adminBtn.classList.add('hidden');
-                
-                // Show buttons based on status. Default to 'new' if status is missing.
-                const status = t.status || 'new';
+               // Show buttons based on status. Default to 'new' if status is missing.
+const status = t.status || 'new';
 
-                if (status === 'new') {
-                    manBtn.classList.remove('hidden');
-                    manBtn.onclick = () => window.managerApproveTask(id);
-                } else if (status === 'manager_approved') {
-                    adminBtn.classList.remove('hidden');
-                    adminBtn.onclick = () => window.adminApproveTask(id);
-                }
+if (status === 'manager_approved') {
+    adminBtn.classList.remove('hidden');
+    adminBtn.onclick = () => window.adminApproveTask(id);
+} else if (status !== 'completed' && status !== 'approved') {
+    // 'new', 'pending' වගේ approve වෙලා නැති අනිත් හැම අවස්ථාවකදීම Manager Approve button එක පෙන්නනවා
+    manBtn.classList.remove('hidden');
+    manBtn.onclick = () => window.managerApproveTask(id);
+}
             } else if (type === 'meter') {
                 const docSnap = await getDoc(doc(db, "meter_readings", id));
                 if(!docSnap.exists()) return;
@@ -3344,6 +3414,40 @@
             document.getElementById('taskApproveModal').classList.add('hidden');
         };
 
+        // NEW BLOCK EDIT FUNCTIONS
+        window.openEditBlockModal = () => {
+             document.getElementById('editBlockId').value = selectedBlockId;
+             document.getElementById('editBName').value = selectedBlockData.name;
+             document.getElementById('editBSize').value = selectedBlockData.size;
+             document.getElementById('editBPrice').value = selectedBlockData.price; // Base price
+             document.getElementById('editBlockModal').classList.remove('hidden');
+        };
+
+        window.saveBlockChanges = async () => {
+             const id = document.getElementById('editBlockId').value;
+             const name = document.getElementById('editBName').value;
+             const size = document.getElementById('editBSize').value;
+             const price = parseFloat(document.getElementById('editBPrice').value);
+
+             await updateDoc(doc(db, `projects/${currentProjId}/blocks/${id}`), {
+                 name, size, price
+             });
+             
+             // Update local data
+             selectedBlockData.name = name;
+             selectedBlockData.size = size;
+             selectedBlockData.price = price;
+             
+             // Update UI in other modals if open
+             if(document.getElementById('sellBlockName')) document.getElementById('sellBlockName').innerText = name;
+             if(document.getElementById('payBlockInfo')) document.getElementById('payBlockInfo').innerText = `${name} - ${selectedBlockData.customer?.name || ''}`;
+             if(document.getElementById('finalPrice')) document.getElementById('finalPrice').value = price;
+
+             document.getElementById('editBlockModal').classList.add('hidden');
+             alert("Block Details Updated");
+        };
+
+        // --- NEW REPORT GENERATION FUNCTION ---
         window.genReport = async (type) => { 
             const start = document.getElementById('repFrom').value; 
             const end = document.getElementById('repTo').value; 
@@ -3360,60 +3464,189 @@
                     let txs = [];
                     snap.forEach(d => {
                         const t = d.data();
-                        if(t.date >= start && t.date <= end) {
-                            if (type === 'petty' && t.category !== 'Petty Cash' && !(t.description||"").toLowerCase().includes('petty')) return; 
+                        if (t.date >= start && t.date <= end) {
+                            if (type === 'petty' && t.category !== 'Petty Cash') return;
                             txs.push(t);
                         }
                     });
                     
-                    // දිනයට අනුව පෙළගැස්වීම (Sort)
-                    txs.sort((a,b) => (a.date || "").localeCompare(b.date || ""));
-
-                    let rows = ""; 
-                    let totalIn = 0, totalOut = 0; 
-                    txs.forEach(t => { 
-                        const isInc = t.type === 'Income'; 
-                        if(isInc) totalIn += t.amount; else totalOut += t.amount; 
-                        rows += `<tr class="border-b"> <td class="p-2">${t.date}</td> <td class="p-2">${t.description}</td> <td class="p-2 font-bold ${isInc ? 'text-green-600' : 'text-red-600'}">${isInc ? 'IN' : 'OUT'}</td> <td class="p-2 text-right">${(t.amount||0).toLocaleString()}</td> </tr>`; 
-                    }); 
-                    html += `<table class="w-full text-xs"><thead><tr class="bg-gray-100"><th>Date</th><th>Desc</th><th>Type</th><th class="text-right">Amount</th></tr></thead><tbody>${rows}</tbody></table> <div class="mt-4 flex justify-between font-bold text-sm border-t pt-2"> <span>Total Income: ${totalIn.toLocaleString()}</span> <span>Total Expense: ${totalOut.toLocaleString()}</span> <span class="${totalIn-totalOut >= 0 ? 'text-green-600' : 'text-red-600'}">Net: ${(totalIn-totalOut).toLocaleString()}</span> </div>`; 
-                } else if (type === 'pnl') { 
-                    const snap = await getDocs(collection(db, "transactions")); 
-                    let inc = 0, exp = 0; 
-                    let cats = {}; 
-                    snap.forEach(d => { 
-                        const t = d.data(); 
-                        if(t.date >= start && t.date <= end) {
-                            if(t.type === 'Income') inc += t.amount; else exp += t.amount; 
-                            if(!cats[t.category]) cats[t.category] = 0; 
-                            cats[t.category] += t.amount; 
+                    txs.sort((a,b) => new Date(a.date) - new Date(b.date));
+                    
+                    let rows = "";
+                    let bal = 0;
+                    txs.forEach(t => {
+                        if (t.type === 'Income') bal += t.amount; else bal -= t.amount;
+                        rows += `<tr class="border-b hover:bg-gray-50">
+                            <td class="p-2">${t.date}</td>
+                            <td class="p-2">${t.description}</td>
+                            <td class="p-2 text-right font-bold text-green-600">${t.type === 'Income' ? t.amount.toLocaleString() : '-'}</td>
+                            <td class="p-2 text-right font-bold text-red-600">${t.type === 'Expense' ? t.amount.toLocaleString() : '-'}</td>
+                            <td class="p-2 text-right font-bold bg-gray-50">${bal.toLocaleString()}</td>
+                        </tr>`;
+                    });
+                    
+                    html += `<table class="w-full text-xs text-left border rounded">
+                        <thead class="bg-gray-100 font-bold uppercase"><tr><th class="p-2">Date</th><th class="p-2">Description</th><th class="p-2 text-right">Income</th><th class="p-2 text-right">Expense</th><th class="p-2 text-right">Balance</th></tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>`;
+                    
+                } else if (type === 'pnl') {
+                    const snap = await getDocs(collection(db, "transactions"));
+                    let inc = {}, exp = {};
+                    let totInc = 0, totExp = 0;
+                    
+                    snap.forEach(d => {
+                        const t = d.data();
+                        if (t.date >= start && t.date <= end) {
+                            if (t.type === 'Income') {
+                                inc[t.category] = (inc[t.category] || 0) + t.amount;
+                                totInc += t.amount;
+                            } else {
+                                exp[t.category] = (exp[t.category] || 0) + t.amount;
+                                totExp += t.amount;
+                            }
                         }
-                    }); 
-                    let catRows = ""; 
-                    for(const [k, v] of Object.entries(cats)) { 
-                        catRows += `<tr><td>${k}</td><td class="text-right">${v.toLocaleString()}</td></tr>`; 
-                    } 
-                    html += `<div class="grid grid-cols-2 gap-4 mb-6"> <div class="bg-green-50 p-4 rounded text-center"><h3 class="font-bold text-green-700">Total Income</h3><p class="text-xl">${inc.toLocaleString()}</p></div> <div class="bg-red-50 p-4 rounded text-center"><h3 class="font-bold text-red-700">Total Expenses</h3><p class="text-xl">${exp.toLocaleString()}</p></div> </div> <div class="text-center p-4 bg-slate-100 rounded mb-4"><h3 class="font-bold">NET PROFIT / (LOSS)</h3><p class="text-2xl font-bold ${inc-exp>=0?'text-green-600':'text-red-600'}">Rs. ${(inc-exp).toLocaleString()}</p></div> <h4 class="font-bold border-b mb-2">Category Breakdown</h4> <table class="w-full text-xs"><tbody>${catRows}</tbody></table>`; 
-                } else if (type === 'bs') { 
-                    const bsSnap = await getDocs(collection(db, "bs_items")); 
-                    let assets = [], liabs = [], equity = []; 
-                    let totA = 0, totL = 0, totE = 0; 
-                    bsSnap.forEach(d => { 
-                        const i = d.data(); 
-                        if(i.date <= end) {
-                            const row = `<tr><td>${i.name}</td><td class="text-right">${(i.amount||0).toLocaleString()}</td></tr>`; 
-                            if(i.type.includes('Asset')) { assets.push(row); totA += i.amount; } 
-                            else if(i.type.includes('Liability')) { liabs.push(row); totL += i.amount; } 
-                            else { equity.push(row); totE += i.amount; } 
+                    });
+                    
+                    let incRows = Object.keys(inc).map(k => `<tr><td class="p-2">${k}</td><td class="p-2 text-right">${inc[k].toLocaleString()}</td></tr>`).join('');
+                    let expRows = Object.keys(exp).map(k => `<tr><td class="p-2">${k}</td><td class="p-2 text-right">${exp[k].toLocaleString()}</td></tr>`).join('');
+                    
+                    html += `<div class="grid grid-cols-2 gap-4 text-xs">
+                        <div class="border rounded p-2">
+                            <h3 class="font-bold bg-green-100 p-1 mb-2 text-green-800">INCOME</h3>
+                            <table class="w-full">${incRows}</table>
+                            <div class="border-t mt-2 pt-1 font-bold text-right text-lg text-green-700">Total: ${totInc.toLocaleString()}</div>
+                        </div>
+                        <div class="border rounded p-2">
+                            <h3 class="font-bold bg-red-100 p-1 mb-2 text-red-800">EXPENSES</h3>
+                            <table class="w-full">${expRows}</table>
+                            <div class="border-t mt-2 pt-1 font-bold text-right text-lg text-red-700">Total: ${totExp.toLocaleString()}</div>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-center font-bold text-2xl border p-4 rounded bg-slate-50">
+                        NET PROFIT: <span class="${(totInc-totExp)>=0 ? 'text-green-600' : 'text-red-600'}">Rs. ${(totInc-totExp).toLocaleString()}</span>
+                    </div>`;
+                    
+                } else if (type === 'bs') {
+                    const snap = await getDocs(collection(db, "bs_items"));
+                    let assets = {fixed: [], current: []};
+                    let equity = [];
+                    let liabilities = [];
+                    
+                    snap.forEach(d => {
+                        const i = d.data();
+                        if (i.date <= end) { // Balance sheet is cumulative up to a date
+                            if (i.type === 'Non-Current Asset') assets.fixed.push(i);
+                            else if (i.type === 'Current Asset') assets.current.push(i);
+                            else if (i.type === 'Equity') equity.push(i);
+                            else if (i.type === 'Current Liability') liabilities.push(i);
                         }
-                    }); 
-                    html += `<div class="grid grid-cols-2 gap-8"> <div><h3 class="font-bold bg-blue-100 p-1 mb-2">ASSETS</h3><table class="w-full text-xs">${assets.join('')}</table><div class="border-t font-bold text-right mt-2">${totA.toLocaleString()}</div></div> <div> <h3 class="font-bold bg-red-100 p-1 mb-2">LIABILITIES</h3><table class="w-full text-xs">${liabs.join('')}</table><div class="border-t font-bold text-right mt-2">${totL.toLocaleString()}</div> <h3 class="font-bold bg-yellow-100 p-1 mb-2 mt-4">EQUITY</h3><table class="w-full text-xs">${equity.join('')}</table><div class="border-t font-bold text-right mt-2">${totE.toLocaleString()}</div> </div> </div>`; 
-                } 
-                container.innerHTML = html; 
-                document.getElementById('printContainer').innerHTML = `<div style="padding:20px; font-family:sans-serif;">${html}</div>`; 
+                    });
+                    
+                    // Helper to sum and generate rows
+                    const genSec = (items) => {
+                        let tot = 0; 
+                        let r = items.map(x => { tot+=x.amount; return `<tr><td>${x.name}</td><td class="text-right">${x.amount.toLocaleString()}</td></tr>`; }).join('');
+                        return {html: r, total: tot};
+                    };
+                    
+                    const fA = genSec(assets.fixed);
+                    const cA = genSec(assets.current);
+                    const eq = genSec(equity);
+                    const li = genSec(liabilities);
+                    
+                    // We also need cash balance from transactions up to 'end' date
+                    const txSnap = await getDocs(collection(db, "transactions"));
+                    let cashBal = 0;
+                    txSnap.forEach(d => {
+                        const t = d.data();
+                        if (t.date <= end) {
+                            if (t.type === 'Income') cashBal += t.amount; else cashBal -= t.amount;
+                        }
+                    });
+                    
+                    cA.html += `<tr class="font-bold text-blue-600"><td>Cash / Bank Balance</td><td class="text-right">${cashBal.toLocaleString()}</td></tr>`;
+                    cA.total += cashBal;
+                    
+                    const totAssets = fA.total + cA.total;
+                    const totEqLiab = eq.total + li.total;
+                    
+                    html += `<div class="grid grid-cols-2 gap-6 text-xs">
+                        <div>
+                            <h3 class="font-bold text-lg border-b mb-2">ASSETS</h3>
+                            <h4 class="font-bold text-gray-500 mt-2">Non-Current Assets</h4>
+                            <table class="w-full mb-2">${fA.html}</table>
+                            <h4 class="font-bold text-gray-500 mt-2">Current Assets</h4>
+                            <table class="w-full mb-2">${cA.html}</table>
+                            <div class="border-t-2 border-black mt-2 pt-1 font-bold text-right text-lg">Total Assets: ${totAssets.toLocaleString()}</div>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg border-b mb-2">EQUITY & LIABILITIES</h3>
+                            <h4 class="font-bold text-gray-500 mt-2">Equity</h4>
+                            <table class="w-full mb-2">${eq.html}</table>
+                            <h4 class="font-bold text-gray-500 mt-2">Current Liabilities</h4>
+                            <table class="w-full mb-2">${li.html}</table>
+                            <div class="border-t-2 border-black mt-2 pt-1 font-bold text-right text-lg">Total Equity & Liab: ${totEqLiab.toLocaleString()}</div>
+                        </div>
+                    </div>`;
+                }
+                
+                container.innerHTML = html;
+                document.getElementById('printContainer').innerHTML = `<div style="padding:20px; font-family:sans-serif;">${html}</div>`;
             } catch(e) {
                 console.error(e);
-                container.innerHTML = "<p class='text-center p-4 text-red-500'>Error loading report data. Check console for details.</p>"; 
+                container.innerHTML = "<p class='text-center p-4 text-red-500'>Error loading report data. Check console for details.</p>";
+            }
+        };
+
+        window.saveTransaction = async () => {
+            const date = document.getElementById('txDate').value;
+            const desc = document.getElementById('txDesc').value;
+            const vno = document.getElementById('txVno').value;
+            const type = document.getElementById('txType').value;
+            const amount = parseFloat(document.getElementById('txAmount').value);
+            const cat = document.getElementById('txCategory').value;
+            const isPetty = document.getElementById('txIsPetty').checked;
+            
+            if (!date || !amount || !desc) return alert("Please fill all fields");
+            
+            try {
+                await addDoc(collection(db, "transactions"), {
+                    date,
+                    description: vno ? `${desc} (V:${vno})` : desc,
+                    amount,
+                    type,
+                    category: isPetty ? "Petty Cash" : cat,
+                    timestamp: serverTimestamp()
+                });
+                alert("Transaction Saved!");
+                document.getElementById('txAmount').value = "";
+                document.getElementById('txDesc').value = "";
+                document.getElementById('txVno').value = "";
+            } catch (e) {
+                console.error(e);
+                alert("Error saving transaction");
+            }
+        };
+
+        window.saveBSItem = async () => {
+            const date = document.getElementById('bsDate').value;
+            const name = document.getElementById('bsName').value;
+            const type = document.getElementById('bsType').value;
+            const amount = parseFloat(document.getElementById('bsAmount').value);
+            
+            if (!date || !amount || !name) return alert("Please fill all fields");
+            
+            try {
+                await addDoc(collection(db, "bs_items"), {
+                    date, name, type, amount, timestamp: serverTimestamp()
+                });
+                alert("Balance Sheet Item Saved!");
+                document.getElementById('bsAmount').value = "";
+                document.getElementById('bsName').value = "";
+            } catch (e) {
+                console.error(e);
+                alert("Error saving item");
             }
         };
 
