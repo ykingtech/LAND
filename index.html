@@ -134,7 +134,7 @@
                 <button onclick="nav('lands')" id="nav-lands" class="nav-btn w-full text-left p-3 rounded-xl hover:bg-slate-800 text-gray-400 font-medium transition"><i class="fas fa-tree mr-3"></i> Lands</button>
                 <button onclick="openStaffAccess()" id="nav-staff" class="nav-btn w-full text-left p-3 rounded-xl hover:bg-slate-800 text-gray-400 font-medium transition"><i class="fas fa-users mr-3"></i> Staff</button>
                 <button onclick="nav('readings')" id="nav-readings" class="nav-btn w-full text-left p-3 rounded-xl hover:bg-slate-800 text-gray-400 font-medium transition"><i class="fas fa-tachometer-alt mr-3"></i> Meter Approvals</button>
-                <button onclick="nav('reports')" id="nav-reports" class="nav-btn w-full text-left p-3 rounded-xl hover:bg-slate-800 text-gray-400 font-medium transition"><i class="fas fa-file-invoice-dollar mr-3"></i> Financial Center</button>
+                <button onclick="openFinanceAccess()"id="nav-reports" class="nav-btn w-full text-left p-3 rounded-xl hover:bg-slate-800 text-gray-400 font-medium transition"><i class="fas fa-file-invoice-dollar mr-3"></i> Financial Center</button>
                 <div class="pt-8 border-t border-slate-800 mt-8">
                     <button onclick="nav('settings')" id="nav-settings" class="nav-btn w-full text-left p-3 rounded-xl hover:bg-slate-800 text-gray-400 font-medium transition"><i class="fas fa-cog mr-3"></i> Settings</button>
                 </div>
@@ -333,7 +333,12 @@
                 </div>
                 
                  <div id="page-reports" class="hidden">
-                    <h2 class="text-2xl font-bold text-slate-800 mb-6">Financial Center</h2>
+                   <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+    <h2 class="text-2xl font-bold text-slate-800">Financial Center</h2>
+    <button onclick="document.getElementById('financePassChangeModal').classList.remove('hidden')" class="bg-yellow-500 text-white px-3 py-2 rounded-lg font-bold hover:bg-yellow-600 text-xs">
+        <i class="fas fa-key mr-1"></i> Change Finance Password
+    </button>
+</div>
                     <div class="flex border-b border-gray-200 mb-6 overflow-x-auto">
                         <button onclick="switchFinTab('entry')" id="ft-entry" class="px-6 py-3 font-bold text-slate-800 border-b-2 border-blue-800 transition whitespace-nowrap">Data Entry</button>
                         <button onclick="switchFinTab('reports')" id="ft-reports" class="px-6 py-3 font-bold text-gray-400 hover:text-blue-600 transition whitespace-nowrap">View Reports</button>
@@ -940,7 +945,17 @@
              </div>
         </div>
     </div>
-
+<div id="financeAccessModal" class="hidden fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4">
+    <div class="bg-white p-6 rounded-2xl w-full max-w-sm text-center shadow-2xl">
+         <h3 class="text-xl font-bold mb-4 text-slate-800">Finance Area Access</h3>
+         <p class="text-sm text-gray-500 mb-4">Enter Access Password to continue</p>
+         <input type="password" id="financeAccessInput" class="w-full text-center text-2xl tracking-widest p-2 border rounded-lg mb-4 font-bold">
+         <div class="flex gap-2">
+             <button onclick="document.getElementById('financeAccessModal').classList.add('hidden')" class="flex-1 py-2 text-gray-500 font-bold border rounded">Cancel</button>
+             <button onclick="verifyFinanceAccess()" class="flex-1 py-2 bg-blue-600 text-white font-bold rounded shadow">Verify</button>
+         </div>
+    </div>
+</div>
     <!-- 14. Edit Block Modal -->
     <div id="editBlockModal" class="hidden fixed inset-0 bg-black/50 z-[80] flex items-center justify-center backdrop-blur-sm">
         <div class="bg-white p-6 rounded-2xl w-full max-w-sm mx-4 shadow-2xl">
@@ -957,7 +972,17 @@
             </div>
         </div>
     </div>
-
+<div id="financePassChangeModal" class="hidden fixed inset-0 bg-black/50 z-[60] flex items-center justify-center backdrop-blur-sm">
+    <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm mx-4 relative">
+        <button onclick="document.getElementById('financePassChangeModal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500"><i class="fas fa-times"></i></button>
+        <h3 class="text-lg font-bold mb-4 text-slate-800">Change Finance Access Password</h3>
+        <div class="space-y-4">
+            <input type="password" id="finAdminAuthPass" placeholder="Admin Password (To Verify)" class="w-full p-3 border rounded-lg text-center">
+            <input type="text" id="newFinancePass" placeholder="New Finance Password" class="w-full p-3 border rounded-lg text-center font-bold text-blue-600">
+            <button onclick="updateFinanceAccessPass()" class="w-full bg-yellow-500 text-white font-bold py-3 rounded-lg shadow hover:bg-yellow-600">Update Password</button>
+        </div>
+    </div>
+</div>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -1044,7 +1069,63 @@
                 window.loadGlobalAttendance();
             }
         };
-        
+        // ---- Finance Access Functions ----
+window.openFinanceAccess = () => { 
+    document.getElementById('financeAccessModal').classList.remove('hidden'); 
+    document.getElementById('financeAccessInput').focus(); 
+};
+
+window.verifyFinanceAccess = async () => { 
+    const input = document.getElementById('financeAccessInput').value; 
+    const btn = document.querySelector('#financeAccessModal button.bg-blue-600');
+    const originalText = btn.innerText;
+    
+    btn.innerText = "Verifying...";
+    btn.disabled = true;
+
+    let pass = "sandeep"; // Default Password එක
+    
+    try { 
+        const s = await getDoc(doc(db, "settings", "finance_config")); 
+        if(s.exists() && s.data().accessPassword) {
+            pass = s.data().accessPassword; 
+        }
+    } catch(e) {
+        console.error("Auth Check Failed:", e);
+    } 
+    
+    btn.innerText = originalText;
+    btn.disabled = false;
+    
+    if (input === pass) {
+        document.getElementById('financeAccessModal').classList.add('hidden');
+        document.getElementById('financeAccessInput').value = "";
+        nav('reports'); // Password හරි නම් විතරක් Report page එකට යනවා
+    } else {
+        alert("Invalid Access Password");
+    }
+};
+
+window.updateFinanceAccessPass = async () => { 
+    const adminPass = document.getElementById('finAdminAuthPass').value; 
+    const newPass = document.getElementById('newFinancePass').value; 
+    let correct = "Sandeep@1116"; 
+    
+    try { 
+        const snap = await getDoc(doc(db, "settings", "config")); 
+        if(snap.exists() && snap.data().adminPassword) correct = snap.data().adminPassword; 
+    } catch(e) {} 
+    
+    if(adminPass !== correct) return alert("Admin Password Incorrect"); 
+    
+    await setDoc(doc(db, "settings", "finance_config"), { accessPassword: newPass }, { merge: true }); 
+    document.getElementById('financePassChangeModal').classList.add('hidden'); 
+    
+    document.getElementById('finAdminAuthPass').value = '';
+    document.getElementById('newFinancePass').value = '';
+    alert("Finance Password Updated!"); 
+};
+// ----------------------------------
         window.subTab = (tabId) => {
             const views = ['overview', 'tasks', 'finance'];
             views.forEach(v => document.getElementById('view-' + v).classList.add('hidden'));
@@ -1956,7 +2037,11 @@
 
             const html = `<div style="font-family: 'Times New Roman', serif; padding: 20px;">
             <div style="text-align:center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;">
+                <img src="ico.jpeg" style="width: 80px; height: 80px; object-fit: cover; border-radius: 50%; margin: 0 auto 10px auto; display: block; border: 2px solid #1e3a8a;">
                 <h1 style="font-size: 28px; font-weight: bold; margin: 0;">SITHULIYA REAL ESTATE</h1>
+                <p style="font-size: 12px; margin: 5px 0;">Kurunegala, Sri Lanka</p>
+                <h2 style="font-size: 20px; text-decoration: underline; margin-top: 15px;">PROJECT EVALUATION REPORT</h2>
+            </div>
                 <p style="font-size: 12px; margin: 5px 0;">Kurunegala, Sri Lanka</p>
                 <h2 style="font-size: 20px; text-decoration: underline; margin-top: 15px;">PROJECT EVALUATION REPORT</h2>
             </div>
@@ -2030,7 +2115,7 @@
             document.getElementById('pdfPreviewOverlay').style.display = 'block';
         };
 
-        window.downloadPDFActual = async () => {
+       window.downloadPDFActual = async () => {
              const element = document.getElementById('printContainer');
              if (!element.innerHTML.trim()) {
                  alert("No report content to download. Please generate a report first.");
@@ -2043,17 +2128,21 @@
                  html2canvas: { scale: 2, useCORS: true, logging: true, scrollY: 0 }, 
                  jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
              };
-             try {
-                await html2pdf().set(opt).from(element).save();
-                document.getElementById('pdfPreviewOverlay').style.display = 'none';
-             } catch (e) {
-                 console.error("PDF Download Error:", e);
-                 alert("Error downloading PDF. Please try again.");
-             }
+             
+             // Image එක load වෙන්න තත්පර 0.5ක් දීලා PDF එක හදනවා
+             setTimeout(async () => {
+                 try {
+                    await html2pdf().set(opt).from(element).save();
+                    document.getElementById('pdfPreviewOverlay').style.display = 'none';
+                 } catch (e) {
+                     console.error("PDF Download Error:", e);
+                     alert("Error downloading PDF. Please try again.");
+                 }
+             }, 500);
         };
 
         // NEW FUNCTION FOR FINANCIAL REPORT PDF DOWNLOAD
-        window.triggerPDFDownload = async () => {
+       window.triggerPDFDownload = async () => {
              const element = document.getElementById('printContainer');
              if (!element.innerHTML.trim() || element.innerHTML.includes("Select date range")) {
                  alert("Please generate a report first.");
@@ -2066,12 +2155,15 @@
                  html2canvas: { scale: 2, useCORS: true, logging: true, scrollY: 0 }, 
                  jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
              };
-             try {
-                await html2pdf().set(opt).from(element).save();
-             } catch (e) {
-                 console.error("PDF Download Error:", e);
-                 alert("Error downloading PDF. Please try again.");
-             }
+             
+             setTimeout(async () => {
+                 try {
+                    await html2pdf().set(opt).from(element).save();
+                 } catch (e) {
+                     console.error("PDF Download Error:", e);
+                     alert("Error downloading PDF. Please try again.");
+                 }
+             }, 500);
         };
         
         window.downloadFinancialReport = async () => { 
@@ -2496,7 +2588,7 @@
                     vList.innerHTML = ""; 
                     (pData.assignedVehicles || []).forEach(v => vList.innerHTML += `<span class="bg-blue-200 px-2 py-1 rounded text-xs font-bold mr-1">${v}</span>`); 
                     if(pData.linkedLandId) { 
-                        const l = await getDoc(doc(db, "company_lands", p.linkedLandId)); 
+                        const l = await getDoc(doc(db, "company_lands", pData.linkedLandId)); 
                         if(l.exists()) document.getElementById('detailLandName').innerText = l.data().name; 
                     } else { 
                         document.getElementById('detailLandName').innerText = ""; 
@@ -2839,29 +2931,59 @@
                     document.getElementById('epRealtimeFuture').innerText = "Rs. " + outstandingPrincipal.toLocaleString();
                     document.getElementById('epRealtimeFuture').dataset.val = outstandingPrincipal;
 
-                    const fullTerm = data.payment.epDetails.months;
-                    const principalPaid = (data.payment.epDetails.paidAmount || 0); 
-                    const originalLoan = data.soldPrice - data.payment.epDetails.downPayment.required;
-                    const pctPaid = principalPaid / originalLoan;
-                    let monthsLeft = Math.max(1, Math.round(fullTerm * (1 - pctPaid)));
-                    if (outstandingPrincipal <= 0) monthsLeft = 0;
+                   // --- FIXED EMI WITH CAPITAL & INTEREST BREAKDOWN ---
+                    const totalLoan = data.soldPrice - data.payment.epDetails.downPayment.required;
+                    const annualRate = data.payment.epDetails.rate || 0;
+                    const months = data.payment.epDetails.months || 1;
+                    const totalPayable = data.payment.epDetails.totalPayable || 0;
+                    
+                    // සම්මත වාරිකය (EMI)
+                    const fixedEmi = totalPayable / months;
+                    
+                    // ගෙවා ඇති මුළු මුදල (Installments only)
+                    const loanPaid = data.payment.epDetails.paidAmount || 0;
+                    
+                    // දැනට ඉතිරිව ඇති මුළු ණය මුදල (මුළු පොලියත් සමග)
+                    const totalRemaining = Math.max(0, totalPayable - loanPaid);
 
-                    let monthlyPrincipal = 0, thisMonthInterest = 0, thisMonthPayable = 0, nextMonthPayable = 0;
+                    // අද දිනට ඉතිරිව ඇති ණය මුදල (Capital only - Settlement Balance)
+                    // පරණ ගෙවීම් මත පදනම්ව දැනට ඉතිරි ප්‍රාග්ධනය ගණනය කිරීම
+                    const paidPct = loanPaid / totalPayable;
+                    const currentOutstandingCapital = Math.max(0, totalLoan * (1 - paidPct));
+                    
+                    document.getElementById('epRealtimeFuture').innerText = "Rs. " + currentOutstandingCapital.toLocaleString(undefined, {maximumFractionDigits: 2});
+                    document.getElementById('epRealtimeFuture').dataset.val = currentOutstandingCapital;
 
-                    if (monthsLeft > 0) {
-                        monthlyPrincipal = outstandingPrincipal / monthsLeft;
-                        const annualRate = data.payment.epDetails.rate || 0;
+                    let thisMonthInterest = 0, thisMonthCapital = 0, thisMonthPayable = 0;
+
+                    if (totalRemaining > 0) {
                         const monthlyRate = (annualRate / 12) / 100;
-                        thisMonthInterest = outstandingPrincipal * monthlyRate;
-                        thisMonthPayable = monthlyPrincipal + thisMonthInterest;
-                        const nextBalance = outstandingPrincipal - monthlyPrincipal;
-                        if (nextBalance > 0) {
-                            const nextMonthInterest = nextBalance * monthlyRate;
-                            nextMonthPayable = monthlyPrincipal + nextMonthInterest;
-                        }
+                        
+                        // මේ මාසයට අදාළ පොලිය (ඉතිරි ප්‍රාග්ධනය මත)
+                        thisMonthInterest = currentOutstandingCapital * monthlyRate;
+                        
+                        // වාරිකයෙන් පොලිය අඩු කළ විට ඉතිරිය කැපිටල් එකයි
+                        thisMonthCapital = fixedEmi - thisMonthInterest;
+                        
+                        // වාරිකය සම්පූර්ණ ගාණට වඩා වැඩි නොවන සේ සකස් කිරීම
+                        thisMonthPayable = Math.min(fixedEmi, totalRemaining);
                     }
 
-                    document.getElementById('epNextDueAmt').innerHTML = `<div class="flex justify-between text-[10px] text-slate-500 font-normal"><span>Capital</span><span>${monthlyPrincipal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></div><div class="flex justify-between text-[10px] text-slate-500 font-normal"><span>Interest</span><span>${thisMonthInterest.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></div><div class="border-t border-indigo-200 mt-1 pt-1 text-lg">Rs. ${thisMonthPayable.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>`;
+                    // UI එක පරණ විදිහටම කැපිටල්/ඉන්ටරෙස්ට් වෙන් කර පෙන්වීම
+                    document.getElementById('epNextDueAmt').innerHTML = `
+                        <div class="flex justify-between text-[10px] text-slate-500 font-normal">
+                            <span>Capital</span>
+                            <span>${thisMonthCapital.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                        </div>
+                        <div class="flex justify-between text-[10px] text-slate-500 font-normal">
+                            <span>Interest</span>
+                            <span>${thisMonthInterest.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                        </div>
+                        <div class="border-t border-indigo-200 mt-1 pt-1 text-lg">Rs. ${thisMonthPayable.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                    `;
+                    
+                    // ලබන මාසයටත් එම වාරිකයම පෙන්වීම
+                    let nextMonthPayable = totalRemaining > fixedEmi ? Math.min(fixedEmi, totalRemaining - fixedEmi) : 0;
                     document.getElementById('epFutureDueAmt').innerText = "Rs. " + nextMonthPayable.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
                 }
             } else if (cycleSec) { 
@@ -2941,22 +3063,24 @@
             });
         }
 
-        window.downloadPaymentReceipt = async () => { 
+        
+            window.downloadPaymentReceipt = async () => { 
             const amt = parseFloat(document.getElementById('newPayAmount').value || 0); 
             const date = document.getElementById('newPayDate').value; 
             const cus = selectedBlockData.customer || {name:'-', nic:'-'}; 
-            const html = `<div class="receipt-box"><div class="receipt-header"><h2 class="receipt-title">OFFICIAL RECEIPT</h2><p>Sithuliya Real Estate</p><p style="font-size:12px;">Kurunegala, Sri Lanka</p></div><div style="margin-bottom:20px; font-size:14px;"><p><strong>Date:</strong> ${date}</p><p><strong>Receipt No:</strong> #${Math.floor(10000 + Math.random() * 90000)}</p></div><div style="border-top:2px solid #eee; border-bottom:2px solid #eee; padding:15px 0;"><div class="receipt-row"><span class="receipt-label">Customer Name</span><span class="receipt-value">${cus.name}</span></div><div class="receipt-row"><span class="receipt-label">Customer NIC</span><span class="receipt-value">${cus.nic}</span></div><div class="receipt-row"><span class="receipt-label">Project</span><span class="receipt-value">${selectedBlockData.projectName || currentProjName}</span></div><div class="receipt-row"><span class="receipt-label">Block Number</span><span class="receipt-value">${selectedBlockData.name}</span></div><div class="receipt-row"><span class="receipt-label">Payment Plan</span><span class="receipt-value">${selectedBlockData.payment.planType}</span></div></div><div style="margin-top:20px; background:#f9f9f9; padding:15px;"><div class="receipt-row" style="font-size:18px;"><span class="receipt-label">AMOUNT PAID</span><span class="receipt-value">Rs. ${amt.toLocaleString()}.00</span></div></div><div class="receipt-footer"><div><div class="sign-line">Cashier Signature</div></div><div><div class="sign-line">Customer Signature</div></div></div><p style="text-align:center; font-size:10px; margin-top:20px; color:#888;">Thank you for your business!</p></div>`; 
+            const html = `<div class="receipt-box"><div class="receipt-header"><img src="ico.jpeg" style="width: 80px; height: 80px; object-fit: cover; border-radius: 50%; margin: 0 auto 10px auto; display: block; border: 2px solid #1e3a8a;"><h2 class="receipt-title">OFFICIAL RECEIPT</h2><p>Sithuliya Real Estate</p><p style="font-size:12px;">Kurunegala, Sri Lanka</p></div><div style="margin-bottom:20px; font-size:14px;"><p><strong>Date:</strong> ${date}</p><p><strong>Receipt No:</strong> #${Math.floor(10000 + Math.random() * 90000)}</p></div><div style="border-top:2px solid #eee; border-bottom:2px solid #eee; padding:15px 0;"><div class="receipt-row"><span class="receipt-label">Customer Name</span><span class="receipt-value">${cus.name}</span></div><div class="receipt-row"><span class="receipt-label">Customer NIC</span><span class="receipt-value">${cus.nic}</span></div><div class="receipt-row"><span class="receipt-label">Project</span><span class="receipt-value">${selectedBlockData.projectName || currentProjName}</span></div><div class="receipt-row"><span class="receipt-label">Block Number</span><span class="receipt-value">${selectedBlockData.name}</span></div><div class="receipt-row"><span class="receipt-label">Payment Plan</span><span class="receipt-value">${selectedBlockData.payment.planType}</span></div></div><div style="margin-top:20px; background:#f9f9f9; padding:15px;"><div class="receipt-row" style="font-size:18px;"><span class="receipt-label">AMOUNT PAID</span><span class="receipt-value">Rs. ${amt.toLocaleString()}.00</span></div></div><div class="receipt-footer"><div><div class="sign-line">Cashier Signature</div></div><div><div class="sign-line">Customer Signature</div></div></div><p style="text-align:center; font-size:10px; margin-top:20px; color:#888;">Thank you for your business!</p></div>`; 
             document.getElementById('printContainer').innerHTML = html; 
             document.getElementById('pdfPreviewOverlay').style.display = 'block'; 
         };
 
-        window.downloadPaymentHistory = async () => { 
+        
+            window.downloadPaymentHistory = async () => { 
             let rows = ""; 
             (selectedBlockData.payment.history || []).forEach(h => { 
                 const d = h.date.seconds ? new Date(h.date.seconds*1000) : new Date(h.date); 
                 rows += `<tr><td style="border-bottom:1px solid #ddd; padding:8px;">${d.toLocaleDateString()}</td><td style="border-bottom:1px solid #ddd; padding:8px;">${h.type}</td><td style="border-bottom:1px solid #ddd; padding:8px; text-align:right">Rs. ${h.amount.toLocaleString()}</td></tr>`; 
             }); 
-            document.getElementById('printContainer').innerHTML = `<h2 class="text-center text-xl underline mb-4">PAYMENT HISTORY</h2><table style="width:100%; border-collapse:collapse; margin-top:20px;"><thead><tr style="background:#f2f2f2;"><th>Date</th><th>Type</th><th style="text-align:right">Amount</th></tr></thead><tbody>${rows}</tbody></table>`; 
+            document.getElementById('printContainer').innerHTML = `<div style="text-align:center; margin-bottom:15px;"><img src="ico.jpeg" style="width: 70px; height: 70px; object-fit: cover; border-radius: 50%; border: 2px solid #1e3a8a;"></div><h2 class="text-center text-xl underline mb-4">PAYMENT HISTORY</h2><table style="width:100%; border-collapse:collapse; margin-top:20px;"><thead><tr style="background:#f2f2f2;"><th>Date</th><th>Type</th><th style="text-align:right">Amount</th></tr></thead><tbody>${rows}</tbody></table>`; 
             document.getElementById('pdfPreviewOverlay').style.display = 'block'; 
         };
 
@@ -3455,7 +3579,7 @@ if (status === 'manager_approved') {
             if(!start || !end) return alert("Select Date Range first!"); 
             
             container.innerHTML = "<p class='text-center p-4'>Generating Report...</p>"; 
-            let html = `<h2 class="text-xl font-bold text-center mb-4 uppercase">${type.replace('_', ' ')} Report</h2> <p class="text-center text-xs mb-4 text-gray-500">From ${start} To ${end}</p>`; 
+            let html = `<div style="text-align:center; margin-bottom:15px;"><img src="ico.jpeg" style="width: 80px; height: 80px; object-fit: cover; border-radius: 50%; display:inline-block; border: 2px solid #1e3a8a;"></div><h2 class="text-xl font-bold text-center mb-4 uppercase">${type.replace('_', ' ')} Report</h2> <p class="text-center text-xs mb-4 text-gray-500">From ${start} To ${end}</p>`; 
             
             try {
                 if (type === 'daybook' || type === 'petty') { 
