@@ -1421,7 +1421,7 @@ window.updateFinanceAccessPass = async () => {
                     
                     if (inLog) {
                         const inTimeObj = new Date(inLog.timestamp.seconds * 1000);
-                        if (inTimeObj.getHours() > 8 || (inTimeObj.getHours() === 8 && inTimeObj.getMinutes() > 30)) {
+                        if (inTimeObj.getHours() > 8 || (inTimeObj.getHours() === 9 && inTimeObj.getMinutes() > 00)) {
                             inText = "Late IN";
                             inColor = "text-red-600 font-bold";
                         }
