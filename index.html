@@ -88,18 +88,6 @@
 .btn-del { background-color: #ef4444; } /* Red */
 .btn-del:hover { background-color: #dc2626; }
 
-
-/* Avoid splitting table rows across pages */
-tr, td, th {
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-}
-table {
-    page-break-inside: auto;
-}
-
-
-
     </style>
 </head>
 <body class="bg-gray-100 h-screen overflow-hidden text-gray-800">
@@ -2188,8 +2176,7 @@ window.updateFinanceAccessPass = async () => {
                  filename: `Financial_Report_${new Date().toLocaleDateString()}.pdf`, 
                  image: { type: 'jpeg', quality: 0.98 }, 
                  html2canvas: { scale: 2, useCORS: true, logging: true, scrollY: 0 }, 
-                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-pagebreak: { mode: ['avoid-all', 'css', 'legacy'] } 
+                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
              };
              
              setTimeout(async () => {
@@ -2214,8 +2201,7 @@ pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
         filename: `Financial_Report_${currentProjName}.pdf`, 
         image: { type: 'jpeg', quality: 0.98 }, 
         html2canvas: { scale: 2, useCORS: true }, 
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }, 
-pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } 
     }; 
     
     try {
@@ -3958,3 +3944,4 @@ window.editTxGeneric = async (id, collectionPath, currentDesc, currentAmount, re
     </script>
 </body>
 </html>
+
