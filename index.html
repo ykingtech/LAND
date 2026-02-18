@@ -88,6 +88,18 @@
 .btn-del { background-color: #ef4444; } /* Red */
 .btn-del:hover { background-color: #dc2626; }
 
+
+/* Avoid splitting table rows across pages */
+tr, td, th {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+}
+table {
+    page-break-inside: auto;
+}
+
+
+
     </style>
 </head>
 <body class="bg-gray-100 h-screen overflow-hidden text-gray-800">
@@ -2176,7 +2188,8 @@ window.updateFinanceAccessPass = async () => {
                  filename: `Financial_Report_${new Date().toLocaleDateString()}.pdf`, 
                  image: { type: 'jpeg', quality: 0.98 }, 
                  html2canvas: { scale: 2, useCORS: true, logging: true, scrollY: 0 }, 
-                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
+                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+pagebreak: { mode: ['avoid-all', 'css', 'legacy'] } 
              };
              
              setTimeout(async () => {
@@ -2201,7 +2214,8 @@ window.updateFinanceAccessPass = async () => {
         filename: `Financial_Report_${currentProjName}.pdf`, 
         image: { type: 'jpeg', quality: 0.98 }, 
         html2canvas: { scale: 2, useCORS: true }, 
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } 
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }, 
+pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     }; 
     
     try {
@@ -3325,13 +3339,14 @@ window.updateFinanceAccessPass = async () => {
         snap.forEach(d => { 
             const e = d.data(); 
             totalExp += e.amount; 
+const safeDesc = encodeURIComponent(e.description);
             list.innerHTML += `
             <tr class="border-b hover:bg-gray-50 group">
                 <td class="p-3">${e.date}</td>
                 <td class="p-3">${e.description}</td>
                 <td class="p-3 font-bold text-red-600">Rs. ${e.amount.toLocaleString()}</td>
                 <td class="p-3 text-right no-print">
-                     <button onclick="editTxGeneric('${d.id}', 'projects/${pid}/expenses', '${e.description}', ${e.amount}, () => window.loadExpensesAndProfit('${pid}'))" class="text-[10px] bg-amber-500 text-white px-2 py-1 rounded ml-1">Edit</button>
+                     <button onclick="editTxGeneric('${d.id}', 'projects/${pid}/expenses', '${safeDesc}', ${e.amount}, () => window.loadExpensesAndProfit('${pid}'))" class="text-[10px] bg-amber-500 text-white px-2 py-1 rounded ml-1">Edit</button>
                      <button onclick="deleteTxGeneric('${d.id}', 'projects/${pid}/expenses', () => window.loadExpensesAndProfit('${pid}'))" class="text-[10px] bg-red-500 text-white px-2 py-1 rounded ml-1">Del</button>
                 </td>
             </tr>`; 
@@ -3657,7 +3672,7 @@ if (status === 'manager_approved') {
             let bal = 0;
             txs.forEach(t => {
                 if (t.type === 'Income') bal += t.amount; else bal -= t.amount;
-                // Added Action Column with .no-print class
+               const safeDesc = encodeURIComponent(t.description);
                 rows += `<tr class="border-b hover:bg-gray-50 group">
                     <td class="p-2">${t.date}</td>
                     <td class="p-2">${t.description}</td>
@@ -3665,7 +3680,7 @@ if (status === 'manager_approved') {
                     <td class="p-2 text-right font-bold text-red-600">${t.type === 'Expense' ? t.amount.toLocaleString() : '-'}</td>
                     <td class="p-2 text-right font-bold bg-gray-50">${bal.toLocaleString()}</td>
                     <td class="p-2 text-center no-print">
-                        <button onclick="editTxGeneric('${t.id}', 'transactions', '${t.description}', ${t.amount}, () => genReport('${type}'))" class="action-btn btn-edit"><i class="fas fa-edit"></i></button>
+                        <button onclick="editTxGeneric('${t.id}', 'transactions', '${safeDesc}', ${t.amount}, () => genReport('${type}'))" class="action-btn btn-edit"><i class="fas fa-edit"></i></button>
                         <button onclick="deleteTxGeneric('${t.id}', 'transactions', () => genReport('${type}'))" class="action-btn btn-del"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>`;
@@ -3878,6 +3893,7 @@ window.deleteTxGeneric = async (id, collectionPath, reloadFunc) => {
 };
 
 window.editTxGeneric = async (id, collectionPath, currentDesc, currentAmount, reloadFunc) => {
+currentDesc = decodeURIComponent(currentDesc);
     // 1. Password ඉල්ලන කොටස (Edit කිරීමට පෙර)
     const pwd = prompt("Enter Admin Password to Edit:");
     if(pwd === null) return;
@@ -3944,4 +3960,3 @@ window.editTxGeneric = async (id, collectionPath, currentDesc, currentAmount, re
     </script>
 </body>
 </html>
-
