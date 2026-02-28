@@ -2866,13 +2866,13 @@ pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
                     const dpTotal = price * (dpPct / 100); 
                     const loanAmt = price - dpTotal; 
                     let totalPayable = 0; 
-                    if (rate === 0) { 
-                        totalPayable = loanAmt; 
-                    } else { 
-                        const r = (rate / 100) / 12; 
-                        const emi = (loanAmt * r * Math.pow(1 + r, months)) / (Math.pow(1 + r, months) - 1); 
-                        totalPayable = emi * months; 
-                    } 
+if (rate === 0) { 
+    totalPayable = loanAmt; 
+} else { 
+    const years = months / 12; 
+    const totalInterest = loanAmt * years * (rate / 100); 
+    totalPayable = loanAmt + totalInterest; 
+} 
                     const isDpComplete = booking >= (dpTotal - 100);
                     ep = { 
                         rate: rate, months: months, cycleDays: cycle, totalPayable: totalPayable, paidAmount: 0, downPayment: { required: dpTotal, paid: booking, isComplete: isDpComplete } 
@@ -2983,59 +2983,73 @@ pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
                     document.getElementById('epRealtimeFuture').dataset.val = outstandingPrincipal;
 
                    // --- FIXED EMI WITH CAPITAL & INTEREST BREAKDOWN ---
-                    const totalLoan = data.soldPrice - data.payment.epDetails.downPayment.required;
-                    const annualRate = data.payment.epDetails.rate || 0;
-                    const months = data.payment.epDetails.months || 1;
-                    const totalPayable = data.payment.epDetails.totalPayable || 0;
-                    
-                    // සම්මත වාරිකය (EMI)
-                    const fixedEmi = totalPayable / months;
-                    
-                    // ගෙවා ඇති මුළු මුදල (Installments only)
-                    const loanPaid = data.payment.epDetails.paidAmount || 0;
-                    
-                    // දැනට ඉතිරිව ඇති මුළු ණය මුදල (මුළු පොලියත් සමග)
-                    const totalRemaining = Math.max(0, totalPayable - loanPaid);
+                    // --- RULE OF 78 (FLAT RATE) BREAKDOWN & SETTLEMENT ---
+const totalLoan = data.soldPrice - data.payment.epDetails.downPayment.required;
+const months = data.payment.epDetails.months || 1;
+const totalPayable = data.payment.epDetails.totalPayable || 0;
+const totalInterest = totalPayable - totalLoan;
 
-                    // අද දිනට ඉතිරිව ඇති ණය මුදල (Capital only - Settlement Balance)
-                    // පරණ ගෙවීම් මත පදනම්ව දැනට ඉතිරි ප්‍රාග්ධනය ගණනය කිරීම
-                    const paidPct = loanPaid / totalPayable;
-                    const currentOutstandingCapital = Math.max(0, totalLoan * (1 - paidPct));
-                    
-                    document.getElementById('epRealtimeFuture').innerText = "Rs. " + currentOutstandingCapital.toLocaleString(undefined, {maximumFractionDigits: 2});
-                    document.getElementById('epRealtimeFuture').dataset.val = currentOutstandingCapital;
+const fixedEmi = totalPayable / months;
+const loanPaid = data.payment.epDetails.paidAmount || 0;
 
-                    let thisMonthInterest = 0, thisMonthCapital = 0, thisMonthPayable = 0;
+// ගෙවා අවසන් කර ඇති මාස ගණන
+const monthsPaid = Math.floor(loanPaid / fixedEmi);
+// දැන් ගෙවන්න තියෙන මාසය
+const currentMonth = monthsPaid + 1;
 
-                    if (totalRemaining > 0) {
-                        const monthlyRate = (annualRate / 12) / 100;
-                        
-                        // මේ මාසයට අදාළ පොලිය (ඉතිරි ප්‍රාග්ධනය මත)
-                        thisMonthInterest = currentOutstandingCapital * monthlyRate;
-                        
-                        // වාරිකයෙන් පොලිය අඩු කළ විට ඉතිරිය කැපිටල් එකයි
-                        thisMonthCapital = fixedEmi - thisMonthInterest;
-                        
-                        // වාරිකය සම්පූර්ණ ගාණට වඩා වැඩි නොවන සේ සකස් කිරීම
-                        thisMonthPayable = Math.min(fixedEmi, totalRemaining);
-                    }
+let thisMonthInterest = 0;
+let thisMonthCapital = 0;
+let thisMonthPayable = 0;
+let settlementBalance = 0;
 
-                    // UI එක පරණ විදිහටම කැපිටල්/ඉන්ටරෙස්ට් වෙන් කර පෙන්වීම
-                    document.getElementById('epNextDueAmt').innerHTML = `
-                        <div class="flex justify-between text-[10px] text-slate-500 font-normal">
-                            <span>Capital</span>
-                            <span>${thisMonthCapital.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-                        </div>
-                        <div class="flex justify-between text-[10px] text-slate-500 font-normal">
-                            <span>Interest</span>
-                            <span>${thisMonthInterest.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-                        </div>
-                        <div class="border-t border-indigo-200 mt-1 pt-1 text-lg">Rs. ${thisMonthPayable.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                    `;
-                    
-                    // ලබන මාසයටත් එම වාරිකයම පෙන්වීම
-                    let nextMonthPayable = totalRemaining > fixedEmi ? Math.min(fixedEmi, totalRemaining - fixedEmi) : 0;
-                    document.getElementById('epFutureDueAmt').innerText = "Rs. " + nextMonthPayable.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+if (loanPaid < totalPayable) {
+    // මාස වල එකතුව සෙවීම (Sum of Digits Formula: n(n+1)/2 )
+    const sumOfDigits = (months * (months + 1)) / 2;
+
+    // මේ මාසෙට අදාල බර තැබීම (පිටිපස්සට ගණන් කිරීම)
+    const weight = (months - currentMonth + 1);
+
+    // මේ මාසෙ පොලිය (Rule of 78 ක්‍රමයට)
+    thisMonthInterest = totalInterest * (weight / sumOfDigits);
+
+    // මේ මාසෙ කැපිටල් එක
+    thisMonthCapital = fixedEmi - thisMonthInterest;
+
+    // --- Settlement Balance සෙවීම ---
+    // 1. දැනටමත් ගෙවා ඇති කැපිටල් එක හොයමු
+    let paidCapital = 0;
+    for(let i = 1; i <= monthsPaid; i++) {
+         let w = (months - i + 1);
+         let interestForMonth = totalInterest * (w / sumOfDigits);
+         paidCapital += (fixedEmi - interestForMonth);
+    }
+
+    // 2. ඉතිරි මුළු කැපිටල් එක
+    const remainingCapital = totalLoan - paidCapital;
+
+    // 3. අදට සෙට්ල් කරනවා නම් ගෙවිය යුතු ගාණ = ඉතිරි කැපිටල් + මේ මාසෙ පොලිය
+    settlementBalance = remainingCapital + thisMonthInterest;
+    
+    thisMonthPayable = Math.min(fixedEmi, totalPayable - loanPaid);
+}
+
+document.getElementById('epRealtimeFuture').innerText = "Rs. " + settlementBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+document.getElementById('epRealtimeFuture').dataset.val = settlementBalance;
+
+document.getElementById('epNextDueAmt').innerHTML = `
+    <div class="flex justify-between text-[10px] text-slate-500 font-normal">
+        <span>Capital Breakdown</span>
+        <span>${thisMonthCapital.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+    </div>
+    <div class="flex justify-between text-[10px] text-slate-500 font-normal">
+        <span>Interest Breakdown</span>
+        <span>${thisMonthInterest.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+    </div>
+    <div class="border-t border-indigo-200 mt-1 pt-1 text-lg">Rs. ${thisMonthPayable.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+`;
+
+let nextMonthPayable = (totalPayable - loanPaid) > fixedEmi ? Math.min(fixedEmi, totalPayable - loanPaid - fixedEmi) : 0;
+document.getElementById('epFutureDueAmt').innerText = "Rs. " + nextMonthPayable.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
                 }
             } else if (cycleSec) { 
                 cycleSec.classList.add('hidden'); 
@@ -3261,14 +3275,18 @@ pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
             const months = parseFloat(document.getElementById('epMonths').value)||60; 
             let monthly = 0; 
             let totalPayable = 0; 
-            if (rate === 0) { 
-                monthly = loanAmt / months; 
-                totalPayable = loanAmt; 
-            } else { 
-                const r = (rate / 100) / 12; 
-                monthly = (loanAmt * r * Math.pow(1 + r, months)) / (Math.pow(1 + r, months) - 1); 
-                totalPayable = monthly * months; 
-            } 
+            let totalInterest = 0;
+
+             if (rate === 0) { 
+    monthly = loanAmt / months; 
+    totalPayable = loanAmt; 
+} else { 
+    // සරල පොලී ක්‍රමයට (Flat Rate) සම්පූර්ණ පොලිය සහ ගෙවිය යුතු මුළු මුදල සෙවීම
+    const years = months / 12; 
+    totalInterest = loanAmt * years * (rate / 100); 
+    totalPayable = loanAmt + totalInterest; 
+    monthly = totalPayable / months; 
+} 
             document.getElementById('epMonthlyInst').innerText = monthly.toLocaleString(undefined, {maximumFractionDigits: 2}); 
             document.getElementById('epTotalPayable').innerText = totalPayable.toLocaleString(undefined, {maximumFractionDigits: 2}); 
             const deedFee = (price * 0.05) - 1000; 
