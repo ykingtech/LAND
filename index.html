@@ -65,41 +65,6 @@
         .section-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-bottom: 10px; }
 
         .report-form-section { margin-bottom: 2rem; border: 1px solid #e2e8f0; padding: 1.5rem; border-radius: 0.75rem; background: white; }
-
-/* Hide Action Buttons in PDF/Print */
-@media print {
-    .no-print { display: none !important; }
-}
-.pdf-hide { display: none !important; }
-
-/* Edit/Delete Button Styles */
-.action-btn {
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 10px;
-    font-weight: bold;
-    margin-left: 5px;
-    cursor: pointer;
-    color: white;
-    border: none;
-}
-.btn-edit { background-color: #f59e0b; } /* Amber */
-.btn-edit:hover { background-color: #d97706; }
-.btn-del { background-color: #ef4444; } /* Red */
-.btn-del:hover { background-color: #dc2626; }
-
-
-/* Avoid splitting table rows across pages */
-tr, td, th {
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-}
-table {
-    page-break-inside: auto;
-}
-
-
-
     </style>
 </head>
 <body class="bg-gray-100 h-screen overflow-hidden text-gray-800">
@@ -925,7 +890,10 @@ table {
                     <input type="number" id="bookingFee" class="p-1 border rounded text-right w-32 text-sm" oninput="calculateEP()" step="0.01">
                 </div>
                 <div class="flex justify-between items-center">
-                    <label class="text-xs font-bold text-gray-500">Down Payment %</label>
+                    <label class="text-xs font-bold text-gray-500 flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="hasDownPay" checked onchange="toggleDownPayState()" class="w-4 h-4 text-blue-600 rounded">
+                        Down Payment %
+                    </label>
                     <input type="number" id="downPayPct" class="p-1 border rounded text-right w-32 text-sm" value="40" oninput="calculateEP()">
                 </div>
                 <div class="flex justify-between items-center">
@@ -2188,8 +2156,7 @@ window.updateFinanceAccessPass = async () => {
                  filename: `Financial_Report_${new Date().toLocaleDateString()}.pdf`, 
                  image: { type: 'jpeg', quality: 0.98 }, 
                  html2canvas: { scale: 2, useCORS: true, logging: true, scrollY: 0 }, 
-                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-pagebreak: { mode: ['avoid-all', 'css', 'legacy'] } 
+                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
              };
              
              setTimeout(async () => {
@@ -2202,35 +2169,20 @@ pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
              }, 500);
         };
         
-       window.downloadFinancialReport = async () => { 
-    const el = document.getElementById('view-finance'); 
-    
-    // 1. PDF එක හදන්න කලින් බට්න් ටික හංගනවා (Hide buttons)
-    const buttons = el.querySelectorAll('button, .no-print'); 
-    buttons.forEach(b => b.style.display = 'none'); 
-
-    const opt = { 
-        margin: 10, 
-        filename: `Financial_Report_${currentProjName}.pdf`, 
-        image: { type: 'jpeg', quality: 0.98 }, 
-        html2canvas: { scale: 2, useCORS: true }, 
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }, 
-pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-    }; 
-    
-    try {
-        // 2. PDF එක Save කරනවා
-        await html2pdf().set(opt).from(el).save(); 
-    } catch(e) {
-        console.error("PDF Error", e);
-    }
-
-    // 3. වැඩේ ඉවර වුනාම ආයේ බට්න් ටික පෙන්නනවා (Show buttons back)
-    buttons.forEach(b => b.style.display = ''); 
-    
-    // විශේෂයෙන් සමහර බට්න්ස් වල පෙනුම හරිගස්සනවා (Restore layout)
-    el.querySelectorAll('button.bg-blue-900, button.bg-red-50').forEach(b => b.style.display = 'inline-flex');
-};
+        window.downloadFinancialReport = async () => { 
+            const el = document.getElementById('view-finance'); 
+            const buttons = el.querySelectorAll('button'); 
+            buttons.forEach(b => b.style.display = 'none'); 
+            const opt = { 
+                margin: 10, 
+                filename: `Financial_Report_${currentProjName}.pdf`, 
+                image: { type: 'jpeg', quality: 0.98 }, 
+                html2canvas: { scale: 2, useCORS: true }, 
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } 
+            }; 
+            await html2pdf().set(opt).from(el).save(); 
+            buttons.forEach(b => b.style.display = 'inline-block'); 
+        };
 
         window.filterStaffGrid = () => { 
             const input = document.getElementById('staffSearchInput').value.toLowerCase(); 
@@ -2862,17 +2814,25 @@ pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
                     const rate = parseFloat(document.getElementById('epRate').value); 
                     const months = parseFloat(document.getElementById('epMonths').value); 
                     const booking = parseFloat(document.getElementById('bookingFee').value) || 0; 
-                    const dpPct = parseFloat(document.getElementById('downPayPct').value); 
-                    const dpTotal = price * (dpPct / 100); 
+                    const hasDp = document.getElementById('hasDownPay').checked;
+                    
+                    let dpTotal = 0;
+                    if (hasDp) {
+                        const dpPct = parseFloat(document.getElementById('downPayPct').value) || 0; 
+                        dpTotal = price * (dpPct / 100); 
+                    } else {
+                        dpTotal = booking; // If no DP, the total DP required is just the booking fee
+                    }
+                    
                     const loanAmt = price - dpTotal; 
                     let totalPayable = 0; 
-if (rate === 0) { 
-    totalPayable = loanAmt; 
-} else { 
-    const years = months / 12; 
-    const totalInterest = loanAmt * years * (rate / 100); 
-    totalPayable = loanAmt + totalInterest; 
-} 
+                    if (rate === 0) { 
+                        totalPayable = loanAmt; 
+                    } else { 
+                        const years = months / 12;
+                        const totalInterest = loanAmt * (rate / 100) * years;
+                        totalPayable = loanAmt + totalInterest; 
+                    } 
                     const isDpComplete = booking >= (dpTotal - 100);
                     ep = { 
                         rate: rate, months: months, cycleDays: cycle, totalPayable: totalPayable, paidAmount: 0, downPayment: { required: dpTotal, paid: booking, isComplete: isDpComplete } 
@@ -2983,73 +2943,60 @@ if (rate === 0) {
                     document.getElementById('epRealtimeFuture').dataset.val = outstandingPrincipal;
 
                    // --- FIXED EMI WITH CAPITAL & INTEREST BREAKDOWN ---
-                    // --- RULE OF 78 (FLAT RATE) BREAKDOWN & SETTLEMENT ---
-const totalLoan = data.soldPrice - data.payment.epDetails.downPayment.required;
-const months = data.payment.epDetails.months || 1;
-const totalPayable = data.payment.epDetails.totalPayable || 0;
-const totalInterest = totalPayable - totalLoan;
+                    const totalLoan = data.soldPrice - data.payment.epDetails.downPayment.required;
+                    const annualRate = data.payment.epDetails.rate || 0;
+                    const months = data.payment.epDetails.months || 1;
+                    const totalPayable = data.payment.epDetails.totalPayable || 0;
+                    
+                    // සම්මත වාරිකය (EMI)
+                    const fixedEmi = totalPayable / months;
+                    
+                    // ගෙවා ඇති මුළු මුදල (Installments only)
+                    const loanPaid = data.payment.epDetails.paidAmount || 0;
+                    
+                    // දැනට ඉතිරිව ඇති මුළු ණය මුදල (මුළු පොලියත් සමග)
+                    const totalRemaining = Math.max(0, totalPayable - loanPaid);
 
-const fixedEmi = totalPayable / months;
-const loanPaid = data.payment.epDetails.paidAmount || 0;
+                    // අද දිනට ඉතිරිව ඇති ණය මුදල (Capital only - Settlement Balance)
+                    // පරණ ගෙවීම් මත පදනම්ව දැනට ඉතිරි ප්‍රාග්ධනය ගණනය කිරීම
+                    const paidPct = loanPaid / totalPayable;
+                    const currentOutstandingCapital = Math.max(0, totalLoan * (1 - paidPct));
+                    
+                    document.getElementById('epRealtimeFuture').innerText = "Rs. " + currentOutstandingCapital.toLocaleString(undefined, {maximumFractionDigits: 2});
+                    document.getElementById('epRealtimeFuture').dataset.val = currentOutstandingCapital;
 
-// ගෙවා අවසන් කර ඇති මාස ගණන
-const monthsPaid = Math.floor(loanPaid / fixedEmi);
-// දැන් ගෙවන්න තියෙන මාසය
-const currentMonth = monthsPaid + 1;
+                    let thisMonthInterest = 0, thisMonthCapital = 0, thisMonthPayable = 0;
 
-let thisMonthInterest = 0;
-let thisMonthCapital = 0;
-let thisMonthPayable = 0;
-let settlementBalance = 0;
+                   if (totalRemaining > 0) {
+                        // මුළු පොලිය
+                        const totalInterestAmount = totalPayable - totalLoan;
+                        
+                        // මාසික ස්ථාවර පොලිය
+                        thisMonthInterest = totalInterestAmount / months;
+                        
+                        // මාසික ප්‍රාග්ධන කොටස
+                        thisMonthCapital = fixedEmi - thisMonthInterest;
+                        
+                        // වාරිකය සම්පූර්ණ ගාණට වඩා වැඩි නොවන සේ සකස් කිරීම
+                        thisMonthPayable = Math.min(fixedEmi, totalRemaining);
+                    }
 
-if (loanPaid < totalPayable) {
-    // මාස වල එකතුව සෙවීම (Sum of Digits Formula: n(n+1)/2 )
-    const sumOfDigits = (months * (months + 1)) / 2;
-
-    // මේ මාසෙට අදාල බර තැබීම (පිටිපස්සට ගණන් කිරීම)
-    const weight = (months - currentMonth + 1);
-
-    // මේ මාසෙ පොලිය (Rule of 78 ක්‍රමයට)
-    thisMonthInterest = totalInterest * (weight / sumOfDigits);
-
-    // මේ මාසෙ කැපිටල් එක
-    thisMonthCapital = fixedEmi - thisMonthInterest;
-
-    // --- Settlement Balance සෙවීම ---
-    // 1. දැනටමත් ගෙවා ඇති කැපිටල් එක හොයමු
-    let paidCapital = 0;
-    for(let i = 1; i <= monthsPaid; i++) {
-         let w = (months - i + 1);
-         let interestForMonth = totalInterest * (w / sumOfDigits);
-         paidCapital += (fixedEmi - interestForMonth);
-    }
-
-    // 2. ඉතිරි මුළු කැපිටල් එක
-    const remainingCapital = totalLoan - paidCapital;
-
-    // 3. අදට සෙට්ල් කරනවා නම් ගෙවිය යුතු ගාණ = ඉතිරි කැපිටල් + මේ මාසෙ පොලිය
-    settlementBalance = remainingCapital + thisMonthInterest;
-    
-    thisMonthPayable = Math.min(fixedEmi, totalPayable - loanPaid);
-}
-
-document.getElementById('epRealtimeFuture').innerText = "Rs. " + settlementBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-document.getElementById('epRealtimeFuture').dataset.val = settlementBalance;
-
-document.getElementById('epNextDueAmt').innerHTML = `
-    <div class="flex justify-between text-[10px] text-slate-500 font-normal">
-        <span>Capital Breakdown</span>
-        <span>${thisMonthCapital.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-    </div>
-    <div class="flex justify-between text-[10px] text-slate-500 font-normal">
-        <span>Interest Breakdown</span>
-        <span>${thisMonthInterest.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-    </div>
-    <div class="border-t border-indigo-200 mt-1 pt-1 text-lg">Rs. ${thisMonthPayable.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-`;
-
-let nextMonthPayable = (totalPayable - loanPaid) > fixedEmi ? Math.min(fixedEmi, totalPayable - loanPaid - fixedEmi) : 0;
-document.getElementById('epFutureDueAmt').innerText = "Rs. " + nextMonthPayable.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    // UI එක පරණ විදිහටම කැපිටල්/ඉන්ටරෙස්ට් වෙන් කර පෙන්වීම
+                    document.getElementById('epNextDueAmt').innerHTML = `
+                        <div class="flex justify-between text-[10px] text-slate-500 font-normal">
+                            <span>Capital</span>
+                            <span>${thisMonthCapital.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                        </div>
+                        <div class="flex justify-between text-[10px] text-slate-500 font-normal">
+                            <span>Interest</span>
+                            <span>${thisMonthInterest.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                        </div>
+                        <div class="border-t border-indigo-200 mt-1 pt-1 text-lg">Rs. ${thisMonthPayable.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                    `;
+                    
+                    // ලබන මාසයටත් එම වාරිකයම පෙන්වීම
+                    let nextMonthPayable = totalRemaining > fixedEmi ? Math.min(fixedEmi, totalRemaining - fixedEmi) : 0;
+                    document.getElementById('epFutureDueAmt').innerText = "Rs. " + nextMonthPayable.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
                 }
             } else if (cycleSec) { 
                 cycleSec.classList.add('hidden'); 
@@ -3260,12 +3207,28 @@ document.getElementById('epFutureDueAmt').innerText = "Rs. " + nextMonthPayable.
             document.getElementById('cashFields').classList.toggle('hidden', isEP); 
             if(isEP) window.calculateEP(); 
         };
+              window.toggleDownPayState = () => {
+            const hasDp = document.getElementById('hasDownPay').checked;
+            const input = document.getElementById('downPayPct');
+            input.disabled = !hasDp;
+            if(!hasDp) input.classList.add('bg-gray-100');
+            else input.classList.remove('bg-gray-100');
+            window.calculateEP();
+        };
 
         window.calculateEP = () => { 
             const price = parseFloat(document.getElementById('finalPrice').value)||0; 
             const booking = parseFloat(document.getElementById('bookingFee').value)||0; 
-            const pct = parseFloat(document.getElementById('downPayPct').value)||40; 
-            const dpAmount = price * (pct / 100); 
+            const hasDp = document.getElementById('hasDownPay').checked;
+            
+            let dpAmount = 0;
+            if(hasDp) {
+                const pct = parseFloat(document.getElementById('downPayPct').value)||40; 
+                dpAmount = price * (pct / 100); 
+            } else {
+                dpAmount = booking; // No Downpayment -> Required DP is just the booking fee
+            }
+            
             document.getElementById('downPayAmount').value = dpAmount; 
             const dpBal = dpAmount - booking; 
             document.getElementById('downPayBalanceDisp').innerText = dpBal.toLocaleString(); 
@@ -3275,18 +3238,15 @@ document.getElementById('epFutureDueAmt').innerText = "Rs. " + nextMonthPayable.
             const months = parseFloat(document.getElementById('epMonths').value)||60; 
             let monthly = 0; 
             let totalPayable = 0; 
-            let totalInterest = 0;
-
-             if (rate === 0) { 
-    monthly = loanAmt / months; 
-    totalPayable = loanAmt; 
-} else { 
-    // සරල පොලී ක්‍රමයට (Flat Rate) සම්පූර්ණ පොලිය සහ ගෙවිය යුතු මුළු මුදල සෙවීම
-    const years = months / 12; 
-    totalInterest = loanAmt * years * (rate / 100); 
-    totalPayable = loanAmt + totalInterest; 
-    monthly = totalPayable / months; 
-} 
+            if (rate === 0) { 
+                monthly = loanAmt / months; 
+                totalPayable = loanAmt; 
+            } else { 
+                const years = months / 12;
+                const totalInterest = loanAmt * (rate / 100) * years;
+                totalPayable = loanAmt + totalInterest;
+                monthly = totalPayable / months;
+            } 
             document.getElementById('epMonthlyInst').innerText = monthly.toLocaleString(undefined, {maximumFractionDigits: 2}); 
             document.getElementById('epTotalPayable').innerText = totalPayable.toLocaleString(undefined, {maximumFractionDigits: 2}); 
             const deedFee = (price * 0.05) - 1000; 
@@ -3344,67 +3304,51 @@ document.getElementById('epFutureDueAmt').innerText = "Rs. " + nextMonthPayable.
             toggleEPFields(); 
         }
 
-        window.loadExpensesAndProfit = (pid) => { 
-    if(!pid) return; 
-    
-    // Expenses Load with Edit/Delete Buttons
-    onSnapshot(collection(db, `projects/${pid}/expenses`), (snap) => { 
-        const list = document.getElementById('expenseList'); 
-        if(!list) return; 
-        list.innerHTML = ""; 
-        let totalExp = 0; 
-        
-        snap.forEach(d => { 
-            const e = d.data(); 
-            totalExp += e.amount; 
-const safeDesc = encodeURIComponent(e.description);
-            list.innerHTML += `
-            <tr class="border-b hover:bg-gray-50 group">
-                <td class="p-3">${e.date}</td>
-                <td class="p-3">${e.description}</td>
-                <td class="p-3 font-bold text-red-600">Rs. ${e.amount.toLocaleString()}</td>
-                <td class="p-3 text-right no-print">
-                     <button onclick="editTxGeneric('${d.id}', 'projects/${pid}/expenses', '${safeDesc}', ${e.amount}, () => window.loadExpensesAndProfit('${pid}'))" class="text-[10px] bg-amber-500 text-white px-2 py-1 rounded ml-1">Edit</button>
-                     <button onclick="deleteTxGeneric('${d.id}', 'projects/${pid}/expenses', () => window.loadExpensesAndProfit('${pid}'))" class="text-[10px] bg-red-500 text-white px-2 py-1 rounded ml-1">Del</button>
-                </td>
-            </tr>`; 
-        }); 
-        
-        if(document.getElementById('finExpense')) { 
-            document.getElementById('finExpense').innerText = "Rs. " + totalExp.toLocaleString(); 
-            updateNet(null, totalExp); 
-        } 
-    }); 
-    
-    // Income Load (Unchanged)
-    onSnapshot(collection(db, `projects/${pid}/blocks`), (snap) => { 
-        let inc = 0; 
-        snap.forEach(b => { 
-            const bd = b.data(); 
-            if(bd.status.includes('sold')) inc += (bd.soldPrice || bd.price); 
-        }); 
-        if(document.getElementById('finIncome')) { 
-            document.getElementById('finIncome').innerText = "Rs. " + inc.toLocaleString(); 
-            updateNet(inc, null); 
-        } 
-    }); 
-};
+        function loadExpensesAndProfit(pid) { 
+            if(!pid) return; 
+            onSnapshot(collection(db, `projects/${pid}/expenses`), (snap) => { 
+                const list = document.getElementById('expenseList'); 
+                if(!list) return; 
+                list.innerHTML = ""; 
+                let totalExp = 0; 
+                snap.forEach(d => { 
+                    const e = d.data(); 
+                    totalExp += e.amount; 
+                    list.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="p-3">${e.date}</td><td class="p-3">${e.description}</td><td class="p-3 font-bold text-red-600">Rs. ${e.amount.toLocaleString()}</td></tr>`; 
+                }); 
+                if(document.getElementById('finExpense')) { 
+                    document.getElementById('finExpense').innerText = "Rs. " + totalExp.toLocaleString(); 
+                    updateNet(null, totalExp); 
+                } 
+            }); 
+            onSnapshot(collection(db, `projects/${pid}/blocks`), (snap) => { 
+                let inc = 0; 
+                snap.forEach(b => { 
+                    const bd = b.data(); 
+                    if(bd.status.includes('sold')) inc += (bd.soldPrice || bd.price); 
+                }); 
+                if(document.getElementById('finIncome')) { 
+                    document.getElementById('finIncome').innerText = "Rs. " + inc.toLocaleString(); 
+                    updateNet(inc, null); 
+                } 
+            }); 
+        }
 
-async function recordDailyTransaction(desc, amt, type, proj) { 
-    await addDoc(collection(db, "transactions"), { 
-        date: new Date().toLocaleDateString('en-CA'), 
-        description: desc, 
-        amount: amt, 
-        type: type === 'income' ? 'Income' : 'Expense', 
-        category: proj || 'General', 
-        timestamp: serverTimestamp() 
-    }); 
-}
+        async function recordDailyTransaction(desc, amt, type, proj) { 
+            await addDoc(collection(db, "transactions"), { 
+                date: new Date().toLocaleDateString('en-CA'), 
+                description: desc, 
+                amount: amt, 
+                type: type === 'income' ? 'Income' : 'Expense', 
+                category: proj || 'General', 
+                timestamp: serverTimestamp() 
+            }); 
+        }
 
-window.openStaffAccess = () => { 
-    document.getElementById('staffAccessModal').classList.remove('hidden'); 
-    document.getElementById('staffAccessInput').focus(); 
-};
+        window.openStaffAccess = () => { 
+            document.getElementById('staffAccessModal').classList.remove('hidden'); 
+            document.getElementById('staffAccessInput').focus(); 
+        };
 
         window.verifyStaffAccess = async () => { 
             const input = document.getElementById('staffAccessInput').value; 
@@ -3658,172 +3602,155 @@ if (status === 'manager_approved') {
 
         // --- NEW REPORT GENERATION FUNCTION ---
         window.genReport = async (type) => { 
-    const start = document.getElementById('repFrom').value; 
-    const end = document.getElementById('repTo').value; 
-    const container = document.getElementById('reportContent'); 
-    
-    if(!start || !end) return alert("Select Date Range first!"); 
-    
-    container.innerHTML = "<p class='text-center p-4'>Generating Report...</p>"; 
-    
-    // Header for Reports
-    let headerHtml = `<div style="text-align:center; margin-bottom:15px;"><img src="ico.jpeg" style="width: 80px; height: 80px; object-fit: cover; border-radius: 50%; display:inline-block; border: 2px solid #1e3a8a;"></div><h2 class="text-xl font-bold text-center mb-4 uppercase">${type.replace('_', ' ')} Report</h2> <p class="text-center text-xs mb-4 text-gray-500">From ${start} To ${end}</p>`;
-    
-    // Style block to hide buttons in PDF
-    let pdfStyle = `<style>.no-print { display: none !important; }</style>`;
-
-    try {
-        if (type === 'daybook' || type === 'petty') { 
-            const snap = await getDocs(collection(db, "transactions")); 
-            let txs = [];
-            snap.forEach(d => {
-                const t = d.data();
-                if (t.date >= start && t.date <= end) {
-                    if (type === 'petty' && t.category !== 'Petty Cash') return;
-                    txs.push({id: d.id, ...t}); // Include ID for edit/delete
+            const start = document.getElementById('repFrom').value; 
+            const end = document.getElementById('repTo').value; 
+            const container = document.getElementById('reportContent'); 
+            if(!start || !end) return alert("Select Date Range first!"); 
+            
+            container.innerHTML = "<p class='text-center p-4'>Generating Report...</p>"; 
+            let html = `<div style="text-align:center; margin-bottom:15px;"><img src="ico.jpeg" style="width: 80px; height: 80px; object-fit: cover; border-radius: 50%; display:inline-block; border: 2px solid #1e3a8a;"></div><h2 class="text-xl font-bold text-center mb-4 uppercase">${type.replace('_', ' ')} Report</h2> <p class="text-center text-xs mb-4 text-gray-500">From ${start} To ${end}</p>`; 
+            
+            try {
+                if (type === 'daybook' || type === 'petty') { 
+                    // Complex Query එක ඉවත් කර Memory Filter භාවිතය
+                    const snap = await getDocs(collection(db, "transactions")); 
+                    let txs = [];
+                    snap.forEach(d => {
+                        const t = d.data();
+                        if (t.date >= start && t.date <= end) {
+                            if (type === 'petty' && t.category !== 'Petty Cash') return;
+                            txs.push(t);
+                        }
+                    });
+                    
+                    txs.sort((a,b) => new Date(a.date) - new Date(b.date));
+                    
+                    let rows = "";
+                    let bal = 0;
+                    txs.forEach(t => {
+                        if (t.type === 'Income') bal += t.amount; else bal -= t.amount;
+                        rows += `<tr class="border-b hover:bg-gray-50">
+                            <td class="p-2">${t.date}</td>
+                            <td class="p-2">${t.description}</td>
+                            <td class="p-2 text-right font-bold text-green-600">${t.type === 'Income' ? t.amount.toLocaleString() : '-'}</td>
+                            <td class="p-2 text-right font-bold text-red-600">${t.type === 'Expense' ? t.amount.toLocaleString() : '-'}</td>
+                            <td class="p-2 text-right font-bold bg-gray-50">${bal.toLocaleString()}</td>
+                        </tr>`;
+                    });
+                    
+                    html += `<table class="w-full text-xs text-left border rounded">
+                        <thead class="bg-gray-100 font-bold uppercase"><tr><th class="p-2">Date</th><th class="p-2">Description</th><th class="p-2 text-right">Income</th><th class="p-2 text-right">Expense</th><th class="p-2 text-right">Balance</th></tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>`;
+                    
+                } else if (type === 'pnl') {
+                    const snap = await getDocs(collection(db, "transactions"));
+                    let inc = {}, exp = {};
+                    let totInc = 0, totExp = 0;
+                    
+                    snap.forEach(d => {
+                        const t = d.data();
+                        if (t.date >= start && t.date <= end) {
+                            if (t.type === 'Income') {
+                                inc[t.category] = (inc[t.category] || 0) + t.amount;
+                                totInc += t.amount;
+                            } else {
+                                exp[t.category] = (exp[t.category] || 0) + t.amount;
+                                totExp += t.amount;
+                            }
+                        }
+                    });
+                    
+                    let incRows = Object.keys(inc).map(k => `<tr><td class="p-2">${k}</td><td class="p-2 text-right">${inc[k].toLocaleString()}</td></tr>`).join('');
+                    let expRows = Object.keys(exp).map(k => `<tr><td class="p-2">${k}</td><td class="p-2 text-right">${exp[k].toLocaleString()}</td></tr>`).join('');
+                    
+                    html += `<div class="grid grid-cols-2 gap-4 text-xs">
+                        <div class="border rounded p-2">
+                            <h3 class="font-bold bg-green-100 p-1 mb-2 text-green-800">INCOME</h3>
+                            <table class="w-full">${incRows}</table>
+                            <div class="border-t mt-2 pt-1 font-bold text-right text-lg text-green-700">Total: ${totInc.toLocaleString()}</div>
+                        </div>
+                        <div class="border rounded p-2">
+                            <h3 class="font-bold bg-red-100 p-1 mb-2 text-red-800">EXPENSES</h3>
+                            <table class="w-full">${expRows}</table>
+                            <div class="border-t mt-2 pt-1 font-bold text-right text-lg text-red-700">Total: ${totExp.toLocaleString()}</div>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-center font-bold text-2xl border p-4 rounded bg-slate-50">
+                        NET PROFIT: <span class="${(totInc-totExp)>=0 ? 'text-green-600' : 'text-red-600'}">Rs. ${(totInc-totExp).toLocaleString()}</span>
+                    </div>`;
+                    
+                } else if (type === 'bs') {
+                    const snap = await getDocs(collection(db, "bs_items"));
+                    let assets = {fixed: [], current: []};
+                    let equity = [];
+                    let liabilities = [];
+                    
+                    snap.forEach(d => {
+                        const i = d.data();
+                        if (i.date <= end) { // Balance sheet is cumulative up to a date
+                            if (i.type === 'Non-Current Asset') assets.fixed.push(i);
+                            else if (i.type === 'Current Asset') assets.current.push(i);
+                            else if (i.type === 'Equity') equity.push(i);
+                            else if (i.type === 'Current Liability') liabilities.push(i);
+                        }
+                    });
+                    
+                    // Helper to sum and generate rows
+                    const genSec = (items) => {
+                        let tot = 0; 
+                        let r = items.map(x => { tot+=x.amount; return `<tr><td>${x.name}</td><td class="text-right">${x.amount.toLocaleString()}</td></tr>`; }).join('');
+                        return {html: r, total: tot};
+                    };
+                    
+                    const fA = genSec(assets.fixed);
+                    const cA = genSec(assets.current);
+                    const eq = genSec(equity);
+                    const li = genSec(liabilities);
+                    
+                    // We also need cash balance from transactions up to 'end' date
+                    const txSnap = await getDocs(collection(db, "transactions"));
+                    let cashBal = 0;
+                    txSnap.forEach(d => {
+                        const t = d.data();
+                        if (t.date <= end) {
+                            if (t.type === 'Income') cashBal += t.amount; else cashBal -= t.amount;
+                        }
+                    });
+                    
+                    cA.html += `<tr class="font-bold text-blue-600"><td>Cash / Bank Balance</td><td class="text-right">${cashBal.toLocaleString()}</td></tr>`;
+                    cA.total += cashBal;
+                    
+                    const totAssets = fA.total + cA.total;
+                    const totEqLiab = eq.total + li.total;
+                    
+                    html += `<div class="grid grid-cols-2 gap-6 text-xs">
+                        <div>
+                            <h3 class="font-bold text-lg border-b mb-2">ASSETS</h3>
+                            <h4 class="font-bold text-gray-500 mt-2">Non-Current Assets</h4>
+                            <table class="w-full mb-2">${fA.html}</table>
+                            <h4 class="font-bold text-gray-500 mt-2">Current Assets</h4>
+                            <table class="w-full mb-2">${cA.html}</table>
+                            <div class="border-t-2 border-black mt-2 pt-1 font-bold text-right text-lg">Total Assets: ${totAssets.toLocaleString()}</div>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg border-b mb-2">EQUITY & LIABILITIES</h3>
+                            <h4 class="font-bold text-gray-500 mt-2">Equity</h4>
+                            <table class="w-full mb-2">${eq.html}</table>
+                            <h4 class="font-bold text-gray-500 mt-2">Current Liabilities</h4>
+                            <table class="w-full mb-2">${li.html}</table>
+                            <div class="border-t-2 border-black mt-2 pt-1 font-bold text-right text-lg">Total Equity & Liab: ${totEqLiab.toLocaleString()}</div>
+                        </div>
+                    </div>`;
                 }
-            });
-            
-            txs.sort((a,b) => new Date(a.date) - new Date(b.date));
-            
-            let rows = "";
-            let bal = 0;
-            txs.forEach(t => {
-                if (t.type === 'Income') bal += t.amount; else bal -= t.amount;
-               const safeDesc = encodeURIComponent(t.description);
-                rows += `<tr class="border-b hover:bg-gray-50 group">
-                    <td class="p-2">${t.date}</td>
-                    <td class="p-2">${t.description}</td>
-                    <td class="p-2 text-right font-bold text-green-600">${t.type === 'Income' ? t.amount.toLocaleString() : '-'}</td>
-                    <td class="p-2 text-right font-bold text-red-600">${t.type === 'Expense' ? t.amount.toLocaleString() : '-'}</td>
-                    <td class="p-2 text-right font-bold bg-gray-50">${bal.toLocaleString()}</td>
-                    <td class="p-2 text-center no-print">
-                        <button onclick="editTxGeneric('${t.id}', 'transactions', '${safeDesc}', ${t.amount}, () => genReport('${type}'))" class="action-btn btn-edit"><i class="fas fa-edit"></i></button>
-                        <button onclick="deleteTxGeneric('${t.id}', 'transactions', () => genReport('${type}'))" class="action-btn btn-del"><i class="fas fa-trash"></i></button>
-                    </td>
-                </tr>`;
-            });
-            
-            let html = `<table class="w-full text-xs text-left border rounded">
-                <thead class="bg-gray-100 font-bold uppercase"><tr><th class="p-2">Date</th><th class="p-2">Description</th><th class="p-2 text-right">Income</th><th class="p-2 text-right">Expense</th><th class="p-2 text-right">Balance</th><th class="p-2 text-center no-print">Actions</th></tr></thead>
-                <tbody>${rows}</tbody>
-            </table>`;
-            
-            container.innerHTML = html;
-            // Add PDF style to print container
-            document.getElementById('printContainer').innerHTML = pdfStyle + `<div style="padding:20px; font-family:sans-serif;">${headerHtml}${html}</div>`;
-            
-        } else if (type === 'pnl') {
-            // P&L Logic (Unchanged but wrapped with header)
-            const snap = await getDocs(collection(db, "transactions"));
-            let inc = {}, exp = {};
-            let totInc = 0, totExp = 0;
-            
-            snap.forEach(d => {
-                const t = d.data();
-                if (t.date >= start && t.date <= end) {
-                    if (t.type === 'Income') {
-                        inc[t.category] = (inc[t.category] || 0) + t.amount;
-                        totInc += t.amount;
-                    } else {
-                        exp[t.category] = (exp[t.category] || 0) + t.amount;
-                        totExp += t.amount;
-                    }
-                }
-            });
-            
-            let incRows = Object.keys(inc).map(k => `<tr><td class="p-2">${k}</td><td class="p-2 text-right">${inc[k].toLocaleString()}</td></tr>`).join('');
-            let expRows = Object.keys(exp).map(k => `<tr><td class="p-2">${k}</td><td class="p-2 text-right">${exp[k].toLocaleString()}</td></tr>`).join('');
-            
-            let html = `<div class="grid grid-cols-2 gap-4 text-xs">
-                <div class="border rounded p-2">
-                    <h3 class="font-bold bg-green-100 p-1 mb-2 text-green-800">INCOME</h3>
-                    <table class="w-full">${incRows}</table>
-                    <div class="border-t mt-2 pt-1 font-bold text-right text-lg text-green-700">Total: ${totInc.toLocaleString()}</div>
-                </div>
-                <div class="border rounded p-2">
-                    <h3 class="font-bold bg-red-100 p-1 mb-2 text-red-800">EXPENSES</h3>
-                    <table class="w-full">${expRows}</table>
-                    <div class="border-t mt-2 pt-1 font-bold text-right text-lg text-red-700">Total: ${totExp.toLocaleString()}</div>
-                </div>
-            </div>
-            <div class="mt-4 text-center font-bold text-2xl border p-4 rounded bg-slate-50">
-                NET PROFIT: <span class="${(totInc-totExp)>=0 ? 'text-green-600' : 'text-red-600'}">Rs. ${(totInc-totExp).toLocaleString()}</span>
-            </div>`;
-            
-            container.innerHTML = html;
-            document.getElementById('printContainer').innerHTML = pdfStyle + `<div style="padding:20px; font-family:sans-serif;">${headerHtml}${html}</div>`;
-
-        } else if (type === 'bs') {
-             // BS Logic (Same as before but ensures printContainer is set correctly)
-             const snap = await getDocs(collection(db, "bs_items"));
-             let assets = {fixed: [], current: []};
-             let equity = [];
-             let liabilities = [];
-             
-             snap.forEach(d => {
-                 const i = d.data();
-                 if (i.date <= end) {
-                     if (i.type === 'Non-Current Asset') assets.fixed.push(i);
-                     else if (i.type === 'Current Asset') assets.current.push(i);
-                     else if (i.type === 'Equity') equity.push(i);
-                     else if (i.type === 'Current Liability') liabilities.push(i);
-                 }
-             });
-             
-             const genSec = (items) => {
-                 let tot = 0; 
-                 let r = items.map(x => { tot+=x.amount; return `<tr><td>${x.name}</td><td class="text-right">${x.amount.toLocaleString()}</td></tr>`; }).join('');
-                 return {html: r, total: tot};
-             };
-             
-             const fA = genSec(assets.fixed);
-             const cA = genSec(assets.current);
-             const eq = genSec(equity);
-             const li = genSec(liabilities);
-             
-             const txSnap = await getDocs(collection(db, "transactions"));
-             let cashBal = 0;
-             txSnap.forEach(d => {
-                 const t = d.data();
-                 if (t.date <= end) {
-                     if (t.type === 'Income') cashBal += t.amount; else cashBal -= t.amount;
-                 }
-             });
-             
-             cA.html += `<tr class="font-bold text-blue-600"><td>Cash / Bank Balance</td><td class="text-right">${cashBal.toLocaleString()}</td></tr>`;
-             cA.total += cashBal;
-             
-             const totAssets = fA.total + cA.total;
-             const totEqLiab = eq.total + li.total;
-             
-             let html = `<div class="grid grid-cols-2 gap-6 text-xs">
-                 <div>
-                     <h3 class="font-bold text-lg border-b mb-2">ASSETS</h3>
-                     <h4 class="font-bold text-gray-500 mt-2">Non-Current Assets</h4>
-                     <table class="w-full mb-2">${fA.html}</table>
-                     <h4 class="font-bold text-gray-500 mt-2">Current Assets</h4>
-                     <table class="w-full mb-2">${cA.html}</table>
-                     <div class="border-t-2 border-black mt-2 pt-1 font-bold text-right text-lg">Total Assets: ${totAssets.toLocaleString()}</div>
-                 </div>
-                 <div>
-                     <h3 class="font-bold text-lg border-b mb-2">EQUITY & LIABILITIES</h3>
-                     <h4 class="font-bold text-gray-500 mt-2">Equity</h4>
-                     <table class="w-full mb-2">${eq.html}</table>
-                     <h4 class="font-bold text-gray-500 mt-2">Current Liabilities</h4>
-                     <table class="w-full mb-2">${li.html}</table>
-                     <div class="border-t-2 border-black mt-2 pt-1 font-bold text-right text-lg">Total Equity & Liab: ${totEqLiab.toLocaleString()}</div>
-                 </div>
-             </div>`;
-
-             container.innerHTML = html;
-             document.getElementById('printContainer').innerHTML = pdfStyle + `<div style="padding:20px; font-family:sans-serif;">${headerHtml}${html}</div>`;
-        }
-    } catch(e) {
-        console.error(e);
-        container.innerHTML = "<p class='text-center p-4 text-red-500'>Error loading report data.</p>";
-    }
-};
+                
+                container.innerHTML = html;
+                document.getElementById('printContainer').innerHTML = `<div style="padding:20px; font-family:sans-serif;">${html}</div>`;
+            } catch(e) {
+                console.error(e);
+                container.innerHTML = "<p class='text-center p-4 text-red-500'>Error loading report data. Check console for details.</p>";
+            }
+        };
 
         window.saveTransaction = async () => {
             const date = document.getElementById('txDate').value;
@@ -3875,81 +3802,8 @@ if (status === 'manager_approved') {
                 alert("Error saving item");
             }
         };
-// --- NEW: GENERIC EDIT/DELETE FUNCTIONS ---
 
-// --- NEW: GENERIC EDIT/DELETE FUNCTIONS (WITH PASSWORD PROTECTION) ---
-
-window.deleteTxGeneric = async (id, collectionPath, reloadFunc) => {
-    if(!confirm("Are you sure you want to PERMANENTLY DELETE this record?")) return;
-    
-    // 1. Password ඉල්ලන කොටස (Delete කිරීමට පෙර)
-    const pwd = prompt("Enter Admin Password to confirm delete:");
-    if(pwd === null) return; // Cancel කළොත් නවතින්න
-
-    // 2. Password එක හරිද කියලා බලනවා
-    let correct = "Sandeep@1116"; 
-    try {
-        const s = await getDoc(doc(db, "settings", "config"));
-        if(s.exists() && s.data().adminPassword) correct = s.data().adminPassword;
-    } catch(e) {}
-
-    if(pwd !== correct) return alert("Wrong Password! Access Denied.");
-
-    // 3. හරිනම් Delete කරනවා
-    try {
-        await deleteDoc(doc(db, collectionPath, id));
-        alert("Record Deleted Successfully!");
-        if(reloadFunc) reloadFunc(); 
-        if(collectionPath === "transactions") {
-            const btn = document.querySelector('#fin-view-reports button.bg-slate-100'); 
-            if(btn) btn.click();
-        }
-    } catch(e) {
-        console.error(e);
-        alert("Error deleting: " + e.message);
-    }
-};
-
-window.editTxGeneric = async (id, collectionPath, currentDesc, currentAmount, reloadFunc) => {
-currentDesc = decodeURIComponent(currentDesc);
-    // 1. Password ඉල්ලන කොටස (Edit කිරීමට පෙර)
-    const pwd = prompt("Enter Admin Password to Edit:");
-    if(pwd === null) return;
-
-    let correct = "Sandeep@1116"; 
-    try {
-        const s = await getDoc(doc(db, "settings", "config"));
-        if(s.exists() && s.data().adminPassword) correct = s.data().adminPassword;
-    } catch(e) {}
-
-    if(pwd !== correct) return alert("Wrong Password! Access Denied.");
-
-    // 2. Password හරි නම් විස්තර වෙනස් කරන්න දෙනවා
-    const newDesc = prompt("Edit Description:", currentDesc);
-    if(newDesc === null) return;
-    
-    const newAmtStr = prompt("Edit Amount:", currentAmount);
-    if(newAmtStr === null) return;
-    const newAmt = parseFloat(newAmtStr);
-
-    if(!newDesc || isNaN(newAmt)) return alert("Invalid Input!");
-
-    try {
-        await updateDoc(doc(db, collectionPath, id), {
-            description: newDesc,
-            amount: newAmt
-        });
-        alert("Record Updated Successfully!");
-        if(reloadFunc) reloadFunc();
-         if(collectionPath === "transactions") {
-            const btn = document.querySelector('#fin-view-reports button.bg-slate-100');
-            if(btn) btn.click();
-        }
-    } catch(e) {
-        console.error(e);
-        alert("Error updating: " + e.message);
-    }
-};        async function initApp() { 
+        async function initApp() { 
             console.log("App Initializing...");
             try {
                 // IMPORTANT: Authenticate anonymously to access Firestore securely
