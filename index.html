@@ -890,7 +890,10 @@
                     <input type="number" id="bookingFee" class="p-1 border rounded text-right w-32 text-sm" oninput="calculateEP()" step="0.01">
                 </div>
                 <div class="flex justify-between items-center">
-                    <label class="text-xs font-bold text-gray-500">Down Payment %</label>
+                    <label class="text-xs font-bold text-gray-500 flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="hasDownPay" checked onchange="toggleDownPayState()" class="w-4 h-4 text-blue-600 rounded">
+                        Down Payment %
+                    </label>
                     <input type="number" id="downPayPct" class="p-1 border rounded text-right w-32 text-sm" value="40" oninput="calculateEP()">
                 </div>
                 <div class="flex justify-between items-center">
@@ -1421,7 +1424,7 @@ window.updateFinanceAccessPass = async () => {
                     
                     if (inLog) {
                         const inTimeObj = new Date(inLog.timestamp.seconds * 1000);
-                        if (inTimeObj.getHours() > 8 || (inTimeObj.getHours() === 9 && inTimeObj.getMinutes() > 00)) {
+                        if (inTimeObj.getHours() > 8 || (inTimeObj.getHours() === 9 && inTimeObj.getMinutes() > 0)) {
                             inText = "Late IN";
                             inColor = "text-red-600 font-bold";
                         }
@@ -2811,16 +2814,24 @@ window.updateFinanceAccessPass = async () => {
                     const rate = parseFloat(document.getElementById('epRate').value); 
                     const months = parseFloat(document.getElementById('epMonths').value); 
                     const booking = parseFloat(document.getElementById('bookingFee').value) || 0; 
-                    const dpPct = parseFloat(document.getElementById('downPayPct').value); 
-                    const dpTotal = price * (dpPct / 100); 
+                    const hasDp = document.getElementById('hasDownPay').checked;
+                    
+                    let dpTotal = 0;
+                    if (hasDp) {
+                        const dpPct = parseFloat(document.getElementById('downPayPct').value) || 0; 
+                        dpTotal = price * (dpPct / 100); 
+                    } else {
+                        dpTotal = booking; // If no DP, the total DP required is just the booking fee
+                    }
+                    
                     const loanAmt = price - dpTotal; 
                     let totalPayable = 0; 
                     if (rate === 0) { 
                         totalPayable = loanAmt; 
                     } else { 
-                        const r = (rate / 100) / 12; 
-                        const emi = (loanAmt * r * Math.pow(1 + r, months)) / (Math.pow(1 + r, months) - 1); 
-                        totalPayable = emi * months; 
+                        const years = months / 12;
+                        const totalInterest = loanAmt * (rate / 100) * years;
+                        totalPayable = loanAmt + totalInterest; 
                     } 
                     const isDpComplete = booking >= (dpTotal - 100);
                     ep = { 
@@ -2956,13 +2967,14 @@ window.updateFinanceAccessPass = async () => {
 
                     let thisMonthInterest = 0, thisMonthCapital = 0, thisMonthPayable = 0;
 
-                    if (totalRemaining > 0) {
-                        const monthlyRate = (annualRate / 12) / 100;
+                   if (totalRemaining > 0) {
+                        // මුළු පොලිය
+                        const totalInterestAmount = totalPayable - totalLoan;
                         
-                        // මේ මාසයට අදාළ පොලිය (ඉතිරි ප්‍රාග්ධනය මත)
-                        thisMonthInterest = currentOutstandingCapital * monthlyRate;
+                        // මාසික ස්ථාවර පොලිය
+                        thisMonthInterest = totalInterestAmount / months;
                         
-                        // වාරිකයෙන් පොලිය අඩු කළ විට ඉතිරිය කැපිටල් එකයි
+                        // මාසික ප්‍රාග්ධන කොටස
                         thisMonthCapital = fixedEmi - thisMonthInterest;
                         
                         // වාරිකය සම්පූර්ණ ගාණට වඩා වැඩි නොවන සේ සකස් කිරීම
@@ -3195,12 +3207,28 @@ window.updateFinanceAccessPass = async () => {
             document.getElementById('cashFields').classList.toggle('hidden', isEP); 
             if(isEP) window.calculateEP(); 
         };
+              window.toggleDownPayState = () => {
+            const hasDp = document.getElementById('hasDownPay').checked;
+            const input = document.getElementById('downPayPct');
+            input.disabled = !hasDp;
+            if(!hasDp) input.classList.add('bg-gray-100');
+            else input.classList.remove('bg-gray-100');
+            window.calculateEP();
+        };
 
         window.calculateEP = () => { 
             const price = parseFloat(document.getElementById('finalPrice').value)||0; 
             const booking = parseFloat(document.getElementById('bookingFee').value)||0; 
-            const pct = parseFloat(document.getElementById('downPayPct').value)||40; 
-            const dpAmount = price * (pct / 100); 
+            const hasDp = document.getElementById('hasDownPay').checked;
+            
+            let dpAmount = 0;
+            if(hasDp) {
+                const pct = parseFloat(document.getElementById('downPayPct').value)||40; 
+                dpAmount = price * (pct / 100); 
+            } else {
+                dpAmount = booking; // No Downpayment -> Required DP is just the booking fee
+            }
+            
             document.getElementById('downPayAmount').value = dpAmount; 
             const dpBal = dpAmount - booking; 
             document.getElementById('downPayBalanceDisp').innerText = dpBal.toLocaleString(); 
@@ -3214,9 +3242,10 @@ window.updateFinanceAccessPass = async () => {
                 monthly = loanAmt / months; 
                 totalPayable = loanAmt; 
             } else { 
-                const r = (rate / 100) / 12; 
-                monthly = (loanAmt * r * Math.pow(1 + r, months)) / (Math.pow(1 + r, months) - 1); 
-                totalPayable = monthly * months; 
+                const years = months / 12;
+                const totalInterest = loanAmt * (rate / 100) * years;
+                totalPayable = loanAmt + totalInterest;
+                monthly = totalPayable / months;
             } 
             document.getElementById('epMonthlyInst').innerText = monthly.toLocaleString(undefined, {maximumFractionDigits: 2}); 
             document.getElementById('epTotalPayable').innerText = totalPayable.toLocaleString(undefined, {maximumFractionDigits: 2}); 
