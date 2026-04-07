@@ -3222,22 +3222,30 @@ window.updateFinanceAccessPass = async () => {
             const hasDp = document.getElementById('hasDownPay').checked;
             
             let dpAmount = 0;
-            if(hasDp) {
-                const pct = parseFloat(document.getElementById('downPayPct').value)||40; 
-                dpAmount = price * (pct / 100); 
-            } else {
-                dpAmount = booking; // No Downpayment -> Required DP is just the booking fee
-            }
-            
-            document.getElementById('downPayAmount').value = dpAmount; 
-            const dpBal = dpAmount - booking; 
-            document.getElementById('downPayBalanceDisp').innerText = dpBal.toLocaleString(); 
-            const loanAmt = price - dpAmount; 
-            document.getElementById('loanAmount').value = loanAmt.toLocaleString(); 
-            const rate = parseFloat(document.getElementById('epRate').value)||15; 
-            const months = parseFloat(document.getElementById('epMonths').value)||60; 
-            let monthly = 0; 
-            let totalPayable = 0; 
+if(hasDp) {
+    const pctInput = document.getElementById('downPayPct').value;
+    const pct = pctInput === "" || isNaN(parseFloat(pctInput)) ? 40 : parseFloat(pctInput);
+    dpAmount = price * (pct / 100);
+} else {
+    dpAmount = booking; // No Downpayment -> Required DP is just the booking fee
+}
+
+document.getElementById('downPayAmount').value = dpAmount;
+const dpBal = dpAmount - booking;
+document.getElementById('downPayBalanceDisp').innerText = dpBal.toLocaleString();
+const loanAmt = price - dpAmount;
+document.getElementById('loanAmount').value = loanAmt.toLocaleString();
+
+// Interest Rate Fix
+const rateInput = document.getElementById('epRate').value;
+const rate = rateInput === "" || isNaN(parseFloat(rateInput)) ? 15 : parseFloat(rateInput);
+
+// Months Fix
+const monthsInput = document.getElementById('epMonths').value;
+const months = monthsInput === "" || isNaN(parseFloat(monthsInput)) ? 60 : parseFloat(monthsInput);
+
+let monthly = 0;
+let totalPayable = 0; 
             if (rate === 0) { 
                 monthly = loanAmt / months; 
                 totalPayable = loanAmt; 
