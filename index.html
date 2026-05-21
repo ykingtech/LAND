@@ -1086,7 +1086,7 @@ window.verifyFinanceAccess = async () => {
     btn.innerText = "Verifying...";
     btn.disabled = true;
 
-    let pass = "sandeep"; // Default Password එක
+    let pass = "sandeep"; // Default Password ??
     
     try { 
         const s = await getDoc(doc(db, "settings", "finance_config")); 
@@ -1103,7 +1103,7 @@ window.verifyFinanceAccess = async () => {
     if (input === pass) {
         document.getElementById('financeAccessModal').classList.add('hidden');
         document.getElementById('financeAccessInput').value = "";
-        nav('reports'); // Password හරි නම් විතරක් Report page එකට යනවා
+        nav('reports'); // Password ??? ??? ?????? Report page ??? ????
     } else {
         alert("Invalid Access Password");
     }
@@ -2132,7 +2132,7 @@ window.updateFinanceAccessPass = async () => {
                  jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
              };
              
-             // Image එක load වෙන්න තත්පර 0.5ක් දීලා PDF එක හදනවා
+             // Image ?? load ????? ????? 0.5?? ???? PDF ?? ?????
              setTimeout(async () => {
                  try {
                     await html2pdf().set(opt).from(element).save();
@@ -2247,7 +2247,7 @@ window.updateFinanceAccessPass = async () => {
                 let isUpdated = false;
                 let updates = {};
 
-                // 1. Allowances (10 වෙනිදා හෝ ඊට පසුව ගෙවීම)
+                // 1. Allowances (10 ?????? ?? ?? ???? ?????)
                 if (today.getDate() >= 10 && s.lastPaidAllowanceMonth !== currentMonthKey) { 
                     let totalAllowance = 0;
 
@@ -2291,7 +2291,7 @@ window.updateFinanceAccessPass = async () => {
                     console.log(`Auto-Paid Allowances for ${s.name}`); 
                 } 
 
-                // 2. Basic Salary (25 වෙනිදා හෝ ඊට පසුව ගෙවීම)
+                // 2. Basic Salary (25 ?????? ?? ?? ???? ?????)
                 if (today.getDate() >= 25 && s.lastPaidSalaryMonth !== currentMonthKey) {
                     if (s.salary > 0) {
                         await addDoc(collection(db, "transactions"), { 
@@ -2312,13 +2312,13 @@ window.updateFinanceAccessPass = async () => {
                     }
 
                     updates.lastPaidSalaryMonth = currentMonthKey;
-                    // UI එකේ "PAID" badge එක පෙන්වන්න පරණ variable එකත් අප්ඩේට් කරනවා
+                    // UI ??? "PAID" badge ?? ???????? ??? variable ???? ??????? ?????
                     updates.lastPaidMonth = currentMonthKey; 
                     isUpdated = true;
                     console.log(`Auto-Paid Salary for ${s.name}`);
                 }
 
-                // Database එක Update කිරීම
+                // Database ?? Update ?????
                 if (isUpdated) {
                     await updateDoc(doc(db, "staff", docSnap.id), updates); 
                 }
@@ -2948,17 +2948,17 @@ window.updateFinanceAccessPass = async () => {
                     const months = data.payment.epDetails.months || 1;
                     const totalPayable = data.payment.epDetails.totalPayable || 0;
                     
-                    // සම්මත වාරිකය (EMI)
+                    // ????? ?????? (EMI)
                     const fixedEmi = totalPayable / months;
                     
-                    // ගෙවා ඇති මුළු මුදල (Installments only)
+                    // ???? ??? ???? ???? (Installments only)
                     const loanPaid = data.payment.epDetails.paidAmount || 0;
                     
-                    // දැනට ඉතිරිව ඇති මුළු ණය මුදල (මුළු පොලියත් සමග)
+                    // ???? ?????? ??? ???? ?? ???? (???? ??????? ???)
                     const totalRemaining = Math.max(0, totalPayable - loanPaid);
 
-                    // අද දිනට ඉතිරිව ඇති ණය මුදල (Capital only - Settlement Balance)
-                    // පරණ ගෙවීම් මත පදනම්ව දැනට ඉතිරි ප්‍රාග්ධනය ගණනය කිරීම
+                    // ?? ???? ?????? ??? ?? ???? (Capital only - Settlement Balance)
+                    // ??? ?????? ?? ?????? ???? ????? ?????????? ???? ?????
                     const paidPct = loanPaid / totalPayable;
                     const currentOutstandingCapital = Math.max(0, totalLoan * (1 - paidPct));
                     
@@ -2968,20 +2968,20 @@ window.updateFinanceAccessPass = async () => {
                     let thisMonthInterest = 0, thisMonthCapital = 0, thisMonthPayable = 0;
 
                    if (totalRemaining > 0) {
-                        // මුළු පොලිය
+                        // ???? ?????
                         const totalInterestAmount = totalPayable - totalLoan;
                         
-                        // මාසික ස්ථාවර පොලිය
+                        // ????? ?????? ?????
                         thisMonthInterest = totalInterestAmount / months;
                         
-                        // මාසික ප්‍රාග්ධන කොටස
+                        // ????? ????????? ????
                         thisMonthCapital = fixedEmi - thisMonthInterest;
                         
-                        // වාරිකය සම්පූර්ණ ගාණට වඩා වැඩි නොවන සේ සකස් කිරීම
+                        // ?????? ???????? ???? ??? ???? ???? ?? ???? ?????
                         thisMonthPayable = Math.min(fixedEmi, totalRemaining);
                     }
 
-                    // UI එක පරණ විදිහටම කැපිටල්/ඉන්ටරෙස්ට් වෙන් කර පෙන්වීම
+                    // UI ?? ??? ??????? ???????/?????????? ???? ?? ???????
                     document.getElementById('epNextDueAmt').innerHTML = `
                         <div class="flex justify-between text-[10px] text-slate-500 font-normal">
                             <span>Capital</span>
@@ -2994,7 +2994,7 @@ window.updateFinanceAccessPass = async () => {
                         <div class="border-t border-indigo-200 mt-1 pt-1 text-lg">Rs. ${thisMonthPayable.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                     `;
                     
-                    // ලබන මාසයටත් එම වාරිකයම පෙන්වීම
+                    // ??? ??????? ?? ??????? ???????
                     let nextMonthPayable = totalRemaining > fixedEmi ? Math.min(fixedEmi, totalRemaining - fixedEmi) : 0;
                     document.getElementById('epFutureDueAmt').innerText = "Rs. " + nextMonthPayable.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
                 }
@@ -3492,7 +3492,7 @@ if (status === 'manager_approved') {
     adminBtn.classList.remove('hidden');
     adminBtn.onclick = () => window.adminApproveTask(id);
 } else if (status !== 'completed' && status !== 'approved') {
-    // 'new', 'pending' වගේ approve වෙලා නැති අනිත් හැම අවස්ථාවකදීම Manager Approve button එක පෙන්නනවා
+    // 'new', 'pending' ??? approve ???? ???? ????? ??? ??????????? Manager Approve button ?? ????????
     manBtn.classList.remove('hidden');
     manBtn.onclick = () => window.managerApproveTask(id);
 }
@@ -3620,14 +3620,14 @@ if (status === 'manager_approved') {
             
             try {
                 if (type === 'daybook' || type === 'petty') { 
-                    // Complex Query එක ඉවත් කර Memory Filter භාවිතය
+                    // Complex Query ?? ???? ?? Memory Filter ??????
                     const snap = await getDocs(collection(db, "transactions")); 
                     let txs = [];
                     snap.forEach(d => {
                         const t = d.data();
                         if (t.date >= start && t.date <= end) {
                             if (type === 'petty' && t.category !== 'Petty Cash') return;
-                            txs.push(t);
+                            txs.push({id: d.id, ...t}); // Add Document ID for Deletion
                         }
                     });
                     
@@ -3643,11 +3643,14 @@ if (status === 'manager_approved') {
                             <td class="p-2 text-right font-bold text-green-600">${t.type === 'Income' ? t.amount.toLocaleString() : '-'}</td>
                             <td class="p-2 text-right font-bold text-red-600">${t.type === 'Expense' ? t.amount.toLocaleString() : '-'}</td>
                             <td class="p-2 text-right font-bold bg-gray-50">${bal.toLocaleString()}</td>
+                            <td class="p-2 text-center no-print">
+                                <button onclick="deleteTransaction('${t.id}')" class="text-red-500 hover:text-red-700 bg-red-50 px-2 py-1 rounded shadow-sm"><i class="fas fa-trash"></i></button>
+                            </td>
                         </tr>`;
                     });
                     
                     html += `<table class="w-full text-xs text-left border rounded">
-                        <thead class="bg-gray-100 font-bold uppercase"><tr><th class="p-2">Date</th><th class="p-2">Description</th><th class="p-2 text-right">Income</th><th class="p-2 text-right">Expense</th><th class="p-2 text-right">Balance</th></tr></thead>
+                        <thead class="bg-gray-100 font-bold uppercase"><tr><th class="p-2">Date</th><th class="p-2">Description</th><th class="p-2 text-right">Income</th><th class="p-2 text-right">Expense</th><th class="p-2 text-right">Balance</th><th class="p-2 text-center no-print">Action</th></tr></thead>
                         <tbody>${rows}</tbody>
                     </table>`;
                     
@@ -3688,14 +3691,14 @@ if (status === 'manager_approved') {
                         NET PROFIT: <span class="${(totInc-totExp)>=0 ? 'text-green-600' : 'text-red-600'}">Rs. ${(totInc-totExp).toLocaleString()}</span>
                     </div>`;
                     
-                } else if (type === 'bs') {
+                 } else if (type === 'bs') {
                     const snap = await getDocs(collection(db, "bs_items"));
                     let assets = {fixed: [], current: []};
                     let equity = [];
                     let liabilities = [];
                     
                     snap.forEach(d => {
-                        const i = d.data();
+                        const i = {id: d.id, ...d.data()}; // Add Document ID
                         if (i.date <= end) { // Balance sheet is cumulative up to a date
                             if (i.type === 'Non-Current Asset') assets.fixed.push(i);
                             else if (i.type === 'Current Asset') assets.current.push(i);
@@ -3707,7 +3710,16 @@ if (status === 'manager_approved') {
                     // Helper to sum and generate rows
                     const genSec = (items) => {
                         let tot = 0; 
-                        let r = items.map(x => { tot+=x.amount; return `<tr><td>${x.name}</td><td class="text-right">${x.amount.toLocaleString()}</td></tr>`; }).join('');
+                        let r = items.map(x => { 
+                            tot+=x.amount; 
+                            return `<tr>
+                                <td>${x.name}</td>
+                                <td class="text-right">${x.amount.toLocaleString()}</td>
+                                <td class="text-right w-10 no-print">
+                                    <button onclick="deleteBSItem('${x.id}')" class="text-red-500 hover:text-red-700 bg-red-50 px-2 py-1 rounded shadow-sm text-[10px]"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>`; 
+                        }).join('');
                         return {html: r, total: tot};
                     };
                     
@@ -3808,6 +3820,32 @@ if (status === 'manager_approved') {
             } catch (e) {
                 console.error(e);
                 alert("Error saving item");
+            }
+        };
+
+        // NEW: Delete Transaction Function
+        window.deleteTransaction = async (id) => {
+            if(!confirm("??? ???????? ??? ?????? ?????? ?? ?????????")) return;
+            try {
+                await deleteDoc(doc(db, "transactions", id));
+                alert("???????? ??? ??? ???! (Deleted Successfully)");
+                document.getElementById('reportContent').innerHTML = "<p class='text-center p-4 text-green-600 font-bold'>Record Deleted. Please click the Report generate button again to refresh the view.</p>";
+            } catch(e) {
+                console.error(e);
+                alert("Error deleting transaction.");
+            }
+        };
+
+        // NEW: Delete Balance Sheet Item Function
+        window.deleteBSItem = async (id) => {
+            if(!confirm("??? Balance Sheet ????? ??? ?????? ?????? ?? ?????????")) return;
+            try {
+                await deleteDoc(doc(db, "bs_items", id));
+                alert("????? ??? ??? ???! (Item Deleted Successfully)");
+                window.genReport('bs'); // Auto refresh Balance Sheet
+            } catch(e) {
+                console.error(e);
+                alert("Error deleting item.");
             }
         };
 
