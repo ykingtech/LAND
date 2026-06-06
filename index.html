@@ -65,6 +65,183 @@
         .section-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-bottom: 10px; }
 
         .report-form-section { margin-bottom: 2rem; border: 1px solid #e2e8f0; padding: 1.5rem; border-radius: 0.75rem; background: white; }
+
+        /* ============================================================
+           UI/UX POLISH LAYER  (visual only)
+           No colors/theme, no content, no logic changed.
+           Adds depth, motion & refinement on top of existing styles.
+           Fully Chromium/Electron compatible.
+           ============================================================ */
+
+        /* Crisp rendering + smooth scrolling */
+        * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        html { scroll-behavior: smooth; }
+
+        /* Modern thin scrollbars (theme-tinted) */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(30,58,138,0.20); border-radius: 999px; border: 2px solid transparent; background-clip: padding-box; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(30,58,138,0.38); background-clip: padding-box; }
+        * { scrollbar-width: thin; scrollbar-color: rgba(30,58,138,0.28) transparent; }
+
+        /* Subtle ambient depth in the work area (same gray/blue palette) */
+        #mainScrollContainer {
+            background-image:
+                radial-gradient(1100px 560px at 100% -8%, rgba(30,58,138,0.055), transparent 60%),
+                radial-gradient(900px 500px at -10% 112%, rgba(15,23,42,0.045), transparent 55%);
+        }
+
+        /* Buttons: tactile micro-interactions */
+        button { transition: transform .18s cubic-bezier(.2,.8,.2,1), box-shadow .2s ease, background-color .2s ease, color .2s ease, border-color .2s ease; }
+        button:active { transform: translateY(1px) scale(.985); }
+        button:focus-visible { outline: 2px solid rgba(37,99,235,.55); outline-offset: 2px; }
+
+        /* Inputs: smooth, soft focus glow */
+        input, select, textarea { transition: box-shadow .2s ease, border-color .2s ease, background-color .2s ease; }
+        input:focus, select:focus, textarea:focus { box-shadow: 0 0 0 4px rgba(37,99,235,.12); }
+
+        /* Cards: transition-ready + hover lift on data grids */
+        .bg-white.rounded-2xl, .bg-white.rounded-xl,
+        #projectGrid > div, #staffGrid > div, #landsGrid > div,
+        #globalAttendanceGrid > div, #blocksContainer > div, #closedProjectList > div {
+            transition: transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s ease, border-color .25s ease;
+        }
+        #projectGrid > div:hover, #staffGrid > div:hover, #landsGrid > div:hover,
+        #globalAttendanceGrid > div:hover, #blocksContainer > div:hover, #closedProjectList > div:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 18px 40px -18px rgba(15,23,42,.35), 0 8px 18px -14px rgba(30,58,138,.30);
+        }
+
+        /* Sidebar: depth gradient + animated active accent bar */
+        #sidebar { background-image: linear-gradient(180deg, #0f172a 0%, #0b1220 100%); }
+        .nav-btn { position: relative; overflow: hidden; transition: transform .2s ease, background-color .2s ease, color .2s ease; }
+        .nav-btn:hover { transform: translateX(3px); }
+        .nav-btn::before {
+            content: ""; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+            width: 3px; height: 0; border-radius: 999px; background: #60a5fa;
+            transition: height .25s cubic-bezier(.2,.8,.2,1);
+        }
+        .nav-btn.text-blue-400::before { height: 58%; }
+
+        /* Header: gentle elevated separation */
+        header.bg-white { box-shadow: 0 6px 18px -14px rgba(15,23,42,.45); }
+
+        /* Sub-tabs: smooth underline transitions */
+        .sub-tab { transition: color .2s ease, border-color .2s ease; }
+
+        /* Notification panel entrance (keyframe was referenced but undefined) */
+        @keyframes fadeInDown { from { opacity:0; transform: translateY(-12px) scale(.98); } to { opacity:1; transform: translateY(0) scale(1); } }
+        .animate-fade-in-down { animation: fadeInDown .28s cubic-bezier(.2,.8,.2,1) both; }
+
+        /* Modal content pop-in on open */
+        @keyframes modalPop { from { opacity:0; transform: translateY(8px) scale(.97); } to { opacity:1; transform: translateY(0) scale(1); } }
+        .fixed.inset-0 > .bg-white { animation: modalPop .25s cubic-bezier(.2,.8,.2,1) both; }
+
+        /* Page transition on navigation */
+        @keyframes pageIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+        [id^="page-"]:not(.hidden) { animation: pageIn .35s cubic-bezier(.2,.8,.2,1) both; }
+
+        /* Login screen: graceful entrance + floating crest */
+        @keyframes floaty { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        #loginScreen .glass-dark { animation: modalPop .5s cubic-bezier(.2,.8,.2,1) both; }
+        #loginScreen img { animation: floaty 4s ease-in-out infinite; }
+
+        /* ============================================================
+           BOLD PROFESSIONAL RESTYLE  (theme-preserving, visual only)
+           Gradients stay within the existing blue / slate / gray hues.
+           ============================================================ */
+
+        /* Work area: premium gradient canvas (clearly not flat gray) */
+        #mainScrollContainer {
+            background-color: #eef2f8 !important;
+            background-image:
+                radial-gradient(1100px 560px at 100% -8%, rgba(37,99,235,0.12), transparent 60%),
+                radial-gradient(900px 520px at -12% 112%, rgba(15,23,42,0.07), transparent 55%),
+                linear-gradient(180deg, #f4f7fc 0%, #e8eef7 100%) !important;
+        }
+
+        /* Header: glassmorphism + animated brand line */
+        header.bg-white {
+            position: relative;
+            background: rgba(255,255,255,0.82) !important;
+            backdrop-filter: blur(14px) saturate(140%);
+            -webkit-backdrop-filter: blur(14px) saturate(140%);
+            border-bottom: 1px solid rgba(37,99,235,0.12) !important;
+            box-shadow: 0 10px 28px -18px rgba(15,23,42,.5);
+        }
+        header.bg-white::before {
+            content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6, #60a5fa, #3b82f6, #1e3a8a);
+            background-size: 200% 100%; animation: brandShift 9s linear infinite;
+        }
+        @keyframes brandShift { from { background-position: 0 0; } to { background-position: 200% 0; } }
+
+        /* Sidebar: deeper premium gradient + glowing crest */
+        #sidebar {
+            background-image: linear-gradient(180deg, #111c33 0%, #0b1220 60%, #0a0f1c 100%) !important;
+            box-shadow: 10px 0 36px -22px rgba(2,6,23,.85);
+        }
+        #sidebar img { box-shadow: 0 0 0 4px rgba(37,99,235,.25), 0 12px 26px -10px rgba(37,99,235,.6); }
+
+        /* Sidebar active item: bold gradient pill + glow */
+        .nav-btn.text-blue-400 {
+            background-image: linear-gradient(135deg, rgba(37,99,235,.32), rgba(30,58,138,.14)) !important;
+            box-shadow: inset 0 0 0 1px rgba(96,165,250,.40), 0 12px 24px -12px rgba(37,99,235,.7) !important;
+            color: #bfdbfe !important;
+        }
+        .nav-btn.text-blue-400::before { height: 62% !important; width: 4px; box-shadow: 0 0 12px rgba(96,165,250,.9); }
+        .nav-btn i { transition: transform .2s ease; }
+        .nav-btn:hover i { transform: scale(1.15); }
+
+        /* Primary action buttons: rich gradients + depth (same hues) */
+        button.bg-blue-900  { background-image: linear-gradient(135deg,#1e3a8a,#1d4ed8) !important; box-shadow: 0 12px 24px -10px rgba(30,58,138,.65) !important; }
+        button.bg-blue-600  { background-image: linear-gradient(135deg,#2563eb,#1d4ed8) !important; box-shadow: 0 12px 24px -10px rgba(37,99,235,.55) !important; }
+        button.bg-slate-800 { background-image: linear-gradient(135deg,#1e293b,#0f172a) !important; box-shadow: 0 12px 24px -10px rgba(15,23,42,.6) !important; }
+        button.bg-green-600 { background-image: linear-gradient(135deg,#16a34a,#15803d) !important; box-shadow: 0 12px 24px -10px rgba(22,163,74,.5) !important; }
+        button.bg-green-700 { background-image: linear-gradient(135deg,#15803d,#166534) !important; box-shadow: 0 12px 24px -10px rgba(21,128,61,.5) !important; }
+        button.bg-red-600   { background-image: linear-gradient(135deg,#dc2626,#b91c1c) !important; box-shadow: 0 12px 24px -10px rgba(220,38,38,.5) !important; }
+        button.bg-red-800   { background-image: linear-gradient(135deg,#991b1b,#7f1d1d) !important; box-shadow: 0 12px 24px -10px rgba(153,27,27,.5) !important; }
+        button.bg-yellow-500{ background-image: linear-gradient(135deg,#f59e0b,#d97706) !important; box-shadow: 0 12px 24px -10px rgba(245,158,11,.5) !important; }
+        button:hover { filter: brightness(1.06); }
+
+        /* Data cards: premium surfaces with strong hover lift */
+        #projectGrid > div, #landsGrid > div, #staffGrid > div, #globalAttendanceGrid > div {
+            border-radius: 1.25rem !important;
+            box-shadow: 0 12px 34px -16px rgba(15,23,42,.22), 0 3px 10px -4px rgba(15,23,42,.08) !important;
+            border: 1px solid rgba(37,99,235,.12) !important;
+        }
+        #projectGrid > div:hover, #landsGrid > div:hover, #staffGrid > div:hover, #globalAttendanceGrid > div:hover {
+            transform: translateY(-6px) !important;
+            box-shadow: 0 28px 52px -20px rgba(30,58,138,.40), 0 10px 22px -14px rgba(15,23,42,.25) !important;
+            border-color: rgba(37,99,235,.32) !important;
+        }
+
+        /* White panels: softer radius + layered shadow */
+        .bg-white.rounded-2xl, .bg-white.rounded-xl {
+            box-shadow: 0 16px 42px -24px rgba(15,23,42,.32), 0 2px 8px -4px rgba(15,23,42,.06) !important;
+        }
+
+        /* Page header icon chips */
+        .page-icon { box-shadow: 0 8px 18px -8px rgba(37,99,235,.45); }
+
+        /* Form controls: unified modern shape (no layout shift) */
+        input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+        select, textarea { border-radius: 0.6rem !important; }
+
+        /* Modals: refined containers + header strip */
+        .fixed.inset-0 > .bg-white,
+        .fixed.inset-0 > .modal-content-scroll { border-radius: 1.25rem !important; }
+        .fixed.inset-0 > .bg-white > h2:first-child,
+        .fixed.inset-0 > .bg-white > h3:first-child { letter-spacing: .2px; }
+
+        /* Search bar refinement */
+        #projSearch { box-shadow: inset 0 1px 3px rgba(15,23,42,.07); }
+        #projSearch:focus { box-shadow: 0 0 0 4px rgba(37,99,235,.16); }
+
+        /* Respect reduced-motion preferences */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+        }
     </style>
 </head>
 <body class="bg-gray-100 h-screen overflow-hidden text-gray-800">
@@ -102,20 +279,30 @@
     </div>
 
     <!-- Login Screen -->
-    <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1600596542815-2a429b08e695?q=80&w=2070&auto=format&fit=crop');">
-        <div class="absolute inset-0 bg-blue-900/60"></div>
-        <div class="relative z-10 glass-dark p-10 rounded-3xl shadow-2xl w-11/12 max-w-md text-center border border-blue-400/30">
-            <div class="mb-8">
-                <div class="flex justify-center mb-4">
-                    <img src="ico.jpeg" onerror="this.src='https://placehold.co/150x150/1e3a8a/ffffff?text=Sithuliya'" class="w-32 h-32 rounded-full border-4 border-blue-500 shadow-xl object-cover">
+    <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-cover bg-center p-4" style="background-image: url('https://images.unsplash.com/photo-1600596542815-2a429b08e695?q=80&w=2070&auto=format&fit=crop');">
+        <div class="absolute inset-0 bg-gradient-to-br from-slate-900/85 via-blue-900/70 to-slate-900/90"></div>
+        <div class="relative z-10 w-full max-w-md">
+            <div class="glass-dark rounded-[2rem] shadow-2xl border border-white/10 overflow-hidden">
+                <div class="h-1.5 w-full bg-gradient-to-r from-blue-600 via-blue-300 to-blue-600"></div>
+                <div class="p-9 text-center">
+                    <div class="flex justify-center mb-5">
+                        <img src="ico.jpeg" onerror="this.src='https://placehold.co/150x150/1e3a8a/ffffff?text=Sithuliya'" class="w-24 h-24 rounded-2xl border border-blue-400/40 shadow-xl object-cover">
+                    </div>
+                    <h1 class="text-3xl text-white luxury-font tracking-wide">Sithuliya</h1>
+                    <p class="text-blue-300/80 text-[10px] uppercase tracking-[0.45em] mt-2 mb-8">Exclusive Real Estate</p>
+                    <div class="space-y-5 text-left">
+                        <div>
+                            <label class="text-[11px] font-semibold uppercase tracking-wider text-blue-200/70 ml-1">Admin Password</label>
+                            <div class="relative mt-1.5">
+                                <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-blue-300/60 text-sm"></i>
+                                <input type="password" id="loginPass" onkeyup="if(event.key==='Enter')attemptLogin()" class="w-full bg-white/5 border border-white/15 rounded-xl py-3 pl-11 pr-4 text-white placeholder-white/30 focus:outline-none focus:border-blue-400 focus:bg-white/10 tracking-wider transition" placeholder="••••••••">
+                            </div>
+                        </div>
+                        <button onclick="attemptLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-900/40 transition transform hover:scale-[1.02] flex items-center justify-center gap-2"><i class="fas fa-arrow-right-to-bracket"></i> Sign In</button>
+                    </div>
                 </div>
-                <h1 class="text-4xl text-white luxury-font tracking-wide">Sithuliya</h1>
-                <p class="text-blue-300 text-xs uppercase tracking-[0.4em] mt-2">Exclusive Real Estate</p>
             </div>
-            <div class="space-y-4">
-                <input type="password" id="loginPass" class="w-full bg-white/10 border border-white/20 rounded-lg p-3 text-white placeholder-gray-300 focus:outline-none focus:border-blue-500 text-center tracking-widest transition" placeholder="Password">
-                <button onclick="attemptLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-lg transition transform hover:scale-105">LOGIN</button>
-            </div>
+            <p class="text-center text-white/40 text-[10px] mt-5 tracking-wide">Secured Admin Console · Sithuliya</p>
         </div>
     </div>
 
@@ -123,52 +310,65 @@
     <div id="mainApp" class="hidden flex h-full">
         <!-- Sidebar -->
         <div id="sidebar" class="w-64 bg-slate-900 text-white shadow-2xl flex flex-col z-40 fixed md:relative h-full transition-transform transform -translate-x-full md:translate-x-0">
-            <div class="p-6 border-b border-slate-800 flex flex-col items-center relative">
-                <button onclick="toggleSidebar()" class="absolute top-4 right-4 md:hidden text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
-                <img src="ico.jpeg" onerror="this.src='https://placehold.co/150x150/1e3a8a/ffffff?text=Sithuliya'" class="w-16 h-16 rounded-full border-2 border-blue-500 mb-3 object-cover shadow-lg">
-                <h2 class="text-2xl luxury-font text-blue-400">Sithuliya <span class="text-[10px] font-sans text-slate-500 block tracking-widest mt-1 text-center">ADMIN CONSOLE</span></h2>
-            </div>
-            <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-                <button onclick="nav('attendance')" id="nav-attendance" class="nav-btn w-full text-left p-3 rounded-xl hover:bg-slate-800 text-gray-400 font-medium transition"><i class="fas fa-user-clock mr-3"></i> Attendance</button>
-                <button onclick="nav('projects')" id="nav-projects" class="nav-btn w-full text-left p-3 rounded-xl bg-blue-900/50 text-blue-400 font-bold border border-blue-800"><i class="fas fa-map-marked-alt mr-3"></i> Projects</button>
-                <button onclick="nav('lands')" id="nav-lands" class="nav-btn w-full text-left p-3 rounded-xl hover:bg-slate-800 text-gray-400 font-medium transition"><i class="fas fa-tree mr-3"></i> Lands</button>
-                <button onclick="openStaffAccess()" id="nav-staff" class="nav-btn w-full text-left p-3 rounded-xl hover:bg-slate-800 text-gray-400 font-medium transition"><i class="fas fa-users mr-3"></i> Staff</button>
-                <button onclick="nav('readings')" id="nav-readings" class="nav-btn w-full text-left p-3 rounded-xl hover:bg-slate-800 text-gray-400 font-medium transition"><i class="fas fa-tachometer-alt mr-3"></i> Meter Approvals</button>
-                <button onclick="openFinanceAccess()"id="nav-reports" class="nav-btn w-full text-left p-3 rounded-xl hover:bg-slate-800 text-gray-400 font-medium transition"><i class="fas fa-file-invoice-dollar mr-3"></i> Financial Center</button>
-                <div class="pt-8 border-t border-slate-800 mt-8">
-                    <button onclick="nav('settings')" id="nav-settings" class="nav-btn w-full text-left p-3 rounded-xl hover:bg-slate-800 text-gray-400 font-medium transition"><i class="fas fa-cog mr-3"></i> Settings</button>
+            <div class="px-5 pt-6 pb-5 flex items-center gap-3 relative border-b border-white/5">
+                <img src="ico.jpeg" onerror="this.src='https://placehold.co/150x150/1e3a8a/ffffff?text=S'" class="w-11 h-11 rounded-xl border border-blue-400/40 object-cover shadow-lg">
+                <div class="leading-tight">
+                    <h2 class="text-xl luxury-font text-blue-400">Sithuliya</h2>
+                    <span class="text-[9px] font-sans text-slate-500 tracking-[0.25em] uppercase">Admin Console</span>
                 </div>
+                <button onclick="toggleSidebar()" class="absolute top-4 right-4 md:hidden text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto hide-scrollbar">
+                <p class="px-3 pt-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-slate-600">Main</p>
+                <button onclick="nav('attendance')" id="nav-attendance" class="nav-btn w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-800 text-gray-400 font-medium transition"><i class="fas fa-user-clock w-5 text-center"></i> Attendance</button>
+                <button onclick="nav('projects')" id="nav-projects" class="nav-btn w-full flex items-center gap-3 p-3 rounded-xl bg-blue-900/50 text-blue-400 font-bold border border-blue-800"><i class="fas fa-map-marked-alt w-5 text-center"></i> Projects</button>
+                <button onclick="nav('lands')" id="nav-lands" class="nav-btn w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-800 text-gray-400 font-medium transition"><i class="fas fa-tree w-5 text-center"></i> Lands</button>
+
+                <p class="px-3 pt-4 pb-1 text-[10px] font-bold uppercase tracking-widest text-slate-600">Operations</p>
+                <button onclick="openStaffAccess()" id="nav-staff" class="nav-btn w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-800 text-gray-400 font-medium transition"><i class="fas fa-users w-5 text-center"></i> Staff</button>
+                <button onclick="nav('readings')" id="nav-readings" class="nav-btn w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-800 text-gray-400 font-medium transition"><i class="fas fa-tachometer-alt w-5 text-center"></i> Meter Approvals</button>
+                <button onclick="openFinanceAccess()" id="nav-reports" class="nav-btn w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-800 text-gray-400 font-medium transition"><i class="fas fa-file-invoice-dollar w-5 text-center"></i> Financial Center</button>
+
+                <p class="px-3 pt-4 pb-1 text-[10px] font-bold uppercase tracking-widest text-slate-600">System</p>
+                <button onclick="nav('settings')" id="nav-settings" class="nav-btn w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-800 text-gray-400 font-medium transition"><i class="fas fa-cog w-5 text-center"></i> Settings</button>
             </nav>
+            <div class="px-4 py-4 border-t border-white/5 flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-300"><i class="fas fa-user-shield text-sm"></i></div>
+                <div class="leading-tight">
+                    <p class="text-xs font-semibold text-slate-200">Administrator</p>
+                    <p class="text-[10px] text-slate-500">System Online</p>
+                </div>
+                <span class="ml-auto w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,.8)]"></span>
+            </div>
         </div>
 
         <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
 
         <div class="flex-1 flex flex-col overflow-hidden bg-gray-50 relative">
-            <header class="bg-white shadow-sm p-4 flex justify-between items-center z-10 px-4 md:px-8 border-b border-blue-100">
-                <button onclick="toggleSidebar()" class="md:hidden text-slate-800 text-xl mr-4"><i class="fas fa-bars"></i></button>
-                
-                <!-- FIXED SEARCH BAR -->
-                <div class="relative w-full max-w-sm group">
-                    <input type="text" id="projSearch" placeholder="Search Projects / Customers..." class="w-full pl-10 pr-4 py-2 border-none bg-blue-50 rounded-full focus:ring-2 focus:ring-blue-500 transition text-sm group-hover:bg-blue-100 text-blue-900" onkeyup="handleGlobalSearch()" onfocus="handleGlobalSearch()">
-                    <i class="fas fa-search absolute left-4 top-2.5 text-blue-400"></i>
-                    <div id="searchResults" class="hidden absolute top-12 left-0 w-full bg-white shadow-2xl rounded-xl border border-blue-100 max-h-96 overflow-y-auto z-50"></div>
-                </div>
-                
-                <div class="flex items-center gap-4 md:gap-6 ml-4">
-                    <div class="relative cursor-pointer" onclick="toggleNotifPanel()">
-                        <div class="relative">
-                            <i id="bellIcon" class="fas fa-bell text-gray-400 text-xl hover:text-blue-800 transition"></i>
-                            <span id="notifBadge" class="hidden absolute -top-2 -right-2 bg-red-600 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full">0</span>
-                        </div>
+            <header class="bg-white shadow-sm px-4 md:px-8 py-3.5 flex justify-between items-center z-10 gap-4 border-b border-blue-100">
+                <div class="flex items-center gap-3 flex-1 min-w-0">
+                    <button onclick="toggleSidebar()" class="md:hidden text-slate-800 text-xl"><i class="fas fa-bars"></i></button>
+                    <!-- GLOBAL SEARCH -->
+                    <div class="relative w-full max-w-md group">
+                        <input type="text" id="projSearch" placeholder="Search projects, customers, NIC..." class="w-full pl-11 pr-4 py-2.5 border border-blue-100 bg-blue-50/60 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition text-sm text-blue-900 placeholder-blue-400/60" onkeyup="handleGlobalSearch()" onfocus="handleGlobalSearch()">
+                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-blue-400"></i>
+                        <div id="searchResults" class="hidden absolute top-12 left-0 w-full bg-white shadow-2xl rounded-xl border border-blue-100 max-h-96 overflow-y-auto z-50"></div>
                     </div>
-                    <button onclick="openNewProjectModal()" class="bg-blue-900 text-white px-3 md:px-5 py-2 rounded-full hover:bg-blue-800 shadow-lg shadow-blue-900/20 text-xs md:text-sm font-bold transition transform hover:scale-105 whitespace-nowrap"><i class="fas fa-plus mr-1 md:mr-2"></i> <span class="hidden md:inline">New Project</span><span class="md:hidden">New</span></button>
+                </div>
+
+                <div class="flex items-center gap-3 md:gap-4">
+                    <button onclick="toggleNotifPanel()" class="relative w-10 h-10 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 transition flex items-center justify-center">
+                        <i id="bellIcon" class="fas fa-bell text-lg"></i>
+                        <span id="notifBadge" class="hidden absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full">0</span>
+                    </button>
+                    <button onclick="openNewProjectModal()" class="bg-blue-900 text-white px-4 md:px-5 py-2.5 rounded-xl hover:bg-blue-800 shadow-lg shadow-blue-900/20 text-xs md:text-sm font-bold transition whitespace-nowrap flex items-center gap-2"><i class="fas fa-plus"></i> <span class="hidden md:inline">New Project</span><span class="md:hidden">New</span></button>
                 </div>
             </header>
 
-            <div id="notifPanel" class="hidden absolute top-20 right-4 md:right-8 w-80 md:w-96 bg-white shadow-2xl rounded-xl border border-gray-100 z-50 overflow-hidden animate-fade-in-down">
-                <div class="bg-slate-900 p-3 text-white text-sm font-bold flex justify-between items-center">
-                    <span><i class="fas fa-exclamation-circle mr-2"></i>Notifications</span>
-                    <button onclick="toggleNotifPanel()"><i class="fas fa-times"></i></button>
+            <div id="notifPanel" class="hidden absolute top-20 right-4 md:right-8 w-80 md:w-96 bg-white shadow-2xl rounded-2xl border border-gray-100 z-50 overflow-hidden animate-fade-in-down">
+                <div class="bg-slate-900 px-4 py-3 text-white text-sm font-bold flex justify-between items-center">
+                    <span><i class="fas fa-bell mr-2 text-blue-400"></i>Notifications</span>
+                    <button onclick="toggleNotifPanel()" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
                 </div>
                 <div id="notifList" class="max-h-80 overflow-y-auto bg-gray-50"></div>
             </div>
@@ -177,10 +377,16 @@
                 <!-- NEW ATTENDANCE PAGE -->
                 <div id="page-attendance" class="hidden pb-20">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                        <h2 class="text-2xl font-bold text-slate-800">Global Attendance Log</h2>
+                        <div class="flex items-center gap-3">
+                            <div class="page-icon w-11 h-11 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center"><i class="fas fa-user-clock text-lg"></i></div>
+                            <div>
+                                <h2 class="text-2xl font-bold text-slate-800">Global Attendance Log</h2>
+                                <p class="text-xs text-gray-400 font-medium mt-0.5">Daily staff check-in records across all sites</p>
+                            </div>
+                        </div>
                         <div class="flex gap-2 items-center w-full md:w-auto">
-                            <input type="date" id="attendanceDateFilter" class="p-2 border rounded-lg bg-white text-sm w-full md:w-auto shadow-sm" onchange="loadGlobalAttendance()">
-                            <button onclick="loadGlobalAttendance()" class="bg-blue-900 text-white px-4 py-2 rounded-lg font-bold text-sm shadow hover:bg-blue-800"><i class="fas fa-sync-alt"></i></button>
+                            <input type="date" id="attendanceDateFilter" class="p-2.5 border border-blue-100 rounded-xl bg-white text-sm w-full md:w-auto shadow-sm focus:ring-2 focus:ring-blue-500" onchange="loadGlobalAttendance()">
+                            <button onclick="loadGlobalAttendance()" class="bg-blue-900 text-white px-4 py-2.5 rounded-xl font-bold text-sm shadow hover:bg-blue-800"><i class="fas fa-sync-alt"></i></button>
                         </div>
                     </div>
                     <div id="globalAttendanceGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -190,10 +396,16 @@
 
                 <div id="page-projects">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                        <h2 class="text-2xl font-bold text-slate-800">Active Developments</h2>
-                        <div class="flex bg-gray-200 rounded-lg p-1">
-                             <button onclick="toggleProjectView('active')" id="btn-view-active" class="px-4 py-1 rounded-md text-sm font-bold bg-white shadow text-slate-800">Active</button>
-                             <button onclick="toggleProjectView('closed')" id="btn-view-closed" class="px-4 py-1 rounded-md text-sm font-bold text-gray-500 hover:text-slate-800">Closed</button>
+                        <div class="flex items-center gap-3">
+                            <div class="page-icon w-11 h-11 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center"><i class="fas fa-map-marked-alt text-lg"></i></div>
+                            <div>
+                                <h2 class="text-2xl font-bold text-slate-800">Active Developments</h2>
+                                <p class="text-xs text-gray-400 font-medium mt-0.5">All ongoing &amp; closed real-estate projects</p>
+                            </div>
+                        </div>
+                        <div class="flex bg-gray-100 border border-gray-200 rounded-xl p-1">
+                             <button onclick="toggleProjectView('active')" id="btn-view-active" class="px-4 py-1.5 rounded-lg text-sm font-bold bg-white shadow text-slate-800">Active</button>
+                             <button onclick="toggleProjectView('closed')" id="btn-view-closed" class="px-4 py-1.5 rounded-lg text-sm font-bold text-gray-500 hover:text-slate-800">Closed</button>
                         </div>
                     </div>
                     <div id="projectGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
@@ -201,24 +413,36 @@
                 </div>
 
                 <div id="page-lands" class="hidden">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-2xl font-bold text-slate-800">Land Acquisition</h2>
-                        <button onclick="document.getElementById('newLandModal').classList.remove('hidden')" class="bg-green-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-green-700 text-sm md:text-base"><i class="fas fa-plus mr-2"></i> Add New Land</button>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="page-icon w-11 h-11 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center"><i class="fas fa-tree text-lg"></i></div>
+                            <div>
+                                <h2 class="text-2xl font-bold text-slate-800">Land Acquisition</h2>
+                                <p class="text-xs text-gray-400 font-medium mt-0.5">Purchased lands, sellers &amp; payment status</p>
+                            </div>
+                        </div>
+                        <button onclick="document.getElementById('newLandModal').classList.remove('hidden')" class="bg-green-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-green-700 text-sm shadow flex items-center gap-2"><i class="fas fa-plus"></i> Add New Land</button>
                     </div>
                     <div id="landsGrid" class="grid grid-cols-1 lg:grid-cols-2 gap-6"></div>
                 </div>
 
                 <div id="page-staff" class="hidden">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                        <h2 class="text-2xl font-bold text-slate-800">Staff Management</h2>
-                        <div class="flex flex-col md:flex-row gap-4 items-center w-full md:w-auto">
+                        <div class="flex items-center gap-3">
+                            <div class="page-icon w-11 h-11 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center"><i class="fas fa-users text-lg"></i></div>
+                            <div>
+                                <h2 class="text-2xl font-bold text-slate-800">Staff Management</h2>
+                                <p class="text-xs text-gray-400 font-medium mt-0.5">Team members, salaries &amp; welfare pool</p>
+                            </div>
+                        </div>
+                        <div class="flex flex-col md:flex-row gap-3 items-center w-full md:w-auto">
                             <div class="relative w-full md:w-auto">
-                                <input type="text" id="staffSearchInput" onkeyup="filterStaffGrid()" placeholder="Search Staff..." class="w-full pl-8 pr-4 py-2 border rounded-full text-sm focus:ring-blue-500 bg-white">
-                                <i class="fas fa-search absolute left-3 top-2.5 text-gray-400"></i>
+                                <input type="text" id="staffSearchInput" onkeyup="filterStaffGrid()" placeholder="Search Staff..." class="w-full pl-9 pr-4 py-2.5 border border-blue-100 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 bg-white">
+                                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
                             </div>
                             <div class="flex gap-2 w-full md:w-auto">
-                                <button onclick="document.getElementById('staffPassChangeModal').classList.remove('hidden')" class="flex-1 md:flex-none bg-yellow-500 text-white px-3 py-2 rounded-lg font-bold hover:bg-yellow-600 text-xs">Password</button>
-                                <button onclick="document.getElementById('newStaffModal').classList.remove('hidden'); document.getElementById('staffMode').value='new'; document.getElementById('newStaffBtnText').innerText='Save Member';" class="flex-1 md:flex-none bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700 text-xs"><i class="fas fa-user-plus mr-2"></i> Add Staff</button>
+                                <button onclick="document.getElementById('staffPassChangeModal').classList.remove('hidden')" class="flex-1 md:flex-none bg-yellow-500 text-white px-4 py-2.5 rounded-xl font-bold hover:bg-yellow-600 text-xs flex items-center justify-center gap-1.5"><i class="fas fa-key"></i> Password</button>
+                                <button onclick="document.getElementById('newStaffModal').classList.remove('hidden'); document.getElementById('staffMode').value='new'; document.getElementById('newStaffBtnText').innerText='Save Member';" class="flex-1 md:flex-none bg-blue-600 text-white px-4 py-2.5 rounded-xl font-bold hover:bg-blue-700 text-xs flex items-center justify-center gap-1.5"><i class="fas fa-user-plus"></i> Add Staff</button>
                             </div>
                         </div>
                     </div>
@@ -238,20 +462,25 @@
                 </div>
 
                 <div id="page-detail" class="hidden pb-20">
-                    <div class="flex flex-col md:flex-row justify-between items-start mb-6 gap-4">
-                        <div>
-                            <button onclick="nav('projects')" class="text-gray-400 hover:text-blue-800 mb-2 font-bold text-xs uppercase tracking-wide"><i class="fas fa-arrow-left mr-2"></i> Back to Dashboard</button>
-                            <h1 id="detailName" class="text-3xl md:text-4xl font-bold text-blue-900 luxury-font">Project Name</h1>
-                            <p class="text-gray-500 flex items-center mt-1 text-sm"><i class="fas fa-map-marker-alt mr-2 text-blue-500"></i> <span id="detailArea">Area</span> | <span id="detailLandName" class="ml-2 font-bold text-slate-800"></span></p>
-                        </div>
-                        <div class="flex flex-col items-end gap-2 w-full md:w-auto">
-                            <span id="detailStatus" class="px-4 py-1 rounded-full text-xs font-bold uppercase bg-blue-100 text-blue-800 border border-blue-200">Development</span>
-                            <div class="flex gap-2 flex-wrap justify-end">
-                                <button onclick="openReportDataModal()" class="text-xs bg-slate-100 text-slate-700 px-3 py-1 rounded font-bold border hover:bg-slate-200"><i class="fas fa-edit mr-1"></i> Data</button>
-                                <button onclick="generateProjectMasterReport()" class="text-xs bg-slate-800 text-white px-3 py-1 rounded font-bold hover:bg-slate-900"><i class="fas fa-print mr-1"></i> Report</button>
-                                <button id="endDevBtn" onclick="endDevelopmentPhase()" class="text-xs text-red-500 hover:bg-red-50 px-3 py-1 rounded border border-red-200 font-bold">End Dev</button>
-                                <button id="closeProjBtn" onclick="closeProject()" class="hidden text-xs bg-red-600 text-white px-3 py-1 rounded shadow hover:bg-red-700 font-bold"><i class="fas fa-lock mr-1"></i> Close</button>
-                                <button id="deleteProjBtn" onclick="deleteProject()" class="text-xs bg-red-800 text-white px-3 py-1 rounded shadow hover:bg-red-900 font-bold"><i class="fas fa-trash mr-1"></i> Delete</button>
+                    <div class="bg-white rounded-2xl border border-blue-100 shadow-sm p-6 mb-6">
+                        <button onclick="nav('projects')" class="text-gray-400 hover:text-blue-800 mb-3 font-bold text-xs uppercase tracking-wide inline-flex items-center"><i class="fas fa-arrow-left mr-2"></i> Back to Dashboard</button>
+                        <div class="flex flex-col md:flex-row justify-between items-start gap-4">
+                            <div class="flex items-start gap-4">
+                                <div class="page-icon w-14 h-14 rounded-2xl bg-blue-600 text-white flex items-center justify-center text-xl shrink-0"><i class="fas fa-map-marked-alt"></i></div>
+                                <div>
+                                    <h1 id="detailName" class="text-3xl md:text-4xl font-bold text-blue-900 luxury-font leading-tight">Project Name</h1>
+                                    <p class="text-gray-500 flex items-center mt-1 text-sm"><i class="fas fa-map-marker-alt mr-2 text-blue-500"></i> <span id="detailArea">Area</span> <span id="detailLandName" class="ml-2 font-bold text-slate-800"></span></p>
+                                </div>
+                            </div>
+                            <div class="flex flex-col items-start md:items-end gap-3 w-full md:w-auto">
+                                <span id="detailStatus" class="px-4 py-1 rounded-full text-xs font-bold uppercase bg-blue-100 text-blue-800 border border-blue-200">Development</span>
+                                <div class="flex gap-2 flex-wrap md:justify-end">
+                                    <button onclick="openReportDataModal()" class="text-xs bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg font-bold border hover:bg-slate-200"><i class="fas fa-edit mr-1"></i> Data</button>
+                                    <button onclick="generateProjectMasterReport()" class="text-xs bg-slate-800 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-slate-900"><i class="fas fa-print mr-1"></i> Report</button>
+                                    <button id="endDevBtn" onclick="endDevelopmentPhase()" class="text-xs text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg border border-red-200 font-bold">End Dev</button>
+                                    <button id="closeProjBtn" onclick="closeProject()" class="hidden text-xs bg-red-600 text-white px-3 py-1.5 rounded-lg shadow hover:bg-red-700 font-bold"><i class="fas fa-lock mr-1"></i> Close</button>
+                                    <button id="deleteProjBtn" onclick="deleteProject()" class="text-xs bg-red-800 text-white px-3 py-1.5 rounded-lg shadow hover:bg-red-900 font-bold"><i class="fas fa-trash mr-1"></i> Delete</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -328,15 +557,27 @@
                 </div>
 
                 <div id="page-readings" class="hidden">
-                    <h2 class="text-2xl font-bold mb-6 text-slate-800">Meter Approvals</h2>
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="page-icon w-11 h-11 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center"><i class="fas fa-tachometer-alt text-lg"></i></div>
+                        <div>
+                            <h2 class="text-2xl font-bold text-slate-800">Meter Approvals</h2>
+                            <p class="text-xs text-gray-400 font-medium mt-0.5">Pending utility meter reading approvals</p>
+                        </div>
+                    </div>
                     <div id="readingsList" class="space-y-4"></div>
                 </div>
                 
                  <div id="page-reports" class="hidden">
                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-    <h2 class="text-2xl font-bold text-slate-800">Financial Center</h2>
-    <button onclick="document.getElementById('financePassChangeModal').classList.remove('hidden')" class="bg-yellow-500 text-white px-3 py-2 rounded-lg font-bold hover:bg-yellow-600 text-xs">
-        <i class="fas fa-key mr-1"></i> Change Finance Password
+    <div class="flex items-center gap-3">
+        <div class="page-icon w-11 h-11 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center"><i class="fas fa-file-invoice-dollar text-lg"></i></div>
+        <div>
+            <h2 class="text-2xl font-bold text-slate-800">Financial Center</h2>
+            <p class="text-xs text-gray-400 font-medium mt-0.5">Transactions, balance sheet &amp; reports</p>
+        </div>
+    </div>
+    <button onclick="document.getElementById('financePassChangeModal').classList.remove('hidden')" class="bg-yellow-500 text-white px-4 py-2.5 rounded-xl font-bold hover:bg-yellow-600 text-xs flex items-center gap-1.5">
+        <i class="fas fa-key"></i> Change Finance Password
     </button>
 </div>
                     <div class="flex border-b border-gray-200 mb-6 overflow-x-auto">
@@ -386,11 +627,18 @@
                 </div>
 
                 <div id="page-settings" class="hidden">
-                    <h2 class="text-2xl font-bold text-slate-800 mb-6">System Settings</h2>
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="page-icon w-11 h-11 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center"><i class="fas fa-cog text-lg"></i></div>
+                        <div>
+                            <h2 class="text-2xl font-bold text-slate-800">System Settings</h2>
+                            <p class="text-xs text-gray-400 font-medium mt-0.5">Administrator configuration</p>
+                        </div>
+                    </div>
                     <div class="bg-white p-8 rounded-2xl shadow-sm border border-blue-100 max-w-md">
-                        <h3 class="font-bold text-lg mb-4 text-blue-600">Change Admin Password</h3>
-                        <input type="password" id="newAdminPass" placeholder="New Password" class="w-full p-3 border rounded-lg mb-4 focus:ring-blue-500">
-                        <button onclick="updatePassword()" class="w-full bg-slate-900 text-white font-bold py-3 rounded-lg hover:bg-slate-800">Update Password</button>
+                        <h3 class="font-bold text-lg mb-1 text-blue-600">Change Admin Password</h3>
+                        <p class="text-xs text-gray-400 mb-4">Update the master admin login password</p>
+                        <input type="password" id="newAdminPass" placeholder="New Password" class="w-full p-3 border border-blue-100 rounded-xl mb-4 focus:ring-2 focus:ring-blue-500">
+                        <button onclick="updatePassword()" class="w-full bg-slate-900 text-white font-bold py-3 rounded-xl hover:bg-slate-800">Update Password</button>
                     </div>
                 </div>
             </main>
@@ -1247,16 +1495,16 @@ window.updateFinanceAccessPass = async () => {
                     const isClosed = d.status === 'closed'; 
                     const el = document.createElement('div'); 
                     if(!isClosed) { 
-                        el.className = "bg-white p-6 rounded-2xl shadow-sm hover:shadow-xl cursor-pointer border border-blue-100 transition relative overflow-hidden group"; 
-                        el.onclick = () => window.openProject(docSnap.id, d); 
-                        el.innerHTML = `<div class="absolute top-0 left-0 w-2 h-full bg-slate-900 group-hover:bg-blue-600 transition"></div><h3 class="font-bold text-lg text-slate-900 pl-2 project-card-title">${d.name}</h3><p class="text-sm text-gray-500 pl-2"><i class="fas fa-map-marker-alt mr-1"></i> ${d.area}</p><span class="text-[10px] uppercase font-bold bg-blue-100 px-2 py-1 rounded absolute top-4 right-4 text-gray-500 tracking-wider">${d.status}</span>`; 
-                        grid.appendChild(el); 
-                    } else { 
-                        el.className = "bg-gray-100 p-4 rounded-xl flex justify-between items-center cursor-pointer border border-gray-200 hover:bg-gray-200"; 
-                        el.onclick = () => window.openProject(docSnap.id, d); 
-                        el.innerHTML = `<div><h3 class="font-bold text-slate-700">${d.name}</h3><p class="text-xs text-gray-500">${d.area} (Closed)</p></div><i class="fas fa-chevron-right text-gray-400"></i>`; 
-                        closedList.appendChild(el); 
-                    } 
+                        el.className = "bg-white rounded-2xl shadow-sm hover:shadow-xl cursor-pointer border border-blue-100 transition relative overflow-hidden group";
+                        el.onclick = () => window.openProject(docSnap.id, d);
+                        el.innerHTML = `<div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-slate-900 to-blue-700 group-hover:from-blue-600 group-hover:to-blue-400 transition"></div><div class="p-6"><div class="flex justify-between items-start mb-3"><div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center text-lg group-hover:bg-blue-600 group-hover:text-white transition"><i class="fas fa-map-marked-alt"></i></div><span class="text-[10px] uppercase font-bold bg-blue-100 px-2.5 py-1 rounded-full text-blue-700 tracking-wider">${d.status}</span></div><h3 class="font-bold text-lg text-slate-900 project-card-title">${d.name}</h3><p class="text-sm text-gray-500 mt-1"><i class="fas fa-map-marker-alt mr-1 text-blue-400"></i> ${d.area}</p><div class="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-blue-700 text-xs font-bold"><span>View project</span><i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i></div></div>`;
+                        grid.appendChild(el);
+                    } else {
+                        el.className = "bg-white p-4 rounded-xl flex justify-between items-center cursor-pointer border border-gray-200 hover:border-blue-200 hover:shadow-md transition";
+                        el.onclick = () => window.openProject(docSnap.id, d);
+                        el.innerHTML = `<div class="flex items-center gap-3"><div class="w-9 h-9 rounded-lg bg-gray-100 text-gray-400 flex items-center justify-center"><i class="fas fa-lock text-xs"></i></div><div><h3 class="font-bold text-slate-700">${d.name}</h3><p class="text-xs text-gray-400">${d.area} · Closed</p></div></div><i class="fas fa-chevron-right text-gray-300"></i>`;
+                        closedList.appendChild(el);
+                    }
                 }); 
             }, (error) => console.error("Projects load error:", error)); 
         };
@@ -1288,7 +1536,7 @@ window.updateFinanceAccessPass = async () => {
                     const paid = (l.advance || 0) + (l.partPayment || 0); 
                     const bal = (l.cost || 0) - paid; 
                     const isPaid = bal <= 0; 
-                    grid.innerHTML += ` <div class="bg-white p-6 rounded-xl border border-blue-100 shadow-sm relative overflow-hidden"> <div class="absolute top-0 left-0 w-2 h-full ${isPaid ? 'bg-green-500' : 'bg-red-500'}"></div> <h3 class="font-bold text-lg ml-3">${l.name}</h3> <p class="text-sm text-gray-500 ml-3 mb-2">Seller: ${l.seller}</p> ${l.linkedProjectId ? '<span class="ml-3 bg-purple-100 text-purple-700 text-[10px] font-bold px-2 py-1 rounded">LINKED TO PROJECT</span>' : '<span class="ml-3 bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded">AVAILABLE</span>'} <div class="ml-3 grid grid-cols-2 gap-4 text-sm mt-4"> <div><p class="text-xs text-gray-400 font-bold uppercase">Cost</p><p class="font-bold">Rs. ${l.cost.toLocaleString()}</p></div> <div><p class="text-xs text-gray-400 font-bold uppercase">Paid</p><p class="font-bold text-green-600">Rs. ${paid.toLocaleString()}</p></div> <div class="col-span-2 border-t pt-2 flex justify-between items-center"> <span class="text-xs font-bold ${isPaid?'text-green-500':'text-red-500'} uppercase">${isPaid?'Fully Paid':'Balance: Rs. '+bal.toLocaleString()}</span> ${!isPaid ? `<button onclick="openLandPaymentModal('${d.id}', '${l.name}', ${bal})" class="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200 font-bold border border-blue-200">Add Payment</button>` : ''} </div> </div> </div> `; 
+                    grid.innerHTML += ` <div class="bg-white rounded-2xl border border-blue-100 shadow-sm relative overflow-hidden"> <div class="absolute top-0 left-0 bottom-0 w-1.5 ${isPaid ? 'bg-green-500' : 'bg-red-500'}"></div> <div class="p-6 pl-7"> <div class="flex justify-between items-start"> <div> <h3 class="font-bold text-lg text-slate-800">${l.name}</h3> <p class="text-sm text-gray-500 mb-2"><i class="fas fa-user-tie mr-1 text-blue-400"></i> ${l.seller}</p> </div> ${l.linkedProjectId ? '<span class="bg-purple-100 text-purple-700 text-[10px] font-bold px-2.5 py-1 rounded-full">LINKED</span>' : '<span class="bg-green-100 text-green-700 text-[10px] font-bold px-2.5 py-1 rounded-full">AVAILABLE</span>'} </div> <div class="grid grid-cols-2 gap-3 text-sm mt-4"> <div class="bg-gray-50 rounded-xl p-3"><p class="text-[10px] text-gray-400 font-bold uppercase tracking-wide">Cost</p><p class="font-bold text-slate-800">Rs. ${l.cost.toLocaleString()}</p></div> <div class="bg-green-50 rounded-xl p-3"><p class="text-[10px] text-green-600 font-bold uppercase tracking-wide">Paid</p><p class="font-bold text-green-700">Rs. ${paid.toLocaleString()}</p></div> <div class="col-span-2 border-t pt-3 flex justify-between items-center"> <span class="text-xs font-bold ${isPaid?'text-green-500':'text-red-500'} uppercase">${isPaid?'Fully Paid':'Balance: Rs. '+bal.toLocaleString()}</span> ${!isPaid ? `<button onclick="openLandPaymentModal('${d.id}', '${l.name}', ${bal})" class="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 font-bold">Add Payment</button>` : ''} </div> </div> </div> </div> `;
                 }); 
             }, (error) => console.error("Lands load error:", error)); 
         };
