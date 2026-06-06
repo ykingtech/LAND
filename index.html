@@ -243,40 +243,36 @@
            Translucent frosted surfaces, vibrancy & specular edges.
            Color theme preserved (blue / slate). Visual only.
            ============================================================ */
-        :root { --lg-blur: 0px; --lg-sat: 160%; }
+        :root { --lg-blur: 24px; --lg-sat: 200%; }
 
-        /* === BACKGROUND IMAGE ===
-           Drop your wallpaper in this folder named  bg.jpg  (or change the name below).
-           It sits behind everything; all glass surfaces (sidebar/header/cards/modals) blur it.
-           The teal gradient below is only a fallback shown if bg.jpg is missing. */
-        body {
+        /* Animated drifting aurora mesh (glass refracts the moving colour) */
+        #mainScrollContainer {
+            background-color: #e8eef7 !important;
             background-image:
-                url('bg.jpg'),
-                radial-gradient(46% 56% at 15% 18%, rgba(56,189,248,0.6), transparent 62%),
-                radial-gradient(50% 60% at 82% 86%, rgba(34,211,238,0.6), transparent 62%),
-                linear-gradient(135deg, #0e7490 0%, #0891b2 38%, #06b6d4 70%, #3b82f6 100%) !important;
-            background-repeat: no-repeat, no-repeat, no-repeat, no-repeat !important;
-            background-size: cover, 200% 200%, 200% 200%, 100% 100% !important;
-            background-position: center, 0% 0%, 100% 100%, center !important;
-            background-attachment: fixed, fixed, fixed, fixed !important;
+                radial-gradient(44% 54% at 15% 20%, rgba(59,130,246,0.48), transparent 66%),
+                radial-gradient(42% 52% at 85% 15%, rgba(129,140,248,0.44), transparent 66%),
+                radial-gradient(48% 58% at 78% 85%, rgba(34,211,238,0.40), transparent 66%),
+                radial-gradient(44% 54% at 20% 90%, rgba(37,99,235,0.40), transparent 66%),
+                linear-gradient(180deg, #e9f0fb 0%, #d8e4f4 100%) !important;
+            background-repeat: no-repeat !important;
+            background-size: 200% 200%, 200% 200%, 200% 200%, 200% 200%, 100% 100% !important;
+            background-position: 0% 0%, 100% 0%, 100% 100%, 0% 100%, center !important;
+            animation: bgDrift 26s ease-in-out infinite alternate;
         }
-        /* Make the app shell transparent so the wallpaper shows through the glass */
-        #mainApp > .bg-gray-50 { background-color: transparent !important; }
-        #mainScrollContainer { background: transparent !important; }
-        /* Readability via TEXT COLOUR only (no shadow / no opacity tricks) */
-        #mainScrollContainer .page-icon + div p { color: #475569 !important; }
+        @keyframes bgDrift {
+            0%   { background-position: 0% 0%, 100% 0%, 100% 100%, 0% 100%, center; }
+            50%  { background-position: 35% 25%, 65% 20%, 60% 70%, 30% 65%, center; }
+            100% { background-position: 10% 40%, 90% 30%, 75% 90%, 15% 80%, center; }
+        }
 
         /* Frosted-glass surfaces (cards & panels) */
         .bg-white.rounded-2xl, .bg-white.rounded-xl,
         #projectGrid > div, #landsGrid > div, #staffGrid > div, #globalAttendanceGrid > div {
-            background-color: rgba(255,255,255,0.20) !important;
-            background-image:
-                linear-gradient(135deg, rgba(255,255,255,0.80) 0%, rgba(255,255,255,0.12) 18%, rgba(255,255,255,0) 38%),
-                radial-gradient(150% 100% at -8% -12%, rgba(255,255,255,0.55), rgba(255,255,255,0) 46%),
-                linear-gradient(160deg, rgba(255,255,255,0.26) 0%, rgba(255,255,255,0.08) 55%, rgba(255,255,255,0.18) 100%) !important;
+            background-color: rgba(255,255,255,0.34) !important;
+            background-image: linear-gradient(135deg, rgba(255,255,255,0.58) 0%, rgba(255,255,255,0.20) 55%, rgba(255,255,255,0.32) 100%) !important;
             -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat));
             backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat));
-            border: 1px solid rgba(255,255,255,0.9) !important;
+            border: 1px solid rgba(255,255,255,0.85) !important;
             box-shadow: 0 16px 44px -16px rgba(30,58,138,.34),
                         inset 0 1px 0 rgba(255,255,255,1),
                         inset 0 0 0 1px rgba(255,255,255,0.30),
@@ -284,30 +280,11 @@
         }
         #projectGrid > div, #landsGrid > div, #staffGrid > div, #globalAttendanceGrid > div { border-radius: 1.5rem !important; }
         #projectGrid > div:hover, #landsGrid > div:hover, #staffGrid > div:hover, #globalAttendanceGrid > div:hover {
-            background-color: rgba(255,255,255,0.62) !important;
-            background-image: linear-gradient(135deg, rgba(255,255,255,0.78) 0%, rgba(255,255,255,0.48) 60%, rgba(255,255,255,0.60) 100%) !important;
+            background-color: rgba(255,255,255,0.46) !important;
+            background-image: linear-gradient(135deg, rgba(255,255,255,0.70) 0%, rgba(255,255,255,0.32) 60%, rgba(255,255,255,0.44) 100%) !important;
             box-shadow: 0 36px 66px -22px rgba(30,58,138,.5),
                         inset 0 1px 0 rgba(255,255,255,1),
                         inset 0 0 0 1px rgba(255,255,255,0.40) !important;
-        }
-
-        /* Real-glass iridescent / prismatic edge (chromatic rim) */
-        .bg-white.rounded-2xl, .bg-white.rounded-xl,
-        #projectGrid > div, #landsGrid > div, #staffGrid > div, #globalAttendanceGrid > div,
-        #sidebar { position: relative; }
-        .bg-white.rounded-2xl::after, .bg-white.rounded-xl::after,
-        #projectGrid > div::after, #landsGrid > div::after,
-        #staffGrid > div::after, #globalAttendanceGrid > div::after,
-        #sidebar::after {
-            content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px;
-            background: conic-gradient(from 120deg,
-                rgba(255,90,160,0.55), rgba(120,170,255,0.55), rgba(90,230,255,0.55),
-                rgba(150,255,200,0.50), rgba(255,235,130,0.50), rgba(255,120,170,0.55));
-            -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-            -webkit-mask-composite: xor;
-            mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-            mask-composite: exclude;
-            mix-blend-mode: screen; opacity: 0.55; pointer-events: none; z-index: 3;
         }
 
         /* Tinted glass sub-panels (inner highlight boxes / stat cards) */
@@ -336,12 +313,10 @@
 
         /* Light "full glass" sidebar (no dark) */
         #sidebar {
-            background-color: rgba(255,255,255,0.18) !important;
-            background-image:
-                linear-gradient(135deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.10) 20%, rgba(255,255,255,0) 42%),
-                linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.10)) !important;
-            -webkit-backdrop-filter: saturate(160%);
-            backdrop-filter: saturate(160%);
+            background-color: rgba(255,255,255,0.55) !important;
+            background-image: linear-gradient(180deg, rgba(255,255,255,0.65), rgba(255,255,255,0.40)) !important;
+            -webkit-backdrop-filter: blur(28px) saturate(180%);
+            backdrop-filter: blur(28px) saturate(180%);
             border-right: 1px solid rgba(255,255,255,0.7) !important;
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 14px 0 44px -26px rgba(30,58,138,.30) !important;
         }
@@ -365,10 +340,9 @@
 
         /* Header — translucent vibrancy bar */
         header.bg-white {
-            background-color: rgba(255,255,255,0.16) !important;
-            background-image: linear-gradient(180deg, rgba(255,255,255,0.34) 0%, rgba(255,255,255,0.10) 100%) !important;
-            -webkit-backdrop-filter: saturate(160%);
-            backdrop-filter: saturate(160%);
+            background: rgba(255,255,255,0.60) !important;
+            -webkit-backdrop-filter: blur(22px) saturate(180%);
+            backdrop-filter: blur(22px) saturate(180%);
             border-bottom: 1px solid rgba(255,255,255,0.6) !important;
             box-shadow: 0 8px 30px -18px rgba(30,58,138,.45) !important;
         }
@@ -394,8 +368,8 @@
         .fixed.inset-0 > .bg-white, .fixed.inset-0 > .modal-content-scroll {
             background-color: rgba(255,255,255,0.50) !important;
             background-image: linear-gradient(135deg, rgba(255,255,255,0.62) 0%, rgba(255,255,255,0.30) 55%, rgba(255,255,255,0.42) 100%) !important;
-            -webkit-backdrop-filter: blur(16px) saturate(185%);
-            backdrop-filter: blur(16px) saturate(185%);
+            -webkit-backdrop-filter: blur(34px) saturate(200%);
+            backdrop-filter: blur(34px) saturate(200%);
             border: 1px solid rgba(255,255,255,0.85) !important;
             border-radius: 1.6rem !important;
             box-shadow: 0 40px 90px -34px rgba(15,23,42,.55),
@@ -410,8 +384,8 @@
         /* Popovers — notifications & search results */
         #notifPanel, #searchResults {
             background-color: rgba(255,255,255,0.78) !important;
-            -webkit-backdrop-filter: blur(12px) saturate(175%);
-            backdrop-filter: blur(12px) saturate(175%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            backdrop-filter: blur(24px) saturate(180%);
             border: 1px solid rgba(255,255,255,0.6) !important;
         }
 
@@ -430,26 +404,6 @@
             box-shadow: 0 0 0 4px rgba(37,99,235,.14), inset 0 1px 2px rgba(15,23,42,.06) !important;
         }
 
-        /* === LIQUID GLASS — rippling refraction on the major surfaces === */
-        .bg-white.rounded-2xl, .bg-white.rounded-xl,
-        #projectGrid > div, #landsGrid > div, #staffGrid > div, #globalAttendanceGrid > div,
-        #sidebar, header.bg-white,
-        .fixed.inset-0 > .bg-white, .fixed.inset-0 > .modal-content-scroll {
-            -webkit-backdrop-filter: url(#liquid-glass) saturate(150%) !important;
-            backdrop-filter: url(#liquid-glass) saturate(150%) !important;
-        }
-        /* Clear glass (no warp) for small controls & popovers */
-        #notifPanel, #searchResults,
-        .bg-blue-50.rounded-xl, .bg-blue-50.rounded-2xl,
-        .bg-green-50.rounded-xl, .bg-green-50.rounded-2xl,
-        .bg-slate-50.rounded-xl, .bg-slate-50.rounded-2xl,
-        .bg-red-50.rounded-xl, .bg-yellow-50.rounded-xl,
-        input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea {
-            -webkit-backdrop-filter: saturate(150%) !important;
-            backdrop-filter: saturate(150%) !important;
-        }
-        .fixed.inset-0[class*="bg-black"] { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
-
         /* Respect reduced-motion preferences */
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
@@ -457,15 +411,6 @@
     </style>
 </head>
 <body class="bg-gray-100 h-screen overflow-hidden text-gray-800">
-
-    <!-- Liquid-glass refraction filter (warps the backdrop behind glass surfaces) -->
-    <svg aria-hidden="true" style="position:absolute; width:0; height:0; overflow:hidden">
-        <filter id="liquid-glass" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
-            <feTurbulence type="fractalNoise" baseFrequency="0.007 0.009" numOctaves="2" seed="14" result="noise"/>
-            <feGaussianBlur in="noise" stdDeviation="2.2" result="soft"/>
-            <feDisplacementMap in="SourceGraphic" in2="soft" scale="42" xChannelSelector="R" yChannelSelector="G"/>
-        </filter>
-    </svg>
 
     <!-- PDF Preview Overlay -->
     <div id="pdfPreviewOverlay">
