@@ -243,40 +243,72 @@
            Translucent frosted surfaces, vibrancy & specular edges.
            Color theme preserved (blue / slate). Visual only.
            ============================================================ */
-        :root { --lg-blur: 22px; --lg-sat: 180%; }
+        :root { --lg-blur: 24px; --lg-sat: 200%; }
 
-        /* Aurora canvas + centred logo watermark (glass blurs over it) */
+        /* Animated drifting aurora mesh (glass refracts the moving colour) */
         #mainScrollContainer {
             background-color: #e8eef7 !important;
             background-image:
-                radial-gradient(closest-side at 12% 16%, rgba(59,130,246,0.30), transparent 72%),
-                radial-gradient(closest-side at 88% 10%, rgba(37,99,235,0.24), transparent 72%),
-                radial-gradient(closest-side at 78% 88%, rgba(99,102,241,0.22), transparent 72%),
-                radial-gradient(closest-side at 16% 92%, rgba(14,165,233,0.20), transparent 72%),
-                linear-gradient(rgba(238,243,251,0.82), rgba(231,239,250,0.86)),
-                url('ico.jpeg'),
-                linear-gradient(180deg, #eef3fb 0%, #e5edf8 100%) !important;
-            background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat !important;
-            background-position: center, center, center, center, center, center 44%, center !important;
-            background-size: cover, cover, cover, cover, cover, min(440px, 55%), cover !important;
+                radial-gradient(44% 54% at 15% 20%, rgba(59,130,246,0.48), transparent 66%),
+                radial-gradient(42% 52% at 85% 15%, rgba(129,140,248,0.44), transparent 66%),
+                radial-gradient(48% 58% at 78% 85%, rgba(34,211,238,0.40), transparent 66%),
+                radial-gradient(44% 54% at 20% 90%, rgba(37,99,235,0.40), transparent 66%),
+                linear-gradient(180deg, #e9f0fb 0%, #d8e4f4 100%) !important;
+            background-repeat: no-repeat !important;
+            background-size: 200% 200%, 200% 200%, 200% 200%, 200% 200%, 100% 100% !important;
+            background-position: 0% 0%, 100% 0%, 100% 100%, 0% 100%, center !important;
+            animation: bgDrift 26s ease-in-out infinite alternate;
+        }
+        @keyframes bgDrift {
+            0%   { background-position: 0% 0%, 100% 0%, 100% 100%, 0% 100%, center; }
+            50%  { background-position: 35% 25%, 65% 20%, 60% 70%, 30% 65%, center; }
+            100% { background-position: 10% 40%, 90% 30%, 75% 90%, 15% 80%, center; }
         }
 
         /* Frosted-glass surfaces (cards & panels) */
         .bg-white.rounded-2xl, .bg-white.rounded-xl,
         #projectGrid > div, #landsGrid > div, #staffGrid > div, #globalAttendanceGrid > div {
-            background-color: rgba(255,255,255,0.55) !important;
+            background-color: rgba(255,255,255,0.34) !important;
+            background-image: linear-gradient(135deg, rgba(255,255,255,0.58) 0%, rgba(255,255,255,0.20) 55%, rgba(255,255,255,0.32) 100%) !important;
             -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat));
             backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat));
-            border: 1px solid rgba(255,255,255,0.65) !important;
-            box-shadow: 0 12px 34px -14px rgba(30,58,138,.30),
-                        inset 0 1px 0 rgba(255,255,255,0.9),
-                        inset 0 -1px 0 rgba(255,255,255,0.25) !important;
+            border: 1px solid rgba(255,255,255,0.85) !important;
+            box-shadow: 0 16px 44px -16px rgba(30,58,138,.34),
+                        inset 0 1px 0 rgba(255,255,255,1),
+                        inset 0 0 0 1px rgba(255,255,255,0.30),
+                        inset 0 -18px 30px -24px rgba(15,23,42,0.18) !important;
         }
         #projectGrid > div, #landsGrid > div, #staffGrid > div, #globalAttendanceGrid > div { border-radius: 1.5rem !important; }
         #projectGrid > div:hover, #landsGrid > div:hover, #staffGrid > div:hover, #globalAttendanceGrid > div:hover {
-            background-color: rgba(255,255,255,0.68) !important;
-            box-shadow: 0 30px 60px -22px rgba(30,58,138,.45),
-                        inset 0 1px 0 rgba(255,255,255,1) !important;
+            background-color: rgba(255,255,255,0.46) !important;
+            background-image: linear-gradient(135deg, rgba(255,255,255,0.70) 0%, rgba(255,255,255,0.32) 60%, rgba(255,255,255,0.44) 100%) !important;
+            box-shadow: 0 36px 66px -22px rgba(30,58,138,.5),
+                        inset 0 1px 0 rgba(255,255,255,1),
+                        inset 0 0 0 1px rgba(255,255,255,0.40) !important;
+        }
+
+        /* Tinted glass sub-panels (inner highlight boxes / stat cards) */
+        .bg-blue-50.rounded-xl, .bg-blue-50.rounded-2xl,
+        .bg-green-50.rounded-xl, .bg-green-50.rounded-2xl,
+        .bg-slate-50.rounded-xl, .bg-slate-50.rounded-2xl,
+        .bg-red-50.rounded-xl, .bg-yellow-50.rounded-xl {
+            background-color: rgba(255,255,255,0.30) !important;
+            background-image: linear-gradient(135deg, rgba(255,255,255,0.50) 0%, rgba(219,234,254,0.22) 100%) !important;
+            -webkit-backdrop-filter: blur(14px) saturate(180%);
+            backdrop-filter: blur(14px) saturate(180%);
+            border: 1px solid rgba(255,255,255,0.75) !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.9),
+                        inset 0 0 0 1px rgba(255,255,255,0.20),
+                        0 8px 22px -14px rgba(30,58,138,.25) !important;
+        }
+        .bg-green-50.rounded-xl, .bg-green-50.rounded-2xl {
+            background-image: linear-gradient(135deg, rgba(255,255,255,0.50) 0%, rgba(187,247,208,0.22) 100%) !important;
+        }
+        .bg-red-50.rounded-xl {
+            background-image: linear-gradient(135deg, rgba(255,255,255,0.50) 0%, rgba(254,202,202,0.22) 100%) !important;
+        }
+        .bg-yellow-50.rounded-xl {
+            background-image: linear-gradient(135deg, rgba(255,255,255,0.50) 0%, rgba(254,240,199,0.24) 100%) !important;
         }
 
         /* Light "full glass" sidebar (no dark) */
@@ -334,12 +366,15 @@
 
         /* Modals — heavy frosted glass + blurred backdrop */
         .fixed.inset-0 > .bg-white, .fixed.inset-0 > .modal-content-scroll {
-            background-color: rgba(255,255,255,0.70) !important;
-            -webkit-backdrop-filter: blur(30px) saturate(190%);
-            backdrop-filter: blur(30px) saturate(190%);
-            border: 1px solid rgba(255,255,255,0.7) !important;
+            background-color: rgba(255,255,255,0.50) !important;
+            background-image: linear-gradient(135deg, rgba(255,255,255,0.62) 0%, rgba(255,255,255,0.30) 55%, rgba(255,255,255,0.42) 100%) !important;
+            -webkit-backdrop-filter: blur(34px) saturate(200%);
+            backdrop-filter: blur(34px) saturate(200%);
+            border: 1px solid rgba(255,255,255,0.85) !important;
             border-radius: 1.6rem !important;
-            box-shadow: 0 40px 90px -34px rgba(15,23,42,.55), inset 0 1px 0 rgba(255,255,255,.95) !important;
+            box-shadow: 0 40px 90px -34px rgba(15,23,42,.55),
+                        inset 0 1px 0 rgba(255,255,255,1),
+                        inset 0 0 0 1px rgba(255,255,255,0.30) !important;
         }
         .fixed.inset-0[class*="bg-black"] {
             -webkit-backdrop-filter: blur(8px);
