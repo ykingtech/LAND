@@ -1016,7 +1016,29 @@
             <button onclick="document.getElementById('landPaymentModal').classList.add('hidden')" class="w-full mt-2 text-gray-500 text-xs">Cancel</button>
         </div>
     </div>
-    
+
+    <!-- 9b. Land Payment History Modal -->
+    <div id="landHistoryModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-lg mx-4">
+            <div class="flex justify-between items-start mb-1">
+                <h3 class="font-bold text-lg text-slate-800">Payment History</h3>
+                <button onclick="document.getElementById('landHistoryModal').classList.add('hidden')" class="text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <p id="landHistName" class="text-xs text-gray-500 mb-4 font-bold"></p>
+            <div class="overflow-y-auto max-h-80 border rounded-xl">
+                <table class="w-full text-xs text-left">
+                    <thead class="bg-slate-50 text-gray-400 uppercase text-[10px] tracking-wide sticky top-0">
+                        <tr><th class="p-2">Date</th><th class="p-2">Description</th><th class="p-2 text-right">Amount</th><th class="p-2 text-center">Actions</th></tr>
+                    </thead>
+                    <tbody id="landHistoryList" class="divide-y"></tbody>
+                </table>
+            </div>
+            <div class="flex justify-between items-center mt-3 text-sm font-bold text-slate-700">
+                <span>Total Paid</span><span id="landHistTotal" class="text-green-600">Rs. 0</span>
+            </div>
+        </div>
+    </div>
+
     <!-- 10. Payment Modal -->
     <div id="paymentModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center overflow-y-auto">
         <div class="bg-white p-6 rounded-2xl w-full max-w-2xl mx-4 my-10 shadow-2xl relative modal-content-scroll">
@@ -1722,7 +1744,7 @@ window.updateFinanceAccessPass = async () => {
                     const paid = (l.advance || 0) + (l.partPayment || 0); 
                     const bal = (l.cost || 0) - paid; 
                     const isPaid = bal <= 0; 
-                    grid.innerHTML += ` <div class="bg-white rounded-2xl border border-blue-100 shadow-sm relative overflow-hidden"> <div class="absolute top-0 left-0 bottom-0 w-1.5 ${isPaid ? 'bg-green-500' : 'bg-red-500'}"></div> <div class="p-6 pl-7"> <div class="flex justify-between items-start"> <div> <h3 class="font-bold text-lg text-slate-800">${l.name}</h3> <p class="text-sm text-gray-500 mb-2"><i class="fas fa-user-tie mr-1 text-blue-400"></i> ${l.seller}</p> </div> ${l.linkedProjectId ? '<span class="bg-purple-100 text-purple-700 text-[10px] font-bold px-2.5 py-1 rounded-full">LINKED</span>' : '<span class="bg-green-100 text-green-700 text-[10px] font-bold px-2.5 py-1 rounded-full">AVAILABLE</span>'} </div> <div class="grid grid-cols-2 gap-3 text-sm mt-4"> <div class="bg-gray-50 rounded-xl p-3"><p class="text-[10px] text-gray-400 font-bold uppercase tracking-wide">Cost</p><p class="font-bold text-slate-800">Rs. ${l.cost.toLocaleString()}</p></div> <div class="bg-green-50 rounded-xl p-3"><p class="text-[10px] text-green-600 font-bold uppercase tracking-wide">Paid</p><p class="font-bold text-green-700">Rs. ${paid.toLocaleString()}</p></div> <div class="col-span-2 border-t pt-3 flex justify-between items-center"> <span class="text-xs font-bold ${isPaid?'text-green-500':'text-red-500'} uppercase">${isPaid?'Fully Paid':'Balance: Rs. '+bal.toLocaleString()}</span> ${!isPaid ? `<button onclick="openLandPaymentModal('${d.id}', '${l.name}', ${bal})" class="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 font-bold">Add Payment</button>` : ''} </div> </div> </div> </div> `;
+                    grid.innerHTML += ` <div class="bg-white rounded-2xl border border-blue-100 shadow-sm relative overflow-hidden"> <div class="absolute top-0 left-0 bottom-0 w-1.5 ${isPaid ? 'bg-green-500' : 'bg-red-500'}"></div> <div class="p-6 pl-7"> <div class="flex justify-between items-start"> <div> <h3 class="font-bold text-lg text-slate-800">${l.name}</h3> <p class="text-sm text-gray-500 mb-2"><i class="fas fa-user-tie mr-1 text-blue-400"></i> ${l.seller}</p> </div> ${l.linkedProjectId ? '<span class="bg-purple-100 text-purple-700 text-[10px] font-bold px-2.5 py-1 rounded-full">LINKED</span>' : '<span class="bg-green-100 text-green-700 text-[10px] font-bold px-2.5 py-1 rounded-full">AVAILABLE</span>'} </div> <div class="grid grid-cols-2 gap-3 text-sm mt-4"> <div class="bg-gray-50 rounded-xl p-3"><p class="text-[10px] text-gray-400 font-bold uppercase tracking-wide">Cost</p><p class="font-bold text-slate-800">Rs. ${l.cost.toLocaleString()}</p></div> <div class="bg-green-50 rounded-xl p-3"><p class="text-[10px] text-green-600 font-bold uppercase tracking-wide">Paid</p><p class="font-bold text-green-700">Rs. ${paid.toLocaleString()}</p></div> <div class="col-span-2 border-t pt-3 flex justify-between items-center"> <span class="text-xs font-bold ${isPaid?'text-green-500':'text-red-500'} uppercase">${isPaid?'Fully Paid':'Balance: Rs. '+bal.toLocaleString()}</span> <div class="flex gap-2"> <button onclick="openLandHistoryModal('${d.id}', '${(l.name||'').replace(/'/g,"\\'")}')" class="text-xs bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-300 font-bold"><i class="fas fa-history mr-1"></i>History</button> ${!isPaid ? `<button onclick="openLandPaymentModal('${d.id}', '${(l.name||'').replace(/'/g,"\\'")}', ${bal})" class="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 font-bold">Add Payment</button>` : ''} </div> </div> </div> </div> </div> `;
                 }); 
             }, (error) => console.error("Lands load error:", error)); 
         };
@@ -1760,11 +1782,99 @@ window.updateFinanceAccessPass = async () => {
                  await updateDoc(landRef, { partPayment: curPaid + amt });
              }
              await addDoc(collection(db, "transactions"), {
-                 date: date, description: `Land Payment: ${document.getElementById('landPayInfo').innerText.split(' - ')[0]}`, amount: amt, type: 'Expense', category: 'Land Acquisition', timestamp: serverTimestamp()
+                 date: date, description: `Land Payment: ${document.getElementById('landPayInfo').innerText.split(' - ')[0]}`, amount: amt, type: 'Expense', category: 'Land Acquisition', landId: selectedLandId, timestamp: serverTimestamp()
              });
              document.getElementById('landPaymentModal').classList.add('hidden');
              alert("Land Payment Recorded Successfully!");
              document.getElementById('landPayAmount').value = "";
+        };
+
+        let currentLandHist = { id: null, name: '' };
+
+        window.openLandHistoryModal = async (id, name) => {
+            currentLandHist = { id, name };
+            document.getElementById('landHistName').innerText = name;
+            document.getElementById('landHistoryModal').classList.remove('hidden');
+            await renderLandHistory();
+        };
+
+        window.renderLandHistory = async () => {
+            const { id, name } = currentLandHist;
+            const tbody = document.getElementById('landHistoryList');
+            tbody.innerHTML = '<tr><td colspan="4" class="p-3 text-center text-gray-400">Loading...</td></tr>';
+            let total = 0, rows = '';
+            const landSnap = await getDoc(doc(db, "company_lands", id));
+            if(landSnap.exists()) {
+                const adv = landSnap.data().advance || 0;
+                if(adv > 0) {
+                    total += adv;
+                    const c = landSnap.data().createdAt;
+                    const dt = (c && c.seconds) ? new Date(c.seconds*1000).toLocaleDateString() : '-';
+                    rows += `<tr class="bg-blue-50/40"><td class="p-2">${dt}</td><td class="p-2 font-bold text-blue-700">Initial Advance (10%)</td><td class="p-2 text-right font-bold">Rs. ${adv.toLocaleString()}</td><td class="p-2 text-center"><button onclick="editLandAdvance('${id}', ${adv})" class="text-blue-500 hover:text-blue-700 mr-2"><i class="fas fa-pen"></i></button><button onclick="deleteLandAdvance('${id}')" class="text-red-400 hover:text-red-600"><i class="fas fa-trash"></i></button></td></tr>`;
+                }
+            }
+            const snap = await getDocs(collection(db, "transactions"));
+            const items = [];
+            snap.forEach(d => {
+                const t = d.data();
+                const match = (t.landId === id) || (!t.landId && t.description && t.description.startsWith(`Land Payment: ${name}`));
+                if(match) items.push({ id: d.id, ...t });
+            });
+            items.sort((a,b)=> (a.date||'').localeCompare(b.date||''));
+            items.forEach(t => {
+                const amt = t.amount || 0;
+                total += amt;
+                rows += `<tr><td class="p-2">${t.date||'-'}</td><td class="p-2">${t.description||''}</td><td class="p-2 text-right font-bold">Rs. ${amt.toLocaleString()}</td><td class="p-2 text-center"><button onclick="editLandPayment('${t.id}','${id}',${amt})" class="text-blue-500 hover:text-blue-700 mr-2"><i class="fas fa-pen"></i></button><button onclick="deleteLandPayment('${t.id}','${id}',${amt})" class="text-red-400 hover:text-red-600"><i class="fas fa-trash"></i></button></td></tr>`;
+            });
+            tbody.innerHTML = rows || '<tr><td colspan="4" class="p-3 text-center text-gray-400">No payments recorded yet</td></tr>';
+            document.getElementById('landHistTotal').innerText = 'Rs. ' + total.toLocaleString();
+        };
+
+        window.deleteLandPayment = async (txId, landId, amount) => {
+            if(!confirm('Delete this payment? The paid amount will be reduced.')) return;
+            await deleteDoc(doc(db, "transactions", txId));
+            const landRef = doc(db, "company_lands", landId);
+            const ls = await getDoc(landRef);
+            if(ls.exists()) {
+                const cur = ls.data().partPayment || 0;
+                await updateDoc(landRef, { partPayment: Math.max(0, cur - amount) });
+            }
+            await renderLandHistory();
+        };
+
+        window.editLandPayment = async (txId, landId, oldAmount) => {
+            const txRef = doc(db, "transactions", txId);
+            const txSnap = await getDoc(txRef);
+            const cur = txSnap.exists() ? txSnap.data() : {};
+            const input = prompt('Edit payment amount (Rs.):', oldAmount);
+            if(input === null) return;
+            const newAmount = parseFloat(input);
+            if(isNaN(newAmount) || newAmount < 0) return alert('Invalid amount');
+            const newDate = prompt('Edit date (YYYY-MM-DD):', cur.date || '') || cur.date;
+            await updateDoc(txRef, { amount: newAmount, date: newDate });
+            const delta = newAmount - oldAmount;
+            const landRef = doc(db, "company_lands", landId);
+            const ls = await getDoc(landRef);
+            if(ls.exists()) {
+                const part = ls.data().partPayment || 0;
+                await updateDoc(landRef, { partPayment: Math.max(0, part + delta) });
+            }
+            await renderLandHistory();
+        };
+
+        window.editLandAdvance = async (landId, oldAdv) => {
+            const input = prompt('Edit initial advance amount (Rs.):', oldAdv);
+            if(input === null) return;
+            const v = parseFloat(input);
+            if(isNaN(v) || v < 0) return alert('Invalid amount');
+            await updateDoc(doc(db, "company_lands", landId), { advance: v });
+            await renderLandHistory();
+        };
+
+        window.deleteLandAdvance = async (landId) => {
+            if(!confirm('Delete the initial advance? The paid amount will be reduced.')) return;
+            await updateDoc(doc(db, "company_lands", landId), { advance: 0 });
+            await renderLandHistory();
         };
 
         window.toggleProjectView = (type) => {
